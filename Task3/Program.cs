@@ -28,7 +28,6 @@ namespace AdoNetPostgresDemo
         }
         static void KeepOnlyFirstRecords(NpgsqlConnection conn)
         {
-            // 1️⃣ Користувачі
             using (var cmd = new NpgsqlCommand(
                 "DELETE FROM users WHERE user_id <> (SELECT MIN(user_id) FROM users);", conn))
             {
@@ -36,7 +35,6 @@ namespace AdoNetPostgresDemo
                 Console.WriteLine($"🧑 Видалено {rowsDeleted} користувачів, крім першого.");
             }
 
-            // 2️⃣ Флеш-картки
             using (var cmd = new NpgsqlCommand(
                 "DELETE FROM flashcards WHERE flashcard_id <> (SELECT MIN(flashcard_id) FROM flashcards);", conn))
             {
@@ -44,7 +42,6 @@ namespace AdoNetPostgresDemo
                 Console.WriteLine($"🃏 Видалено {rowsDeleted} флеш-карток, крім першої.");
             }
 
-            // 3️⃣ Результати тестів
             using (var cmd = new NpgsqlCommand(
                 "DELETE FROM test_results WHERE result_id <> (SELECT MIN(result_id) FROM test_results);", conn))
             {
@@ -57,11 +54,10 @@ namespace AdoNetPostgresDemo
         static void GenerateTestData(NpgsqlConnection conn)
         {
             var random = new Random();
-            int count = random.Next(30, 51); // 30–50 користувачів
+            int count = random.Next(30, 51); 
 
             for (int i = 1; i <= count; i++)
             {
-                // Додаємо користувача
                 string email = $"user{i}@example.com";
                 string fullName = $"Тестовий Користувач {i}";
                 int points = random.Next(0, 1000);
