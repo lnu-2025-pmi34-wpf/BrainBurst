@@ -17,7 +17,7 @@ namespace AdoNetPostgresDemo
 
             using var conn = new NpgsqlConnection(connectionString);
             conn.Open();
-            Console.WriteLine("✅ Підключення успішне!\n");
+            Console.WriteLine("Підключення успішне!\n");
             //KeepOnlyFirstRecords(conn);
 
             //GenerateTestData(conn);
@@ -32,21 +32,21 @@ namespace AdoNetPostgresDemo
                 "DELETE FROM users WHERE user_id <> (SELECT MIN(user_id) FROM users);", conn))
             {
                 int rowsDeleted = cmd.ExecuteNonQuery();
-                Console.WriteLine($"🧑 Видалено {rowsDeleted} користувачів, крім першого.");
+                Console.WriteLine($"Видалено {rowsDeleted} користувачів, крім першого.");
             }
 
             using (var cmd = new NpgsqlCommand(
                 "DELETE FROM flashcards WHERE flashcard_id <> (SELECT MIN(flashcard_id) FROM flashcards);", conn))
             {
                 int rowsDeleted = cmd.ExecuteNonQuery();
-                Console.WriteLine($"🃏 Видалено {rowsDeleted} флеш-карток, крім першої.");
+                Console.WriteLine($"Видалено {rowsDeleted} флеш-карток, крім першої.");
             }
 
             using (var cmd = new NpgsqlCommand(
                 "DELETE FROM test_results WHERE result_id <> (SELECT MIN(result_id) FROM test_results);", conn))
             {
                 int rowsDeleted = cmd.ExecuteNonQuery();
-                Console.WriteLine($"📊 Видалено {rowsDeleted} результатів тестів, крім першого.");
+                Console.WriteLine($"Видалено {rowsDeleted} результатів тестів, крім першого.");
             }
         }
 
@@ -95,12 +95,12 @@ namespace AdoNetPostgresDemo
             }
 
 
-            Console.WriteLine($"✅ Згенеровано {count} користувачів з флеш-картами та результатами тестів.\n");
+            Console.WriteLine($"Згенеровано {count} користувачів з флеш-картами та результатами тестів.\n");
         }
 
         static void ShowUsers(NpgsqlConnection conn)
         {
-            Console.WriteLine("=== 🧑 Таблиця USERS ===");
+            Console.WriteLine("=== Таблиця USERS ===");
             string query = "SELECT user_id, email, full_name, points, rank, created_at FROM users ORDER BY user_id;";
 
             using var cmd = new NpgsqlCommand(query, conn);
@@ -108,7 +108,7 @@ namespace AdoNetPostgresDemo
 
             if (!reader.HasRows)
             {
-                Console.WriteLine("❌ Немає користувачів.\n");
+                Console.WriteLine("Немає користувачів.\n");
                 return;
             }
 
@@ -127,7 +127,7 @@ namespace AdoNetPostgresDemo
 
         static void ShowFlashcards(NpgsqlConnection conn)
         {
-            Console.WriteLine("=== 🃏 Таблиця FLASHCARDS ===");
+            Console.WriteLine("=== Таблиця FLASHCARDS ===");
             string query = "SELECT flashcard_id, user_id, question, answer, created_at FROM flashcards ORDER BY flashcard_id;";
 
             using var cmd = new NpgsqlCommand(query, conn);
@@ -135,7 +135,7 @@ namespace AdoNetPostgresDemo
 
             if (!reader.HasRows)
             {
-                Console.WriteLine("❌ Немає карток.\n");
+                Console.WriteLine("Немає карток.\n");
                 return;
             }
 
@@ -153,7 +153,7 @@ namespace AdoNetPostgresDemo
 
         static void ShowTestResults(NpgsqlConnection conn)
         {
-            Console.WriteLine("=== 📊 Таблиця TEST_RESULTS ===");
+            Console.WriteLine("=== Таблиця TEST_RESULTS ===");
             string query = "SELECT result_id, user_id, correct_answers, total_questions, score, test_date FROM test_results ORDER BY result_id;";
 
             using var cmd = new NpgsqlCommand(query, conn);
@@ -161,7 +161,7 @@ namespace AdoNetPostgresDemo
 
             if (!reader.HasRows)
             {
-                Console.WriteLine("❌ Немає результатів тестів.\n");
+                Console.WriteLine("Немає результатів тестів.\n");
                 return;
             }
 
