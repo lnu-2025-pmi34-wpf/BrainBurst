@@ -10,6 +10,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 		.gitignore = .gitignore
 	EndProjectSection
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BrainBurst.DAL", "BrainBurst.DAL\BrainBurst.DAL.csproj", "{F16E0A25-9928-4829-A4F3-1BDC5EC897AD}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -20,6 +22,10 @@ Global
 		{A178A3B5-287F-4A00-BC8A-0A986DF9C099}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{A178A3B5-287F-4A00-BC8A-0A986DF9C099}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{A178A3B5-287F-4A00-BC8A-0A986DF9C099}.Release|Any CPU.Build.0 = Release|Any CPU
+		{F16E0A25-9928-4829-A4F3-1BDC5EC897AD}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F16E0A25-9928-4829-A4F3-1BDC5EC897AD}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F16E0A25-9928-4829-A4F3-1BDC5EC897AD}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F16E0A25-9928-4829-A4F3-1BDC5EC897AD}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
