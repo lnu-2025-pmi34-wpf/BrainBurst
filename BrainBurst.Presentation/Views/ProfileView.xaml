@@ -1,0 +1,76 @@
+﻿<UserControl x:Class="BrainBurst.Presentation.Views.ProfileView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:local="clr-namespace:BrainBurst.Presentation.Views"
+             mc:Ignorable="d" 
+             d:DesignHeight="720" d:DesignWidth="1180"
+             Background="White">
+    <ScrollViewer VerticalScrollBarVisibility="Auto">
+        <StackPanel Margin="40">
+
+            <TextBlock Text="Профіль" FontSize="28" FontWeight="Bold" Margin="0,0,0,20"/>
+
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
+
+                <Ellipse Grid.Column="0" Height="120" Width="120"
+                         Stroke="Gainsboro" StrokeThickness="2">
+                    <Ellipse.Fill>
+                        <ImageBrush ImageSource="/Assets/logo-black.png" 
+                                    Stretch="UniformToFill"/>
+                    </Ellipse.Fill>
+                </Ellipse>
+
+                <StackPanel Grid.Column="1" VerticalAlignment="Center" Margin="30,0,0,0">
+                    <TextBlock Text="нікнейм" FontSize="24" FontWeight="SemiBold"/>
+                    <StackPanel Orientation="Horizontal" Margin="0,10,0,10">
+                        <TextBlock Text="6 флешкарток" FontSize="16" Margin="0,0,20,0"/>
+                        <TextBlock Text="0 читачів" FontSize="16" Margin="0,0,20,0"/>
+                        <TextBlock Text="0 стежить" FontSize="16"/>
+                    </StackPanel>
+                    <StackPanel Orientation="Horizontal">
+                        <Button Content="Редагувати профіль" 
+                                Style="{StaticResource ProfileGrayButton}"
+                                Click="EditProfileButton_Click"/>
+                        <Button Content="Переглянути архів" 
+                                Style="{StaticResource ProfileGrayButton}"
+                                Click="ArchiveButton_Click"/>
+                    </StackPanel>
+                </StackPanel>
+            </Grid>
+            <TextBlock Text="Нагороди" FontSize="28" FontWeight="Bold" Margin="0,40,0,20"/>
+            <StackPanel>
+                <Border Style="{StaticResource AwardPanel}">
+                    <StackPanel>
+                        <TextBlock Text="Перший спалах" Style="{StaticResource AwardTitleText}"/>
+                        <TextBlock Text="за створення першої картки чи тесту" Style="{StaticResource AwardSubText}"/>
+                    </StackPanel>
+                </Border>
+                <Border Style="{StaticResource AwardPanel}">
+                    <StackPanel>
+                        <TextBlock Text="Фокус дня" Style="{StaticResource AwardTitleText}"/>
+                        <TextBlock Text="за активність 7 днів поспіль" Style="{StaticResource AwardSubText}"/>
+                    </StackPanel>
+                </Border>
+                <Border Style="{StaticResource AwardPanel}" Background="#FFE4E1">
+                    <StackPanel>
+                        <TextBlock Text="Карткороб" Style="{StaticResource AwardTitleText}"/>
+                        <TextBlock Text="за 100 створених карток" Style="{StaticResource AwardSubText}"/>
+                    </StackPanel>
+                </Border>
+                <Border Style="{StaticResource AwardPanel}" Background="#FFD8D6">
+                    <StackPanel>
+                        <TextBlock Text="Мозкобуст" Style="{StaticResource AwardTitleText}"/>
+                        <TextBlock Text="за вихід у топ-10 рейтингу" Style="{StaticResource AwardSubText}"/>
+                    </StackPanel>
+                </Border>
+            </StackPanel>
+
+        </StackPanel>
+    </ScrollViewer>
+</UserControl>

@@ -1,0 +1,66 @@
+﻿<Window x:Class="BrainBurst.Presentation.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:BrainBurst.Presentation"
+        mc:Ignorable="d"
+        Title="Brain Burst" Height="720" Width="1280" WindowStartupLocation="CenterScreen">
+
+    <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="1.2*"/>
+            <ColumnDefinition Width="*"/>
+        </Grid.ColumnDefinitions>
+
+
+        <Grid Grid.Column="0" Background="White">
+
+            <TextBlock Text="Вивчай швидше. Запам'ятовуй надовше."
+                       Foreground="{StaticResource PrimaryBrandBrush}"
+                       HorizontalAlignment="Center"
+                       VerticalAlignment="Bottom"
+                       Margin="20"/>
+
+            <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center">
+
+                <TextBlock Text="BRAIN BURST"
+                           FontSize="64"
+                           FontWeight="Bold"
+                           Foreground="{StaticResource PrimaryBrandBrush}"
+                           HorizontalAlignment="Center"
+                           Margin="0,0,0,20"/>
+
+                <Image Source="/Assets/logo.png" 
+                       Height="180"
+                       Margin="0,0,0,30"/>
+
+                <Button Content="Зареєструватися"
+                        Style="{StaticResource PrimaryButton}" Margin="0,0,0,10"
+                        Click="RegisterButton_Click"/>
+
+                <Button Content="Ввійти"
+                        Style="{StaticResource SecondaryButton}"
+                        Click="LoginButton_Click"/>
+            </StackPanel>
+        </Grid>
+
+        <Grid Grid.Column="1" Background="{StaticResource PrimaryBrandBrush}">
+
+            <StackPanel VerticalAlignment="Center" Margin="40">
+
+                <TextBlock Foreground="White" FontSize="20" TextWrapping="Wrap">
+                    <Run FontWeight="Bold">Brain Burst</Run>
+                    <Run> — це сучасна навчальна платформа, розроблена для того, щоб </Run>
+                    <Run FontWeight="Bold">зробити навчання простим, ефективним та цікавим.</Run>
+                </TextBlock>
+
+                <TextBlock Foreground="White" FontSize="20" TextWrapping="Wrap" Margin="0,25,0,0">
+                    <Run>Створюйте власні набори карток, переглядайте тисячі готових колекцій та опановуйте будь-яку тему за допомогою інтерактивних режимів навчання.</Run>
+                </TextBlock>
+
+            </StackPanel>
+        </Grid>
+
+    </Grid>
+</Window>

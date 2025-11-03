@@ -1,0 +1,29 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net9.0-windows</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <UseWPF>true</UseWPF>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <None Remove="Assets\achievements.png" />
+    <None Remove="Assets\cards.png" />
+    <None Remove="Assets\logo-black.png" />
+    <None Remove="Assets\logo.png" />
+    <None Remove="Assets\settings.png" />
+    <None Remove="Assets\tests.png" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Resource Include="Assets\achievements.png" />
+    <Resource Include="Assets\cards.png" />
+    <Resource Include="Assets\logo-black.png" />
+    <Resource Include="Assets\logo.png" />
+    <Resource Include="Assets\settings.png" />
+    <Resource Include="Assets\tests.png" />
+  </ItemGroup>
+
+</Project>

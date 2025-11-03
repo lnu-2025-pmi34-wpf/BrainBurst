@@ -1,0 +1,72 @@
+﻿<Window x:Class="BrainBurst.Presentation.RegistrationWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:BrainBurst.Presentation"
+        xmlns:sys="clr-namespace:System;assembly=mscorlib"
+        mc:Ignorable="d"
+        Title="Реєстрація" 
+        Height="720" Width="1280"
+        WindowStartupLocation="CenterScreen"
+        Background="White">
+
+    <Grid>
+        <Button Content="← Повернутися на головну"
+            Style="{StaticResource BackButton}"
+            Click="BackButton_Click"/>
+        <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center" Width="500">
+
+            <Image Source="/Assets/logo.png" 
+                   Height="150"
+                   Margin="0,0,0,10"/>
+
+            <TextBlock Text="BRAIN BURST"
+                       FontSize="48"
+                       FontWeight="Bold"
+                       Foreground="{StaticResource PrimaryBrandBrush}"
+                       HorizontalAlignment="Center"
+                       Margin="0,0,0,30"/>
+
+            <TextBlock Text="Дата народження" 
+                       FontWeight="Bold" 
+                       Margin="0,0,0,5"
+                       Foreground="#555"/>
+
+            <Grid Margin="0,0,0,10">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
+
+                <TextBox Grid.Column="0" Style="{StaticResource InputTextBox}" Tag="День" Text=""
+                         Margin="0,0,5,0" Padding="10,0,0,0"/>
+
+                <TextBox Grid.Column="1" Style="{StaticResource InputTextBox}" Tag="Місяць" Text=""
+                         Margin="5,0,5,0" Padding="10,0,0,0"/>
+
+                <TextBox Grid.Column="2" Style="{StaticResource InputTextBox}" Tag="Рік" Text=""
+                         Margin="5,0,0,0" Padding="10,0,0,0"/>
+            </Grid>
+
+            <TextBox Style="{StaticResource InputTextBox}" Tag="Введіть електронну пошту" Text=""
+                     Margin="0,0,0,10"/>
+
+            <TextBox Style="{StaticResource InputTextBox}" Tag="Введіть ім'я користувача" Text=""
+                     Margin="0,0,0,10"/>
+
+            <TextBlock Text="Введіть пароль" 
+                       FontWeight="Bold" 
+                       Margin="0,0,0,5" 
+                       Foreground="#555"/>
+            <PasswordBox Style="{StaticResource InputPasswordBox}"/>
+
+            <Button Content="Зареєструватися"
+                    Style="{StaticResource PrimaryButton}"
+                    Margin="0,20,0,0"
+                    Click="Register_Click"/>
+
+        </StackPanel>
+    </Grid>
+</Window>

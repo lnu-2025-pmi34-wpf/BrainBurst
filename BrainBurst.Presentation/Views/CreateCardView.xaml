@@ -1,0 +1,38 @@
+﻿<UserControl x:Class="BrainBurst.Presentation.Views.CreateCardView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:local="clr-namespace:BrainBurst.Presentation.Views"
+             mc:Ignorable="d" 
+             d:DesignHeight="720" d:DesignWidth="1180"
+             Background="White">
+    <ScrollViewer VerticalScrollBarVisibility="Auto">
+        <StackPanel Margin="40" HorizontalAlignment="Center" Width="700">
+
+            <Button Content="← Назад"
+                    Style="{StaticResource BackButton}"
+                    Click="BackButton_Click"
+                    Margin="0,0,0,10"/>
+
+            <TextBlock Text="Створення нової картки" FontSize="28" FontWeight="Bold" Margin="0,0,0,20"/>
+
+            <TextBlock Text="Тема" FontWeight="Bold" Margin="0,0,0,5" Foreground="#555"/>
+            <TextBox Style="{StaticResource InputTextBox}" Tag="Назва колоди (напр., 'Психологія')" Text=""/>
+
+            <TextBlock Text="Питання" FontWeight="Bold" Margin="0,10,0,5" Foreground="#555"/>
+            <TextBox Style="{StaticResource InputTextAreaStyle}" Tag="Введіть питання..."/>
+
+            <TextBlock Text="Відповідь" FontWeight="Bold" Margin="0,10,0,5" Foreground="#555"/>
+            <TextBox Style="{StaticResource InputTextAreaStyle}" Tag="Введіть правильну відповідь..."/>
+
+            <Button Content="Зберегти картку" 
+                    Style="{StaticResource PrimaryButton}"
+                    Width="300"
+                    Margin="0,20,0,0"
+                    HorizontalAlignment="Right"
+                    Click="SaveButton_Click"/>
+
+        </StackPanel>
+    </ScrollViewer>
+</UserControl>

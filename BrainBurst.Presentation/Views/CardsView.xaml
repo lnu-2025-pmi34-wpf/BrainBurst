@@ -1,0 +1,82 @@
+﻿<UserControl x:Class="BrainBurst.Presentation.Views.CardsView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:local="clr-namespace:BrainBurst.Presentation.Views"
+             mc:Ignorable="d" 
+             d:DesignHeight="720" d:DesignWidth="1180"
+             Background="White">
+    <ScrollViewer VerticalScrollBarVisibility="Auto">
+        <StackPanel Margin="40">
+            <TextBlock Text="Мої картки" FontSize="28" FontWeight="Bold" Margin="0,0,0,20"/>
+
+            <Grid Margin="0,0,0,20">
+                <TextBox Style="{StaticResource SearchBox}" Tag="Пошук..." Text=""/>
+                <TextBlock Text="🔍" FontSize="20" 
+                           HorizontalAlignment="Right" 
+                           VerticalAlignment="Center" 
+                           Margin="0,0,15,0"
+                           Foreground="#888"/>
+            </Grid>
+
+            <TextBlock Text="Продовжити вивчення" FontSize="22" FontWeight="Bold" Margin="0,0,0,10"/>
+            <WrapPanel>
+                <Border Style="{StaticResource DeckCard}" MouseLeftButtonDown="Deck_Click">
+                    <StackPanel>
+                        <TextBlock Text="дискретна математика" Style="{StaticResource AwardTitleText}"/>
+                        <TextBlock Text="створено: 13/04/2023" Style="{StaticResource AwardSubText}" Margin="0,10,0,0"/>
+                    </StackPanel>
+                </Border>
+                <Border Style="{StaticResource DeckCard}" MouseLeftButtonDown="Deck_Click">
+                    <StackPanel>
+                        <TextBlock Text="математичний аналіз" Style="{StaticResource AwardTitleText}"/>
+                        <TextBlock Text="створено: 24/03/2023" Style="{StaticResource AwardSubText}" Margin="0,10,0,0"/>
+                    </StackPanel>
+                </Border>
+            </WrapPanel>
+
+            <TextBlock Text="Нещодавні" FontSize="22" FontWeight="Bold" Margin="0,20,0,10"/>
+            <WrapPanel>
+                <Border Style="{StaticResource DeckCard}" MouseLeftButtonDown="Deck_Click">
+                    <StackPanel>
+                        <TextBlock Text="психологія" Style="{StaticResource AwardTitleText}"/>
+                        <TextBlock Text="створено: 15/01/2025" Style="{StaticResource AwardSubText}" Margin="0,10,0,0"/>
+                    </StackPanel>
+                </Border>
+                <Border Style="{StaticResource DeckCard}" MouseLeftButtonDown="Deck_Click">
+                    <StackPanel>
+                        <TextBlock Text="англійська мова" Style="{StaticResource AwardTitleText}"/>
+                        <TextBlock Text="створено: 01/02/2021" Style="{StaticResource AwardSubText}" Margin="0,10,0,0"/>
+                    </StackPanel>
+                </Border>
+                <Border Style="{StaticResource DeckCard}" MouseLeftButtonDown="Deck_Click">
+                    <StackPanel>
+                        <TextBlock Text="програмування" Style="{StaticResource AwardTitleText}"/>
+                        <TextBlock Text="створено: 03/03/2024" Style="{StaticResource AwardSubText}" Margin="0,10,0,0"/>
+                    </StackPanel>
+                </Border>
+                <Border Style="{StaticResource DeckCard}" MouseLeftButtonDown="Deck_Click">
+                    <StackPanel>
+                        <TextBlock Text="теорія ігор" Style="{StaticResource AwardTitleText}"/>
+                        <TextBlock Text="створено: 01/02/2021" Style="{StaticResource AwardSubText}" Margin="0,10,0,0"/>
+                    </StackPanel>
+                </Border>
+                <Border Style="{StaticResource DeckCard}" MouseLeftButtonDown="Deck_Click">
+                    <StackPanel>
+                        <TextBlock Text="теорія ігор" Style="{StaticResource AwardTitleText}"/>
+                        <TextBlock Text="створено: 01/02/2021" Style="{StaticResource AwardSubText}" Margin="0,10,0,0"/>
+                    </StackPanel>
+                </Border>
+                <Border Style="{StaticResource DeckCard}" MouseLeftButtonDown="Deck_Click">
+                    <StackPanel>
+                        <TextBlock Text="психологія" Style="{StaticResource AwardTitleText}"/>
+                        <TextBlock Text="створено: 15/01/2025" Style="{StaticResource AwardSubText}" Margin="0,10,0,0"/>
+                    </StackPanel>
+                </Border>
+
+                <Button Style="{StaticResource AddDeckButton}" Click="AddButton_Click"/>
+            </WrapPanel>
+        </StackPanel>
+    </ScrollViewer>
+</UserControl>

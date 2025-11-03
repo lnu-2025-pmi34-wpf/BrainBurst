@@ -1,0 +1,66 @@
+﻿<UserControl x:Class="BrainBurst.Presentation.Views.StudyView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:local="clr-namespace:BrainBurst.Presentation.Views"
+             mc:Ignorable="d" 
+             d:DesignHeight="720" d:DesignWidth="1180"
+             Background="White">
+    <Grid>
+        <Button Content="◀" Style="{StaticResource StudyArrowButton}" 
+                HorizontalAlignment="Left" VerticalAlignment="Center" Margin="30,0,0,0"/>
+
+        <Button Content="▶" Style="{StaticResource StudyArrowButton}" 
+                HorizontalAlignment="Right" VerticalAlignment="Center" Margin="0,0,30,0"/>
+
+        <Grid HorizontalAlignment="Center" VerticalAlignment="Center">
+
+            <Border x:Name="QuestionCard" Style="{StaticResource StudyCard}">
+                <Grid>
+                    <TextBlock Text="Дискретна математика" 
+                               FontSize="16" FontWeight="Bold" Foreground="#D85A5A"
+                               VerticalAlignment="Top" HorizontalAlignment="Left"/>
+
+                    <TextBlock Text="Що таке граф?" 
+                               FontSize="36" FontWeight="Bold" 
+                               HorizontalAlignment="Center" VerticalAlignment="Center"
+                               TextWrapping="Wrap"/>
+
+                    <TextBox x:Name="AnswerTextBox" Style="{StaticResource StudyAnswerInput}"
+                             VerticalAlignment="Bottom"
+                             KeyDown="AnswerTextBox_KeyDown"
+                             Tag="Введіть вашу відповідь..."/>
+                </Grid>
+            </Border>
+
+            <Border x:Name="AnswerCard" Style="{StaticResource StudyCard}"
+                    Visibility="Collapsed"
+                    Background="#F0FFF0">
+
+                <Grid>
+                    <TextBlock Text="Дискретна математика" 
+                               FontSize="16" FontWeight="Bold" Foreground="#D85A5A"
+                               VerticalAlignment="Top" HorizontalAlignment="Left"/>
+                    <TextBlock x:Name="ResultIcon" Text="✅" FontSize="60" 
+                               HorizontalAlignment="Center" VerticalAlignment="Top" Margin="0,40,0,0"/>
+
+                    <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" Margin="0,30,0,0">
+                        <TextBlock Text="ВАША ВІДПОВІДЬ:" FontSize="14" FontWeight="Bold" Foreground="Gray"/>
+                        <TextBlock x:Name="UserAnswerText" Text="[Ваша відповідь]" FontSize="18" Margin="0,5,0,0"/>
+
+                        <TextBlock Text="ПРАВИЛЬНА ВІДПОВІДЬ:" FontSize="14" FontWeight="Bold" Foreground="Gray" Margin="0,20,0,0"/>
+                        <TextBlock x:Name="CorrectAnswerText" Text="[Правильна відповідь]" FontSize="18" Margin="0,5,0,0"/>
+                    </StackPanel>
+
+                    <Button Content="Наступне питання →" 
+                            Style="{StaticResource ProfileGrayButton}"
+                            Background="White"
+                            VerticalAlignment="Bottom" HorizontalAlignment="Right"
+                            Click="NextCard_Click"/>
+                </Grid>
+            </Border>
+
+        </Grid>
+    </Grid>
+</UserControl>

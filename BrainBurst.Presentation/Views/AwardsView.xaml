@@ -1,0 +1,172 @@
+﻿<UserControl x:Class="BrainBurst.Presentation.Views.AwardsView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:local="clr-namespace:BrainBurst.Presentation.Views"
+             mc:Ignorable="d" 
+             d:DesignHeight="720" d:DesignWidth="1180"
+             Background="White">
+    <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="1.5*"/>
+            <ColumnDefinition Width="*"/>
+        </Grid.ColumnDefinitions>
+
+        <StackPanel Grid.Column="0" Margin="40">
+            <TextBlock Text="Рейтинг" FontSize="28" FontWeight="Bold" Margin="0,0,0,20"/>
+
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="50"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="100"/>
+                    <ColumnDefinition Width="100"/>
+                </Grid.ColumnDefinitions>
+
+                <TextBlock Grid.Column="0" Text="№" Style="{StaticResource RatingHeader}" HorizontalAlignment="Center"/>
+                <TextBlock Grid.Column="1" Text="ім'я користувача" Style="{StaticResource RatingHeader}" Margin="5"/>
+                <TextBlock Grid.Column="2" Text="бали" Style="{StaticResource RatingHeader}" HorizontalAlignment="Center"/>
+                <TextBlock Grid.Column="3" Text="ранг" Style="{StaticResource RatingHeader}" HorizontalAlignment="Center"/>
+            </Grid>
+
+            <StackPanel>
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="50"/>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="100"/>
+                        <ColumnDefinition Width="100"/>
+                    </Grid.ColumnDefinitions>
+
+                    <Border Grid.Column="0" Style="{StaticResource RatingNumberCell}">
+                        <TextBlock Text="1" HorizontalAlignment="Center" FontWeight="SemiBold"/>
+                    </Border>
+                    <Border Grid.Column="1" Style="{StaticResource RatingDataCell}">
+                        <TextBlock Text="user_one" FontWeight="SemiBold"/>
+                    </Border>
+                    <Border Grid.Column="2" Style="{StaticResource RatingDataCell}">
+                        <TextBlock Text="1500" HorizontalAlignment="Center" FontWeight="SemiBold"/>
+                    </Border>
+                    <Border Grid.Column="3" Style="{StaticResource RatingDataCell}">
+                        <TextBlock Text="Gold" HorizontalAlignment="Center" FontWeight="SemiBold"/>
+                    </Border>
+                </Grid>
+
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="50"/>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="100"/>
+                        <ColumnDefinition Width="100"/>
+                    </Grid.ColumnDefinitions>
+
+                    <Border Grid.Column="0" Style="{StaticResource RatingNumberCell}" Background="#FFEAE8">
+                        <TextBlock Text="2" HorizontalAlignment="Center" FontWeight="SemiBold"/>
+                    </Border>
+                    <Border Grid.Column="1" Style="{StaticResource RatingDataCell}" Background="#FFEAE8">
+                        <TextBlock Text="user_two" FontWeight="SemiBold"/>
+                    </Border>
+                    <Border Grid.Column="2" Style="{StaticResource RatingDataCell}" Background="#FFEAE8">
+                        <TextBlock Text="1450" HorizontalAlignment="Center" FontWeight="SemiBold"/>
+                    </Border>
+                    <Border Grid.Column="3" Style="{StaticResource RatingDataCell}" Background="#FFEAE8">
+                        <TextBlock Text="Gold" HorizontalAlignment="Center" FontWeight="SemiBold"/>
+                    </Border>
+                </Grid>
+
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="50"/>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="100"/>
+                        <ColumnDefinition Width="100"/>
+                    </Grid.ColumnDefinitions>
+
+                    <Border Grid.Column="0" Style="{StaticResource RatingNumberCell}" Background="#FFDDD9">
+                        <TextBlock Text="3" HorizontalAlignment="Center" FontWeight="SemiBold"/>
+                    </Border>
+                    <Border Grid.Column="1" Style="{StaticResource RatingDataCell}" Background="#FFDDD9">
+                        <TextBlock Text="user_three" FontWeight="SemiBold"/>
+                    </Border>
+                    <Border Grid.Column="2" Style="{StaticResource RatingDataCell}" Background="#FFDDD9">
+                        <TextBlock Text="1400" HorizontalAlignment="Center" FontWeight="SemiBold"/>
+                    </Border>
+                    <Border Grid.Column="3" Style="{StaticResource RatingDataCell}" Background="#FFDDD9">
+                        <TextBlock Text="Silver" HorizontalAlignment="Center" FontWeight="SemiBold"/>
+                    </Border>
+                </Grid>
+
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="50"/>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="100"/>
+                        <ColumnDefinition Width="100"/>
+                    </Grid.ColumnDefinitions>
+
+                    <Border Grid.Column="0" Style="{StaticResource RatingNumberCell}" Background="#FFD0CC">
+                        <TextBlock Text="4" HorizontalAlignment="Center" FontWeight="SemiBold"/>
+                    </Border>
+                    <Border Grid.Column="1" Style="{StaticResource RatingDataCell}" Background="#FFD0CC">
+                        <TextBlock Text="user_four" FontWeight="SemiBold"/>
+                    </Border>
+                    <Border Grid.Column="2" Style="{StaticResource RatingDataCell}" Background="#FFD0CC">
+                        <TextBlock Text="1350" HorizontalAlignment="Center" FontWeight="SemiBold"/>
+                    </Border>
+                    <Border Grid.Column="3" Style="{StaticResource RatingDataCell}" Background="#FFD0CC">
+                        <TextBlock Text="Silver" HorizontalAlignment="Center" FontWeight="SemiBold"/>
+                    </Border>
+                </Grid>
+
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="50"/>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="100"/>
+                        <ColumnDefinition Width="100"/>
+                    </Grid.ColumnDefinitions>
+
+                    <Border Grid.Column="0" Style="{StaticResource RatingNumberCell}" Background="#F0A096">
+                        <TextBlock Text="5" HorizontalAlignment="Center" FontWeight="SemiBold"/>
+                    </Border>
+                    <Border Grid.Column="1" Style="{StaticResource RatingDataCell}" Background="#F0A096">
+                        <TextBlock Text="user_five" FontWeight="SemiBold"/>
+                    </Border>
+                    <Border Grid.Column="2" Style="{StaticResource RatingDataCell}" Background="#F0A096">
+                        <TextBlock Text="1300" HorizontalAlignment="Center" FontWeight="SemiBold"/>
+                    </Border>
+                    <Border Grid.Column="3" Style="{StaticResource RatingDataCell}" Background="#F0A096">
+                        <TextBlock Text="Bronze" HorizontalAlignment="Center" FontWeight="SemiBold"/>
+                    </Border>
+                </Grid>
+
+        
+            </StackPanel>
+        </StackPanel>
+
+        <Grid Grid.Column="1" Background="{StaticResource PrimaryBrandBrush}">
+            <Viewbox Stretch="Uniform" Margin="20">
+                <Grid Width="400" Height="300">
+                    <Border Background="Transparent" BorderBrush="White" BorderThickness="4"
+                            Width="120" Height="150"
+                            VerticalAlignment="Bottom" HorizontalAlignment="Center" Margin="0,0,0,0"/>
+                    <TextBlock Text="1" Foreground="White" FontSize="100" FontWeight="Bold"
+                               HorizontalAlignment="Center" VerticalAlignment="Bottom" Margin="0,0,0,10"/>
+
+                    <Border Background="Transparent" BorderBrush="White" BorderThickness="4"
+                            Width="120" Height="120"
+                            VerticalAlignment="Bottom" HorizontalAlignment="Right" Margin="0,0,20,0"/>
+                    <TextBlock Text="2" Foreground="White" FontSize="100" FontWeight="Bold"
+                               HorizontalAlignment="Right" VerticalAlignment="Bottom" Margin="0,0,30,0"/>
+
+                    <Border Background="Transparent" BorderBrush="White" BorderThickness="4"
+                            Width="120" Height="100"
+                            VerticalAlignment="Bottom" HorizontalAlignment="Left" Margin="20,0,0,0"/>
+                    <TextBlock Text="3" Foreground="White" FontSize="100" FontWeight="Bold"
+                               HorizontalAlignment="Left" VerticalAlignment="Bottom" Margin="33,0,0,-7"/>
+                </Grid>
+            </Viewbox>
+        </Grid>
+    </Grid>
+</UserControl>
