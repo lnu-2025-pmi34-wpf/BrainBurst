@@ -9,14 +9,11 @@ namespace BrainBurst.Presentation.Views
 {
     public partial class TestTakingView : UserControl
     {
-        // === "Фейкова" база даних питань ===
         private List<Question> testQuestions;
         private int currentQuestionIndex = 0;
 
-        // === СПИСОК ДЛЯ ЗБЕРІГАННЯ ПОМИЛОК ===
         private List<TestMistake> mistakesList;
 
-        // Внутрішній клас для зберігання питання
         private class Question
         {
             public string Topic { get; set; }
@@ -28,7 +25,6 @@ namespace BrainBurst.Presentation.Views
         {
             InitializeComponent();
 
-            // Створюємо НОВИЙ список помилок для цього тесту
             mistakesList = new List<TestMistake>();
 
             LoadDummyQuestions();
@@ -75,19 +71,16 @@ namespace BrainBurst.Presentation.Views
 
                 if (userAnswer.ToLower().Trim() == correctAnswer.ToLower().Trim())
                 {
-                    // ПРАВИЛЬНО
                     ResultIcon.Text = "✅";
                     ResultIcon.Foreground = Brushes.Green;
                     AnswerCard.Background = (SolidColorBrush)(new BrushConverter().ConvertFrom("#F0FFF0"));
                 }
                 else
                 {
-                    // НЕПРАВИЛЬНО
                     ResultIcon.Text = "❌";
                     ResultIcon.Foreground = Brushes.Red;
                     AnswerCard.Background = (SolidColorBrush)(new BrushConverter().ConvertFrom("#FFF0F0"));
 
-                    // === ДОДАЄМО ПОМИЛКУ ДО СПИСКУ ===
                     mistakesList.Add(new TestMistake
                     {
                         QuestionText = currentQuestion.Text,
@@ -111,10 +104,8 @@ namespace BrainBurst.Presentation.Views
             }
             else
             {
-                // Тест закінчено, переходимо на сторінку результатів
                 if (NavigationService.GetNavigationService(this) != null)
                 {
-                    // === ПЕРЕДАЄМО СПИСОК ПОМИЛОК І ЗАГАЛЬНУ КІЛЬКІСТЬ ===
                     NavigationService.GetNavigationService(this).Navigate(new TestResultsView(mistakesList, testQuestions.Count));
                 }
             }

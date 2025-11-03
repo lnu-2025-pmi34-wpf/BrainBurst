@@ -13,6 +13,9 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BrainBurst.DAL", "BrainBurst.DAL\BrainBurst.DAL.csproj", "{F16E0A25-9928-4829-A4F3-1BDC5EC897AD}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BrainBurst.Presentation", "BrainBurst.Presentation\BrainBurst.Presentation.csproj", "{FCE30E05-6077-4889-BA0E-11E20BF507D7}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BrainBurst.BLL", "BrainBurst.BLL\BrainBurst.BLL.csproj", "{B974F04D-5B3E-4973-9C94-926287718EC2}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BrainBurst.BLL.Tests", "BrainBurst.BLL.Tests\BrainBurst.BLL.Tests.csproj", "{37B222A3-2E28-4B16-9C6E-989B2B878FFD}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -32,6 +35,14 @@ Global
 		{FCE30E05-6077-4889-BA0E-11E20BF507D7}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{FCE30E05-6077-4889-BA0E-11E20BF507D7}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{FCE30E05-6077-4889-BA0E-11E20BF507D7}.Release|Any CPU.Build.0 = Release|Any CPU
+		{B974F04D-5B3E-4973-9C94-926287718EC2}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B974F04D-5B3E-4973-9C94-926287718EC2}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B974F04D-5B3E-4973-9C94-926287718EC2}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B974F04D-5B3E-4973-9C94-926287718EC2}.Release|Any CPU.Build.0 = Release|Any CPU
+		{37B222A3-2E28-4B16-9C6E-989B2B878FFD}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{37B222A3-2E28-4B16-9C6E-989B2B878FFD}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{37B222A3-2E28-4B16-9C6E-989B2B878FFD}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{37B222A3-2E28-4B16-9C6E-989B2B878FFD}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

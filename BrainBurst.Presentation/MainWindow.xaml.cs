@@ -18,16 +18,13 @@ namespace BrainBurst.Presentation
 
             if (result == true)
             {
-                // Успіх! Відкриваємо ProfileWindow.
                 ProfileWindow profileWindow = new ProfileWindow();
                 profileWindow.Show();
 
-                // Закриваємо MainWindow (лендінг)
                 this.Close();
             }
             else
             {
-                // "Назад" або 'X'. Повертаємо MainWindow.
                 this.Show();
             }
         }
@@ -41,16 +38,13 @@ namespace BrainBurst.Presentation
 
             if (result == true)
             {
-                // Успіх! Відкриваємо ProfileWindow.
                 ProfileWindow profileWindow = new ProfileWindow();
                 profileWindow.Show();
 
-                // Закриваємо MainWindow (лендінг)
                 this.Close();
             }
             else
             {
-                // "Назад" або 'X'. Повертаємо MainWindow.
                 this.Show();
             }
         }

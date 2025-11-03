@@ -5,9 +5,6 @@ using System.Windows.Navigation;
 
 namespace BrainBurst.Presentation.Views
 {
-    /// <summary>
-    /// Interaction logic for ChangePasswordView.xaml
-    /// </summary>
     public partial class ChangePasswordView : UserControl
     {
         public ChangePasswordView()
