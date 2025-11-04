@@ -16,49 +16,12 @@ namespace BrainBurst.DAL.Data
         {
         }
 
-        public ApplicationDbContext()
-        {
-            var currentDir = Directory.GetCurrentDirectory();
-            var solutionDir = Directory.GetParent(currentDir)?.Parent?.FullName
-                              ?? Directory.GetParent(currentDir)?.FullName
-                              ?? currentDir;
+      
 
-            var envPath = Path.Combine(solutionDir, ".env");
-
-            if (File.Exists(envPath))
-            {
-                foreach (var line in File.ReadAllLines(envPath))
-                {
-                    if (string.IsNullOrWhiteSpace(line) || line.TrimStart().StartsWith('#'))
-                        continue;
-
-                    var parts = line.Split('=', 2);
-                    if (parts.Length != 2) continue;
-
-                    var key = parts[0].Trim();
-                    var value = parts[1].Trim().Trim('"', '\'');
-
-                    Environment.SetEnvironmentVariable(key, value);
-                }
-            }
-
-            var builder = new ConfigurationBuilder()
-                .SetBasePath(currentDir)
-                .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
-                .AddEnvironmentVariables();
-
-            _configuration = builder.Build();
-        }
-
-        protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
-        {
-            if (!optionsBuilder.IsConfigured)
-            {
-                var connectionString = _configuration.GetConnectionString("DefaultConnection");
-                optionsBuilder.UseNpgsql(connectionString);
-            }
-        }
-
+   protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
+    {
+        // Конфігурація відбувається через DI в App.xaml.cs
+    }
         // === DbSet ===
         public DbSet<User> Users { get; set; } = null!;
         public DbSet<Flashcard> Flashcards { get; set; } = null!;

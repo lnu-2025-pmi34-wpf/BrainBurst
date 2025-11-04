@@ -27,9 +27,9 @@
                 </Ellipse>
 
                 <StackPanel Grid.Column="1" VerticalAlignment="Center" Margin="30,0,0,0">
-                    <TextBlock Text="нікнейм" FontSize="24" FontWeight="SemiBold"/>
+                    <TextBlock x:Name="UsernameTextBlock" Text="нікнейм" FontSize="24" FontWeight="SemiBold"/>
                     <StackPanel Orientation="Horizontal" Margin="0,10,0,10">
-                        <TextBlock Text="6 флешкарток" FontSize="16" Margin="0,0,20,0"/>
+                        <TextBlock x:Name="FlashcardsCountTextBlock" Text="6 флешкарток" FontSize="16" Margin="0,0,20,0"/>
                         <TextBlock Text="0 читачів" FontSize="16" Margin="0,0,20,0"/>
                         <TextBlock Text="0 стежить" FontSize="16"/>
                     </StackPanel>

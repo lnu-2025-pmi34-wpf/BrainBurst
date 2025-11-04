@@ -1,9 +1,13 @@
-namespace BrainBurst.BLL.Abstractions;
+using BrainBurst.DAL.Entities; // Все ще потрібна залежність від DAL.Entities
+using System.Collections.Generic;
+using System.Threading;
+using System.Threading.Tasks;
 
-using BrainBurst.DAL.Entities;
+namespace BrainBurst.DAL.Abstractions; // << НОВИЙ NAMESPACE
 
 public interface IUserRepository
 {
+    Task DeleteAsync(int id, CancellationToken ct); // НОВИЙ МЕТОД
     Task<User> GetByIdAsync(int id, CancellationToken ct);
     Task<User?> GetByEmailAsync(string email, CancellationToken ct);
     Task<User> AddAsync(User user, CancellationToken ct);

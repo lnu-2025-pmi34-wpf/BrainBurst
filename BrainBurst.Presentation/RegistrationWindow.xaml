@@ -40,27 +40,34 @@
                     <ColumnDefinition Width="*"/>
                 </Grid.ColumnDefinitions>
 
-                <TextBox Grid.Column="0" Style="{StaticResource InputTextBox}" Tag="День" Text=""
+                <TextBox Grid.Column="0" x:Name="DayTextBox" Style="{StaticResource InputTextBox}" Tag="День" Text=""
                          Margin="0,0,5,0" Padding="10,0,0,0"/>
 
-                <TextBox Grid.Column="1" Style="{StaticResource InputTextBox}" Tag="Місяць" Text=""
+                <TextBox Grid.Column="1" x:Name="MonthTextBox" Style="{StaticResource InputTextBox}" Tag="Місяць" Text=""
                          Margin="5,0,5,0" Padding="10,0,0,0"/>
 
-                <TextBox Grid.Column="2" Style="{StaticResource InputTextBox}" Tag="Рік" Text=""
+                <TextBox Grid.Column="2" x:Name="YearTextBox" Style="{StaticResource InputTextBox}" Tag="Рік" Text=""
                          Margin="5,0,0,0" Padding="10,0,0,0"/>
             </Grid>
 
-            <TextBox Style="{StaticResource InputTextBox}" Tag="Введіть електронну пошту" Text=""
+            <TextBox x:Name="EmailTextBox" Style="{StaticResource InputTextBox}" Tag="Введіть електронну пошту" Text=""
                      Margin="0,0,0,10"/>
 
-            <TextBox Style="{StaticResource InputTextBox}" Tag="Введіть ім'я користувача" Text=""
+            <TextBox x:Name="FullNameTextBox" Style="{StaticResource InputTextBox}" Tag="Введіть ім'я користувача" Text=""
                      Margin="0,0,0,10"/>
 
             <TextBlock Text="Введіть пароль" 
                        FontWeight="Bold" 
                        Margin="0,0,0,5" 
                        Foreground="#555"/>
-            <PasswordBox Style="{StaticResource InputPasswordBox}"/>
+            
+            <PasswordBox x:Name="PasswordInputBox" Style="{StaticResource InputPasswordBox}"/>
+
+            <TextBlock x:Name="StatusText" 
+                       Margin="0,10,0,0" 
+                       Foreground="Red" 
+                       HorizontalAlignment="Center" 
+                       FontWeight="SemiBold"/>
 
             <Button Content="Зареєструватися"
                     Style="{StaticResource PrimaryButton}"

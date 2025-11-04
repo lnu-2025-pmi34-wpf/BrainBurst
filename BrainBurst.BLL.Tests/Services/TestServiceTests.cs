@@ -2,7 +2,7 @@ using Moq;
 using Xunit;
 
 using BrainBurst.BLL.Services;
-using BrainBurst.BLL.Abstractions;
+using BrainBurst.DAL.Abstractions;
 using BrainBurst.BLL.Interfaces;
 using BrainBurst.DAL.Entities;
 using BrainBurst.BLL.Enums;

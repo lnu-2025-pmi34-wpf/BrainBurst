@@ -21,35 +21,28 @@
 
         <TextBlock Grid.Row="1" Text="Архів тестів" FontSize="28" FontWeight="Bold" Margin="0,10,0,20"/>
 
-        <ScrollViewer Grid.Row="2" VerticalScrollBarVisibility="Auto">
-            <StackPanel>
-
-                
-                <Button Style="{StaticResource ArchiveItemButton}" Click="ResultItem_Click">
-                    <StackPanel Orientation="Horizontal">
-                        <TextBlock Text="Тест: "/>
-                        <TextBlock Text="Дискретна математика" Foreground="#555"/>
-                        <TextBlock Text=" - 80%" FontWeight="Bold" Margin="10,0,0,0"/>
-                    </StackPanel>
-                </Button>
-
-                <Button Style="{StaticResource ArchiveItemButton}" Click="ResultItem_Click">
-                    <StackPanel Orientation="Horizontal">
-                        <TextBlock Text="Тест: "/>
-                        <TextBlock Text="Психологія" Foreground="#555"/>
-                        <TextBlock Text=" - 95%" FontWeight="Bold" Margin="10,0,0,0"/>
-                    </StackPanel>
-                </Button>
-
-                <Button Style="{StaticResource ArchiveItemButton}" Click="ResultItem_Click">
-                    <StackPanel Orientation="Horizontal">
-                        <TextBlock Text="Тест: "/>
-                        <TextBlock Text="Англійська мова" Foreground="#555"/>
-                        <TextBlock Text=" - 70%" FontWeight="Bold" Margin="10,0,0,0"/>
-                    </StackPanel>
-                </Button>
-
-            </StackPanel>
+       <ScrollViewer Grid.Row="2" VerticalScrollBarVisibility="Auto">
+            
+            <ItemsControl x:Name="ArchiveItemsControl">
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate>
+                        <Button Style="{StaticResource ArchiveItemButton}" 
+                                Click="ResultItem_Click"
+                                Tag="{Binding TestResultId}"> <StackPanel Orientation="Horizontal">
+                                <TextBlock Text="Тест: "/>
+                                <TextBlock Text="{Binding TestTitle}" Foreground="#555"/>
+                                <TextBlock FontWeight="Bold" Margin="10,0,0,0">
+                                    <Run Text="{Binding CorrectAnswersPercent, StringFormat='- {0:F0}%'}"/>
+                                    <Run Text="{Binding Points, StringFormat='(Бали: {0})'}"/>
+                                </TextBlock>
+                                <TextBlock Text="{Binding TestDate, StringFormat='{} ({0:dd.MM.yyyy})'}" 
+                                           Foreground="Gray" Margin="10,0,0,0"/>
+                            </StackPanel>
+                        </Button>
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
+            
         </ScrollViewer>
 
     </Grid>

@@ -25,5 +25,13 @@
     <Resource Include="Assets\settings.png" />
     <Resource Include="Assets\tests.png" />
   </ItemGroup>
+<ItemGroup>
+  <ProjectReference Include="..\BrainBurst.BLL\BrainBurst.BLL.csproj" />
+  <ProjectReference Include="..\BrainBurst.DAL\BrainBurst.DAL.csproj" />
+</ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="Microsoft.EntityFrameworkCore" Version="9.0.10" />
+    <PackageReference Include="Microsoft.Extensions.Hosting" Version="9.0.10" />
+  </ItemGroup>
 
 </Project>

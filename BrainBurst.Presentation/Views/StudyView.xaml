@@ -18,11 +18,11 @@
 
             <Border x:Name="QuestionCard" Style="{StaticResource StudyCard}">
                 <Grid>
-                    <TextBlock Text="Дискретна математика" 
+                    <TextBlock x:Name="QuestionTopic" Text="Дискретна математика" 
                                FontSize="16" FontWeight="Bold" Foreground="#D85A5A"
                                VerticalAlignment="Top" HorizontalAlignment="Left"/>
 
-                    <TextBlock Text="Що таке граф?" 
+                    <TextBlock x:Name="QuestionText" Text="Завантаження питання..."
                                FontSize="36" FontWeight="Bold" 
                                HorizontalAlignment="Center" VerticalAlignment="Center"
                                TextWrapping="Wrap"/>
@@ -39,7 +39,7 @@
                     Background="#F0FFF0">
 
                 <Grid>
-                    <TextBlock Text="Дискретна математика" 
+                    <TextBlock x:Name="AnswerTopic" Text="Дискретна математика" 
                                FontSize="16" FontWeight="Bold" Foreground="#D85A5A"
                                VerticalAlignment="Top" HorizontalAlignment="Left"/>
                     <TextBlock x:Name="ResultIcon" Text="✅" FontSize="60" 

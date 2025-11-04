@@ -1,24 +1,32 @@
 ﻿using System.Windows;
+using Microsoft.Extensions.DependencyInjection; // Додаємо для доступу до DI
 
 namespace BrainBurst.Presentation
 {
     public partial class MainWindow : Window
     {
-        public MainWindow()
+        // Видаляємо створення вікон вручну, отримуємо їх через DI
+        private readonly IServiceProvider _serviceProvider;
+
+        public MainWindow(IServiceProvider serviceProvider) // Отримуємо IServiceProvider
         {
             InitializeComponent();
+            _serviceProvider = serviceProvider;
         }
 
+        // ... (LoginButton_Click та RegisterButton_Click)
         private void RegisterButton_Click(object sender, RoutedEventArgs e)
         {
-            RegistrationWindow registrationWindow = new RegistrationWindow();
+            // Отримуємо вікно з DI
+            RegistrationWindow registrationWindow = _serviceProvider.GetRequiredService<RegistrationWindow>();
             this.Hide();
 
             bool? result = registrationWindow.ShowDialog();
 
             if (result == true)
             {
-                ProfileWindow profileWindow = new ProfileWindow();
+                // Отримуємо ProfileWindow з DI
+                ProfileWindow profileWindow = _serviceProvider.GetRequiredService<ProfileWindow>();
                 profileWindow.Show();
 
                 this.Close();
@@ -31,14 +39,16 @@ namespace BrainBurst.Presentation
 
         private void LoginButton_Click(object sender, RoutedEventArgs e)
         {
-            LoginWindow loginWindow = new LoginWindow();
+            // Отримуємо вікно з DI
+            LoginWindow loginWindow = _serviceProvider.GetRequiredService<LoginWindow>();
             this.Hide();
 
             bool? result = loginWindow.ShowDialog();
 
             if (result == true)
             {
-                ProfileWindow profileWindow = new ProfileWindow();
+                // Отримуємо ProfileWindow з DI
+                ProfileWindow profileWindow = _serviceProvider.GetRequiredService<ProfileWindow>();
                 profileWindow.Show();
 
                 this.Close();

@@ -2,20 +2,28 @@
 using System.Windows.Controls;
 using BrainBurst.Presentation.Views;
 using System.Windows.Navigation;
+using System;
+using Microsoft.Extensions.DependencyInjection; // Додаємо для DI
 
 namespace BrainBurst.Presentation.Views
 {
     public partial class SettingsView : UserControl
     {
-        public SettingsView()
+        private readonly IServiceProvider _serviceProvider;
+
+        // Конструктор вже був оновлений на кроці 15, додаємо using для DI
+        public SettingsView(IServiceProvider serviceProvider)
         {
             InitializeComponent();
+            _serviceProvider = serviceProvider;
         }
 
         private void LogoutButton_Click(object sender, RoutedEventArgs e)
         {
-            MainWindow mainWindow = new MainWindow();
+            // Отримуємо MainWindow з DI-контейнера
+            MainWindow mainWindow = _serviceProvider.GetRequiredService<MainWindow>();
             Window currentWindow = Window.GetWindow(this);
+            
             mainWindow.Show();
 
             if (currentWindow != null)
@@ -28,7 +36,9 @@ namespace BrainBurst.Presentation.Views
         {
             if (NavigationService.GetNavigationService(this) != null)
             {
-                NavigationService.GetNavigationService(this).Navigate(new ChangePasswordView());
+                // ВИПРАВЛЕНО: Створюємо ChangePasswordView через DI
+                var changePasswordView = _serviceProvider.GetRequiredService<ChangePasswordView>();
+                NavigationService.GetNavigationService(this).Navigate(changePasswordView);
             }
         }
 
@@ -36,7 +46,9 @@ namespace BrainBurst.Presentation.Views
         {
             if (NavigationService.GetNavigationService(this) != null)
             {
-                NavigationService.GetNavigationService(this).Navigate(new DeleteAccountView());
+                // ВИПРАВЛЕНО: Створюємо DeleteAccountView через DI
+                var deleteAccountView = _serviceProvider.GetRequiredService<DeleteAccountView>();
+                NavigationService.GetNavigationService(this).Navigate(deleteAccountView);
             }
         }
     }

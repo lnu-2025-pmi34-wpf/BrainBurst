@@ -15,14 +15,17 @@
                     Click="BackButton_Click"
                     Margin="0,0,0,10"/>
 
-            <TextBlock Text="Створення нового тесту" FontSize="28" FontWeight="Bold" Margin="0,0,0,20"/>
+<TextBlock Text="Створення нового тесту" FontSize="28" FontWeight="Bold" Margin="0,0,0,20"/>
 
             <TextBlock Text="Назва тесту" FontWeight="Bold" Margin="0,0,0,5" Foreground="#555"/>
-            <TextBox Style="{StaticResource InputTextBox}" Tag="Назва вашого тесту (напр., 'Тест з математики')" Text=""/>
+            <TextBox x:Name="TestNameTextBox" 
+                     Style="{StaticResource InputTextBox}" 
+                     Tag="Назва вашого тесту (напр., 'Тест з математики')" Text=""/>
 
             <TextBlock Text="Оберіть колоди карток" FontWeight="Bold" Margin="0,10,0,5" Foreground="#555"/>
 
-            <ListBox SelectionMode="Multiple"
+            <ListBox x:Name="DeckListBox" 
+                     SelectionMode="Multiple"
                      ItemContainerStyle="{StaticResource DeckSelectionListBoxItemStyle}"
                      BorderThickness="0"
                      Background="Transparent">
@@ -31,40 +34,20 @@
                         <WrapPanel/>
                     </ItemsPanelTemplate>
                 </ListBox.ItemsPanel>
-
-                <ListBoxItem>
-                    <StackPanel>
-                        <TextBlock Text="дискретна математика" Style="{StaticResource AwardTitleText}"/>
-                        <TextBlock Text="створено: 13/04/2023" Style="{StaticResource AwardSubText}" Margin="0,10,0,0"/>
-                    </StackPanel>
-                </ListBoxItem>
-                <ListBoxItem>
-                    <StackPanel>
-                        <TextBlock Text="математичний аналіз" Style="{StaticResource AwardTitleText}"/>
-                        <TextBlock Text="створено: 24/03/2023" Style="{StaticResource AwardSubText}" Margin="0,10,0,0"/>
-                    </StackPanel>
-                </ListBoxItem>
-                <ListBoxItem>
-                    <StackPanel>
-                        <TextBlock Text="психологія" Style="{StaticResource AwardTitleText}"/>
-                        <TextBlock Text="створено: 15/01/2025" Style="{StaticResource AwardSubText}" Margin="0,10,0,0"/>
-                    </StackPanel>
-                </ListBoxItem>
-                <ListBoxItem>
-                    <StackPanel>
-                        <TextBlock Text="англійська мова" Style="{StaticResource AwardTitleText}"/>
-                        <TextBlock Text="створено: 01/02/2021" Style="{StaticResource AwardSubText}" Margin="0,10,0,0"/>
-                    </StackPanel>
-                </ListBoxItem>
-                <ListBoxItem>
-                    <StackPanel>
-                        <TextBlock Text="програмування" Style="{StaticResource AwardTitleText}"/>
-                        <TextBlock Text="створено: 03/03/2024" Style="{StaticResource AwardSubText}" Margin="0,10,0,0"/>
-                    </StackPanel>
-                </ListBoxItem>
-
+                
+                <ListBox.ItemTemplate>
+                    <DataTemplate>
+                         <StackPanel>
+                            <TextBlock Text="{Binding TagsStr}" Style="{StaticResource AwardTitleText}"/> 
+                            <TextBlock Text="{Binding CreatedAt, StringFormat='створено: {0:dd/MM/yyyy}'}" Style="{StaticResource AwardSubText}" Margin="0,10,0,0"/>
+                         </StackPanel>
+                    </DataTemplate>
+                </ListBox.ItemTemplate>
             </ListBox>
-            <Button Content="Створити тест" 
+            
+            <TextBlock x:Name="StatusText" Margin="0,10,0,0" Foreground="Red" HorizontalAlignment="Right" FontWeight="SemiBold"/>
+
+            <Button Content="Створити тест"
                     Style="{StaticResource PrimaryButton}"
                     Width="300"
                     Margin="0,30,0,0"
