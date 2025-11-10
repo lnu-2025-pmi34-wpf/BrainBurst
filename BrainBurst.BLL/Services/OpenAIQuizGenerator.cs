@@ -11,7 +11,7 @@ namespace BrainBurst.BLL.Services
     public sealed partial class OpenAIQuizGenerator : IQuizGenerator
     {
         // УВАГА: Ключ має бути завантажений зі змінних середовища!
-        private const string ApiKey = 
+        private const string ApiKey =
         private const string SystemPrompt = 
             "Ти — експерт з генерації навчальних флеш-карток. Згенеруй список флеш-карток (питання/відповідь/теги) на основі наданого тексту. " +
             "Використовуй формат JSON-масиву з об'єктами { \"Question\": \"...\", \"Answer\": \"...\", \"Tags\": [\"Tag1\", \"Tag2\"] }. " +

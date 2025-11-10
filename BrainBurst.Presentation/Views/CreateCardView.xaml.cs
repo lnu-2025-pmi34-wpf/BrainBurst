@@ -6,13 +6,13 @@ using System;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Windows.Media;
+using System.Threading; // Додано для CancellationToken
+using System.Collections.Generic; // Додано для List<T>
 
 namespace BrainBurst.Presentation.Views
 {
     public partial class CreateCardView : UserControl
     {
-        // УСУНЕНО: private const int CurrentUserId = 1; 
-
         private readonly IFlashcardService _flashcardService;
         private readonly IAuthContext _authContext; // <--- ДОДАНО ПОЛЕ
 
@@ -36,12 +36,22 @@ namespace BrainBurst.Presentation.Views
         {
             string question = QuestionTextBox.Text;
             string answer = AnswerTextBox.Text;
-            string tagsInput = TagsTextBox.Text;
+            string tagsInput = TagsTextBox.Text?.Trim(); // Одразу обрізаємо пробіли з країв
 
-            // Парсимо теги: розділяємо за комою, видаляємо пробіли та пусті рядки
-            var tags = tagsInput.Split(',', StringSplitOptions.RemoveEmptyEntries)
-                                 .Select(t => t.Trim())
-                                 .Where(t => !string.IsNullOrWhiteSpace(t));
+            // Нова, більш надійна логіка парсингу тегів
+            IEnumerable<string> tags;
+            if (string.IsNullOrWhiteSpace(tagsInput))
+            {
+                tags = Array.Empty<string>();
+            }
+            else
+            {
+                // Розділяємо за комами, крапками з комою або навіть пробілами, якщо хочете (тут тільки коми для початку)
+                tags = tagsInput.Split(new[] { ',' }, StringSplitOptions.RemoveEmptyEntries)
+                                .Select(t => t.Trim())
+                                .Where(t => !string.IsNullOrWhiteSpace(t))
+                                .ToList(); // Матеріалізуємо список одразу
+            }
 
             StatusText.Text = "";
             StatusText.Foreground = Brushes.Red;
@@ -58,16 +68,18 @@ namespace BrainBurst.Presentation.Views
                 // Очищаємо поля після успішного збереження
                 QuestionTextBox.Text = "";
                 AnswerTextBox.Text = "";
-                TagsTextBox.Text = "";
+                // TagsTextBox.Text = ""; // Можна не очищати тему, якщо користувач хоче створити кілька карток підряд в одну тему
             }
             catch (ArgumentException ex)
             {
                 // Помилка валідації (наприклад, порожнє питання чи відповідь)
                 StatusText.Text = ex.Message;
             }
-            catch (Exception)
+            catch (Exception ex)
             {
-                StatusText.Text = "Непередбачена помилка. Не вдалося зберегти картку.";
+                // Інші помилки (наприклад, проблеми з БД або мережею)
+                // ТЕПЕР ПОКАЗУЄ ВНУТРІШНЮ ПОМИЛКУ БД
+                StatusText.Text = $"Помилка: {ex.Message}";
             }
         }
     }

@@ -3,7 +3,7 @@ using System.Windows.Controls;
 using System.Windows.Navigation;
 using System;
 using Microsoft.Extensions.DependencyInjection;
-using BrainBurst.BLL.Interfaces;
+using BrainBurst.BLL.Interfaces; // Додано для IAuthContext
 using System.Threading.Tasks;
 using System.Threading;
 using System.Linq;
@@ -15,8 +15,7 @@ namespace BrainBurst.Presentation.Views
 {
     public partial class CreateTestView : UserControl
     {
-        // 🚨 ТИМЧАСОВО: Використовуємо фіктивний ID
-        private const int CurrentUserId = 1; 
+        // УСУНЕНО: private const int CurrentUserId = 1; 
         
         // Внутрішній DTO для відображення колод
         private class DeckItem
@@ -28,16 +27,18 @@ namespace BrainBurst.Presentation.Views
 
         private readonly IFlashcardService _flashcardService;
         private readonly ITestService _testService;
+        private readonly IAuthContext _authContext; // <--- ДОДАНО ПОЛЕ
         
         // Зберігаємо всі картки, щоб потім відфільтрувати їх за обраними "колодами"
         private IReadOnlyList<FlashcardDTO> AllCards = Array.Empty<FlashcardDTO>();
 
-        // Оновлений конструктор для DI
-        public CreateTestView(IFlashcardService flashcardService, ITestService testService)
+        // ОНОВЛЕНО: Конструктор приймає IAuthContext
+        public CreateTestView(IFlashcardService flashcardService, ITestService testService, IAuthContext authContext)
         {
             InitializeComponent();
             _flashcardService = flashcardService;
             _testService = testService;
+            _authContext = authContext; // <--- ІНІЦІАЛІЗОВАНО
             
             // Завантажуємо дані при завантаженні UI
             this.Loaded += CreateTestView_Loaded;
@@ -56,7 +57,8 @@ namespace BrainBurst.Presentation.Views
                 StatusText.Text = "Завантаження карток...";
                 StatusText.Foreground = Brushes.Gray;
                 
-                AllCards = await _flashcardService.ListAsync(CurrentUserId, null, CancellationToken.None);
+                // ВИКОРИСТАННЯ: CurrentUserId замінено на _authContext.CurrentUserId
+                AllCards = await _flashcardService.ListAsync(_authContext.CurrentUserId, null, CancellationToken.None);
                 
                 // Групуємо картки за першим тегом (імітація колод)
                 var decks = AllCards
@@ -123,7 +125,8 @@ namespace BrainBurst.Presentation.Views
                 }
                 
                 // 2. Генеруємо тест
-                await _testService.GenerateFromFlashcardsAsync(CurrentUserId, flashcardIds, CancellationToken.None);
+                // ВИКОРИСТАННЯ: CurrentUserId замінено на _authContext.CurrentUserId
+                await _testService.GenerateFromFlashcardsAsync(_authContext.CurrentUserId, flashcardIds, CancellationToken.None);
 
                 // 3. Успіх: повертаємось на попередній екран (TestsView).
                 StatusText.Text = "Тест успішно згенеровано!";

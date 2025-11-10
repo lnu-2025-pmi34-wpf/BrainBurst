@@ -15,7 +15,7 @@
                     Click="BackButton_Click"
                     Margin="0,0,0,10"/>
 
-<TextBlock Text="Створення нового тесту" FontSize="28" FontWeight="Bold" Margin="0,0,0,20"/>
+            <TextBlock Text="Створення нового тесту" FontSize="28" FontWeight="Bold" Margin="0,0,0,20"/>
 
             <TextBlock Text="Назва тесту" FontWeight="Bold" Margin="0,0,0,5" Foreground="#555"/>
             <TextBox x:Name="TestNameTextBox" 

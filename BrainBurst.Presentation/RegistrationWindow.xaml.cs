@@ -1,5 +1,5 @@
 ﻿using System.Windows;
-using BrainBurst.BLL.Interfaces; // Додаємо для IAuthService
+using BrainBurst.BLL.Interfaces; 
 using System;
 using System.Threading.Tasks;
 using System.Windows.Media;
@@ -9,12 +9,14 @@ namespace BrainBurst.Presentation
     public partial class RegistrationWindow : Window
     {
         private readonly IAuthService _authService;
+        private readonly IAuthContext _authContext; // <--- ДОДАНО ПОЛЕ
 
         // Оновлюємо конструктор для отримання залежностей
-        public RegistrationWindow(IAuthService authService)
+        public RegistrationWindow(IAuthService authService, IAuthContext authContext) // <--- ДОДАНО IAuthContext
         {
             InitializeComponent();
             _authService = authService;
+            _authContext = authContext; // <--- ІНІЦІАЛІЗАЦІЯ
         }
 
         private void BackButton_Click(object sender, RoutedEventArgs e)
@@ -35,7 +37,10 @@ namespace BrainBurst.Presentation
             try
             {
                 // ВИКЛИК РЕАЛЬНОЇ ЛОГІКИ РЕЄСТРАЦІЇ
-                await _authService.RegisterAsync(email, password, fullName, CancellationToken.None);
+                var userDto = await _authService.RegisterAsync(email, password, fullName, CancellationToken.None); // <--- ЗБЕРЕЖЕНО DTO
+
+                // ВСТАНОВЛЕННЯ КОНТЕКСТУ ПІСЛЯ УСПІШНОЇ РЕЄСТРАЦІЇ
+                _authContext.SetCurrentUser(userDto); // <--- ВИКЛИК SetCurrentUser
 
                 // УСПІШНА РЕЄСТРАЦІЯ
                 this.DialogResult = true;
@@ -46,9 +51,10 @@ namespace BrainBurst.Presentation
                 // Помилка валідації (наприклад, некоректний email, короткий пароль, email вже існує)
                 StatusText.Text = ex.Message;
             }
-            catch (Exception ex) // <-- Додаємо змінну ex
+            catch (Exception ex) // <-- Додано змінну ex, щоб показати внутрішню помилку
             {
                 // Інші помилки (наприклад, проблеми з БД або мережею)
+                // ТЕПЕР ПОКАЗУЄ ВНУТРІШНЮ ПОМИЛКУ БД
                 StatusText.Text = $"Непередбачена помилка реєстрації: {ex.InnerException?.Message ?? ex.Message}. Спробуйте пізніше.";
             }
         }

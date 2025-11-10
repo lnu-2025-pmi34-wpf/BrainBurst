@@ -2,7 +2,7 @@
 using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Navigation;
-using BrainBurst.BLL.Interfaces; // Додаємо для IFlashcardService та IAuthContext
+using BrainBurst.BLL.Interfaces;
 using System;
 using Microsoft.Extensions.DependencyInjection;
 using System.Threading.Tasks;
@@ -14,13 +14,10 @@ namespace BrainBurst.Presentation.Views
 {
     public partial class CardsView : UserControl
     {
-        // 🚨 Більше не використовуємо: private const int CurrentUserId = 1; 
-
         private readonly IServiceProvider _serviceProvider;
         private readonly IFlashcardService _flashcardService;
-        private readonly IAuthContext _authContext; // <--- ДОДАНО ПОЛЕ
+        private readonly IAuthContext _authContext;
 
-        // Внутрішній DTO для відображення колод
         private class DeckItem
         {
             public string DeckTag { get; set; } = string.Empty; 
@@ -28,30 +25,36 @@ namespace BrainBurst.Presentation.Views
             public DateTime CreatedAt { get; set; }
         }
 
-        // ОНОВЛЕНО: Конструктор приймає IAuthContext
         public CardsView(IServiceProvider serviceProvider, IFlashcardService flashcardService, IAuthContext authContext)
         {
             InitializeComponent();
             _serviceProvider = serviceProvider;
             _flashcardService = flashcardService;
-            _authContext = authContext; // <--- ІНІЦІАЛІЗОВАНО
+            _authContext = authContext;
             
-            this.Loaded += CardsView_Loaded;
+            // Змінюємо підписку: тепер реагуємо на зміну видимості, а не лише на перше завантаження
+            this.IsVisibleChanged += CardsView_IsVisibleChanged;
         }
-        
-        private void CardsView_Loaded(object sender, RoutedEventArgs e)
+
+        // Цей метод спрацьовує щоразу, коли сторінка стає видимою (наприклад, при поверненні назад)
+        private void CardsView_IsVisibleChanged(object sender, DependencyPropertyChangedEventArgs e)
         {
-            LoadCardsAsync(); 
+            if ((bool)e.NewValue == true)
+            {
+                // Якщо сторінка стала видимою, перезавантажуємо дані
+                LoadCardsAsync();
+            }
         }
+
+        // Старий метод Loaded більше не потрібен, його можна видалити
+        // private void CardsView_Loaded(object sender, RoutedEventArgs e) { ... }
 
         private async Task LoadCardsAsync(string? search = null)
         {
              try
             {
-                // ВИКОРИСТАННЯ: CurrentUserId замінено на _authContext.CurrentUserId
                 var allCards = await _flashcardService.ListAsync(_authContext.CurrentUserId, search, CancellationToken.None);
 
-                // Групуємо картки за першим тегом (імітація колод)
                 var groupedDecks = allCards
                     .Where(c => c.Tags.Any())
                     .GroupBy(c => c.Tags.First()) 
@@ -64,7 +67,6 @@ namespace BrainBurst.Presentation.Views
                     .OrderByDescending(d => d.CreatedAt)
                     .ToList();
                 
-                // ... (далі йде існуючий код відображення)
                 DecksItemsControl.ItemsSource = groupedDecks;
                 
                 if (!allCards.Any())
@@ -76,9 +78,10 @@ namespace BrainBurst.Presentation.Views
                     NoCardsMessage.Visibility = Visibility.Collapsed;
                 }
             }
-            catch (Exception)
+            catch (Exception ex)
             {
-                NoCardsMessage.Text = "Помилка завантаження карток.";
+                // MessageBox.Show($"Помилка завантаження карток: {ex.Message}", "Помилка");
+                NoCardsMessage.Text = "Помилка завантаження.";
                 NoCardsMessage.Visibility = Visibility.Visible;
             }
         }
@@ -98,18 +101,32 @@ namespace BrainBurst.Presentation.Views
                 
                 if (deckItem != null && NavigationService.GetNavigationService(this) != null)
                 {
-                    var studyView = _serviceProvider.GetRequiredService<StudyView>();
-                    NavigationService.GetNavigationService(this).Navigate(studyView);
+                    try 
+                    {
+                        var studyView = _serviceProvider.GetRequiredService<StudyView>();
+                        NavigationService.GetNavigationService(this).Navigate(studyView);
+                    }
+                    catch (Exception ex)
+                    {
+                        MessageBox.Show($"Помилка переходу до навчання: {ex.Message}", "Помилка");
+                    }
                 }
             }
         }
 
         private void AddButton_Click(object sender, RoutedEventArgs e)
         {
-            if (NavigationService.GetNavigationService(this) != null)
+            try
             {
-                var createCardView = _serviceProvider.GetRequiredService<CreateCardView>();
-                NavigationService.GetNavigationService(this).Navigate(createCardView);
+                if (NavigationService.GetNavigationService(this) != null)
+                {
+                    var createCardView = _serviceProvider.GetRequiredService<CreateCardView>();
+                    NavigationService.GetNavigationService(this).Navigate(createCardView);
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Критична помилка при переході до створення картки:\n\n{ex.Message}\n\nInner Exception: {ex.InnerException?.Message}", "Знайдено помилку!");
             }
         }
     }
