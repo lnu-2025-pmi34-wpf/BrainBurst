@@ -1,6 +1,6 @@
+using System;
 using BrainBurst.BLL.DTO;
 using BrainBurst.BLL.Interfaces;
-using System;
 
 namespace BrainBurst.BLL.Services;
 
@@ -9,17 +9,17 @@ public class AuthContext : IAuthContext
 {
     private UserDTO? _currentUser;
 
-    public int CurrentUserId => _currentUser?.Id ?? 0;
+    public int CurrentUserId => this._currentUser?.Id ?? 0;
 
-    public UserDTO? CurrentUser => _currentUser;
+    public UserDTO? CurrentUser => this._currentUser;
 
     public void SetCurrentUser(UserDTO user)
     {
-        _currentUser = user ?? throw new ArgumentNullException(nameof(user));
+        this._currentUser = user ?? throw new ArgumentNullException(nameof(user));
     }
 
     public void ClearContext()
     {
-        _currentUser = null;
+        this._currentUser = null;
     }
 }

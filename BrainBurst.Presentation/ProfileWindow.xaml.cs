@@ -1,25 +1,26 @@
-﻿using BrainBurst.Presentation.Views;
-using System.Windows;
-using System.Windows.Controls;
-using System;
-using Microsoft.Extensions.DependencyInjection; // Додаємо для DI
-using Microsoft.Extensions.DependencyInjection; // Додаємо для DI
-namespace BrainBurst.Presentation
+﻿namespace BrainBurst.Presentation
 {
+    using System;
+    using System.Windows;
+    using System.Windows.Controls;
+    using BrainBurst.Presentation.Views;
+    using Microsoft.Extensions.DependencyInjection; // Додаємо для DI
+    using Microsoft.Extensions.DependencyInjection; // Додаємо для DI
+
     public partial class ProfileWindow : Window
     {
         private readonly IServiceProvider _serviceProvider;
 
         // Отримуємо IServiceProvider через DI
-      public ProfileWindow(IServiceProvider serviceProvider)
+        public ProfileWindow(IServiceProvider serviceProvider)
         {
-            InitializeComponent();
-            _serviceProvider = serviceProvider;
-            
+            this.InitializeComponent();
+            this._serviceProvider = serviceProvider;
+
             try
             {
                 // Запускаємо стартовий View, отримуючи його з DI
-                MainFrame.Navigate(_serviceProvider.GetRequiredService<ProfileView>());
+                this.MainFrame.Navigate(this._serviceProvider.GetRequiredService<ProfileView>());
             }
             catch (Exception ex)
             {
@@ -28,30 +29,31 @@ namespace BrainBurst.Presentation
                 Application.Current.Shutdown(); // Закриваємо додаток після повідомлення
             }
         }
+
         private void ProfileButton_Click(object sender, RoutedEventArgs e)
         {
-            MainFrame.Navigate(_serviceProvider.GetRequiredService<ProfileView>());
+            this.MainFrame.Navigate(this._serviceProvider.GetRequiredService<ProfileView>());
         }
 
         private void CardsButton_Click(object sender, RoutedEventArgs e)
         {
-            MainFrame.Navigate(_serviceProvider.GetRequiredService<CardsView>());
+            this.MainFrame.Navigate(this._serviceProvider.GetRequiredService<CardsView>());
         }
 
         private void TestsButton_Click(object sender, RoutedEventArgs e)
         {
-            MainFrame.Navigate(_serviceProvider.GetRequiredService<TestsView>());
+            this.MainFrame.Navigate(this._serviceProvider.GetRequiredService<TestsView>());
         }
 
         private void AwardsButton_Click(object sender, RoutedEventArgs e)
         {
-            MainFrame.Navigate(_serviceProvider.GetRequiredService<AwardsView>());
+            this.MainFrame.Navigate(this._serviceProvider.GetRequiredService<AwardsView>());
         }
 
         private void SettingsButton_Click(object sender, RoutedEventArgs e)
         {
             // Виправляємо помилку CS7036: тепер SettingsView створюється через DI
-            MainFrame.Navigate(_serviceProvider.GetRequiredService<SettingsView>());
+            this.MainFrame.Navigate(this._serviceProvider.GetRequiredService<SettingsView>());
         }
     }
 }

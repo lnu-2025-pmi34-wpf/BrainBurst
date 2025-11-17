@@ -1,11 +1,11 @@
-﻿using System.Windows;
-using BrainBurst.BLL.Interfaces; // Додаємо для IAuthService
-using System;
-using System.Threading.Tasks;
-using System.Windows.Media;
-
-namespace BrainBurst.Presentation
+﻿namespace BrainBurst.Presentation
 {
+    using System;
+    using System.Threading.Tasks;
+    using System.Windows;
+    using System.Windows.Media;
+    using BrainBurst.BLL.Interfaces;
+
     public partial class LoginWindow : Window
     {
         private readonly IAuthService _authService;
@@ -14,9 +14,9 @@ namespace BrainBurst.Presentation
         // Оновлюємо конструктор для отримання залежностей
         public LoginWindow(IAuthService authService, IServiceProvider serviceProvider)
         {
-            InitializeComponent();
-            _authService = authService;
-            _serviceProvider = serviceProvider;
+            this.InitializeComponent();
+            this._authService = authService;
+            this._serviceProvider = serviceProvider;
         }
 
         private void BackButton_Click(object sender, RoutedEventArgs e)
@@ -27,16 +27,16 @@ namespace BrainBurst.Presentation
 
         private async void Login_Click(object sender, RoutedEventArgs e)
         {
-            string email = EmailTextBox.Text;
-            string password = PasswordInputBox.Password;
+            string email = this.EmailTextBox.Text;
+            string password = this.PasswordInputBox.Password;
 
-            StatusText.Text = "";
-            StatusText.Foreground = Brushes.Red;
+            this.StatusText.Text = string.Empty;
+            this.StatusText.Foreground = Brushes.Red;
 
             try
             {
                 // ВИКЛИК РЕАЛЬНОЇ ЛОГІКИ АУТЕНТИФІКАЦІЇ
-                await _authService.LoginAsync(email, password, CancellationToken.None);
+                await this._authService.LoginAsync(email, password, CancellationToken.None);
 
                 // УСПІШНИЙ ВХІД
                 this.DialogResult = true;
@@ -45,17 +45,17 @@ namespace BrainBurst.Presentation
             catch (ArgumentException ex)
             {
                 // Помилка валідації (наприклад, некоректний email/пароль)
-                StatusText.Text = ex.Message;
+                this.StatusText.Text = ex.Message;
             }
             catch (KeyNotFoundException ex)
             {
                 // Помилка, коли користувача не знайдено
-                StatusText.Text = ex.Message;
+                this.StatusText.Text = ex.Message;
             }
             catch (Exception)
             {
                 // Інші помилки (наприклад, проблеми з БД або мережею)
-                StatusText.Text = "Непередбачена помилка входу. Спробуйте пізніше.";
+                this.StatusText.Text = "Непередбачена помилка входу. Спробуйте пізніше.";
             }
         }
     }

@@ -3,16 +3,16 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.13.35806.99
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Task3", "Task3\Task3.csproj", "{A178A3B5-287F-4A00-BC8A-0A986DF9C099}"
-EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{8EC462FD-D22E-90A8-E5CE-7E832BA40C5D}"
 	ProjectSection(SolutionItems) = preProject
+		.editorconfig = .editorconfig
 		.gitignore = .gitignore
 	EndProjectSection
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BrainBurst.DAL", "BrainBurst.DAL\BrainBurst.DAL.csproj", "{F16E0A25-9928-4829-A4F3-1BDC5EC897AD}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BrainBurst.Presentation", "BrainBurst.Presentation\BrainBurst.Presentation.csproj", "{FCE30E05-6077-4889-BA0E-11E20BF507D7}"
+EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BrainBurst.BLL", "BrainBurst.BLL\BrainBurst.BLL.csproj", "{B974F04D-5B3E-4973-9C94-926287718EC2}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BrainBurst.BLL.Tests", "BrainBurst.BLL.Tests\BrainBurst.BLL.Tests.csproj", "{37B222A3-2E28-4B16-9C6E-989B2B878FFD}"
@@ -23,10 +23,6 @@ Global
 		Release|Any CPU = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{A178A3B5-287F-4A00-BC8A-0A986DF9C099}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{A178A3B5-287F-4A00-BC8A-0A986DF9C099}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{A178A3B5-287F-4A00-BC8A-0A986DF9C099}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{A178A3B5-287F-4A00-BC8A-0A986DF9C099}.Release|Any CPU.Build.0 = Release|Any CPU
 		{F16E0A25-9928-4829-A4F3-1BDC5EC897AD}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{F16E0A25-9928-4829-A4F3-1BDC5EC897AD}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{F16E0A25-9928-4829-A4F3-1BDC5EC897AD}.Release|Any CPU.ActiveCfg = Release|Any CPU

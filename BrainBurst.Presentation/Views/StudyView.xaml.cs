@@ -1,20 +1,20 @@
-﻿using System.Windows;
-using System.Windows.Controls;
-using System.Windows.Input; 
-using System.Windows.Media;
-using BrainBurst.BLL.Interfaces; // Для IFlashcardService
-using BrainBurst.BLL.DTO; // Для FlashcardDTO
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using System;
-
-namespace BrainBurst.Presentation.Views
+﻿namespace BrainBurst.Presentation.Views
 {
+    using System;
+    using System.Collections.Generic;
+    using System.Linq;
+    using System.Threading.Tasks;
+    using System.Windows;
+    using System.Windows.Controls;
+    using System.Windows.Input;
+    using System.Windows.Media;
+    using BrainBurst.BLL.DTO; // Для FlashcardDTO
+    using BrainBurst.BLL.Interfaces; // Для IFlashcardService
+
     public partial class StudyView : UserControl
     {
         // 🚨 ТИМЧАСОВО: Використовуємо фіктивний ID
-        private const int CurrentUserId = 1; 
+        private const int CurrentUserId = 1;
 
         private readonly IFlashcardService _flashcardService;
         private List<FlashcardDTO> _flashcards = new List<FlashcardDTO>();
@@ -23,16 +23,16 @@ namespace BrainBurst.Presentation.Views
         // Оновлюємо конструктор для DI
         public StudyView(IFlashcardService flashcardService)
         {
-            InitializeComponent();
-            _flashcardService = flashcardService;
-            
+            this.InitializeComponent();
+            this._flashcardService = flashcardService;
+
             // Завантажуємо дані після завантаження елемента в UI
-            this.Loaded += StudyView_Loaded; 
+            this.Loaded += this.StudyView_Loaded;
         }
 
         private void StudyView_Loaded(object sender, RoutedEventArgs e)
         {
-            LoadCardsAsync();
+            this.LoadCardsAsync();
         }
 
         private async Task LoadCardsAsync()
@@ -40,91 +40,91 @@ namespace BrainBurst.Presentation.Views
             try
             {
                 // Завантажуємо всі картки користувача
-                _flashcards = (await _flashcardService.ListAsync(CurrentUserId, null, CancellationToken.None)).ToList();
-                
-                if (_flashcards.Any())
+                this._flashcards = (await this._flashcardService.ListAsync(CurrentUserId, null, CancellationToken.None)).ToList();
+
+                if (this._flashcards.Any())
                 {
-                    _currentCardIndex = 0;
-                    DisplayCard(_currentCardIndex);
+                    this._currentCardIndex = 0;
+                    this.DisplayCard(this._currentCardIndex);
                 }
                 else
                 {
                     // Обробка випадку, коли карток немає
-                    QuestionText.Text = "Картки не знайдено. Створіть нову картку!";
+                    this.QuestionText.Text = "Картки не знайдено. Створіть нову картку!";
                 }
-                
-                AnswerTextBox.Focus();
+
+                this.AnswerTextBox.Focus();
             }
             catch (Exception)
             {
-                QuestionText.Text = "Помилка завантаження карток.";
+                this.QuestionText.Text = "Помилка завантаження карток.";
             }
         }
 
         private void DisplayCard(int index)
         {
-            if (index >= 0 && index < _flashcards.Count)
+            if (index >= 0 && index < this._flashcards.Count)
             {
-                var card = _flashcards[index];
-                
+                var card = this._flashcards[index];
+
                 // Встановлюємо текст
-                QuestionText.Text = card.Question; 
-                
+                this.QuestionText.Text = card.Question;
+
                 // Встановлюємо тему (перший тег або дефолт)
-                QuestionTopic.Text = card.Tags.FirstOrDefault() ?? "Загальна колода";
-                AnswerTopic.Text = QuestionTopic.Text;
-                
+                this.QuestionTopic.Text = card.Tags.FirstOrDefault() ?? "Загальна колода";
+                this.AnswerTopic.Text = this.QuestionTopic.Text;
+
                 // Скидаємо UI до режиму "питання"
-                AnswerTextBox.Text = "";
-                QuestionCard.Visibility = Visibility.Visible;
-                AnswerCard.Visibility = Visibility.Collapsed;
-                
-                AnswerTextBox.Focus();
+                this.AnswerTextBox.Text = string.Empty;
+                this.QuestionCard.Visibility = Visibility.Visible;
+                this.AnswerCard.Visibility = Visibility.Collapsed;
+
+                this.AnswerTextBox.Focus();
             }
         }
 
         private void AnswerTextBox_KeyDown(object sender, KeyEventArgs e)
         {
-            if (e.Key == Key.Enter && _flashcards.Any() && QuestionCard.Visibility == Visibility.Visible)
+            if (e.Key == Key.Enter && this._flashcards.Any() && this.QuestionCard.Visibility == Visibility.Visible)
             {
-                string userAnswer = AnswerTextBox.Text;
-                var currentCard = _flashcards[_currentCardIndex];
+                string userAnswer = this.AnswerTextBox.Text;
+                var currentCard = this._flashcards[this._currentCardIndex];
                 string currentCorrectAnswer = currentCard.Answer; // Беремо справжню відповідь
 
-                UserAnswerText.Text = userAnswer;
-                CorrectAnswerText.Text = currentCorrectAnswer;
+                this.UserAnswerText.Text = userAnswer;
+                this.CorrectAnswerText.Text = currentCorrectAnswer;
 
                 // Проста перевірка відповіді (регістронезалежне порівняння)
-                if (userAnswer.Trim().Equals(currentCorrectAnswer.Trim(), StringComparison.OrdinalIgnoreCase)) 
+                if (userAnswer.Trim().Equals(currentCorrectAnswer.Trim(), StringComparison.OrdinalIgnoreCase))
                 {
-                    ResultIcon.Text = "✅";
-                    ResultIcon.Foreground = Brushes.Green;
-                    AnswerCard.Background = (SolidColorBrush)(new BrushConverter().ConvertFrom("#F0FFF0"));
+                    this.ResultIcon.Text = "✅";
+                    this.ResultIcon.Foreground = Brushes.Green;
+                    this.AnswerCard.Background = (SolidColorBrush)(new BrushConverter().ConvertFrom("#F0FFF0"));
                 }
                 else
                 {
-                    ResultIcon.Text = "❌";
-                    ResultIcon.Foreground = Brushes.Red;
-                    AnswerCard.Background = (SolidColorBrush)(new BrushConverter().ConvertFrom("#FFF0F0"));
+                    this.ResultIcon.Text = "❌";
+                    this.ResultIcon.Foreground = Brushes.Red;
+                    this.AnswerCard.Background = (SolidColorBrush)(new BrushConverter().ConvertFrom("#FFF0F0"));
                 }
 
-                QuestionCard.Visibility = Visibility.Collapsed;
-                AnswerCard.Visibility = Visibility.Visible;
+                this.QuestionCard.Visibility = Visibility.Collapsed;
+                this.AnswerCard.Visibility = Visibility.Visible;
             }
         }
 
         private void NextCard_Click(object sender, RoutedEventArgs e)
         {
-            if (!_flashcards.Any()) return;
-            
-            _currentCardIndex++;
-            if (_currentCardIndex >= _flashcards.Count)
+            if (!this._flashcards.Any()) return;
+
+            this._currentCardIndex++;
+            if (this._currentCardIndex >= this._flashcards.Count)
             {
                 // Повертаємося до початку колоди
-                _currentCardIndex = 0; 
+                this._currentCardIndex = 0;
             }
-            
-            DisplayCard(_currentCardIndex);
+
+            this.DisplayCard(this._currentCardIndex);
         }
     }
 }

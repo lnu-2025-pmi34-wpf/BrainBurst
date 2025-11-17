@@ -1,5 +1,6 @@
-using BrainBurst.DAL.Entities;
 using BrainBurst.BLL.Mapping;
+using BrainBurst.DAL.Entities;
+
 namespace BrainBurst.BLL.Services;
 
 public sealed class TestService : ITestService
@@ -13,7 +14,7 @@ public sealed class TestService : ITestService
     public TestService(ITestRepository tests, ITestResultRepository results, IUserRepository users,
                        IFlashcardRepository cards, IRatingService rating)
     {
-        _tests = tests; _results = results; _users = users; _cards = cards; _rating = rating;
+        this._tests = tests; this._results = results; this._users = users; this._cards = cards; this._rating = rating;
     }
 
     public async Task<TestDTO> GenerateFromFlashcardsAsync(int creatorId, IEnumerable<int> flashcardIds, CancellationToken ct)
@@ -21,9 +22,9 @@ public sealed class TestService : ITestService
         if (flashcardIds == null || !flashcardIds.Any())
             throw new ArgumentException("Потрібен хоча б один flashcardId.");
 
-        var test = await _tests.CreateFromFlashcardsAsync(creatorId, flashcardIds, ct);
+        var test = await this._tests.CreateFromFlashcardsAsync(creatorId, flashcardIds, ct);
 
-        var allCards = await _cards.FindAsync(creatorId, null, ct);
+        var allCards = await this._cards.FindAsync(creatorId, null, ct);
         var set = allCards.Where(c => flashcardIds.Contains(c.FlashcardId)).ToList();
 
         return set.ToTestDTO(test.TestId, creatorId);
@@ -31,7 +32,7 @@ public sealed class TestService : ITestService
 
     public async Task<TestDTO?> GetAsync(int id, CancellationToken ct)
     {
-        var t = await _tests.GetAsync(id, ct);
+        var t = await this._tests.GetAsync(id, ct);
         if (t is null) return null;
 
         return new TestDTO
@@ -50,10 +51,10 @@ public sealed class TestService : ITestService
     {
         if (answers.Count == 0) throw new ArgumentException("Відповіді відсутні.");
 
-        var test = await _tests.GetAsync(testId, ct) ?? throw new InvalidOperationException("Тест не знайдено.");
-        var user = await _users.GetByIdAsync(userId, ct);
+        var test = await this._tests.GetAsync(testId, ct) ?? throw new InvalidOperationException("Тест не знайдено.");
+        var user = await this._users.GetByIdAsync(userId, ct);
 
-        var cards = await _cards.FindAsync(test.CreatorId, null, ct);
+        var cards = await this._cards.FindAsync(test.CreatorId, null, ct);
         var cardById = cards.ToDictionary(c => c.FlashcardId);
 
         int correct = 0;
@@ -61,7 +62,7 @@ public sealed class TestService : ITestService
         foreach (var (fid, input) in answers)
         {
             var isCorrect = cardById.TryGetValue(fid, out var fc) &&
-                            string.Equals(fc.Answer?.Trim(), (input ?? "").Trim(), StringComparison.OrdinalIgnoreCase);
+                            string.Equals(fc.Answer?.Trim(), (input ?? string.Empty).Trim(), StringComparison.OrdinalIgnoreCase);
 
             if (isCorrect) correct++;
 
@@ -86,10 +87,10 @@ public sealed class TestService : ITestService
         };
 
 
-        var saved = await _results.AddAsync(tr, qr, ct);
+        var saved = await this._results.AddAsync(tr, qr, ct);
 
         user.Points += points;
-        await _users.UpdateAsync(user, ct);
+        await this._users.UpdateAsync(user, ct);
 
         var dto = saved.ToDTO(qr.Select(q => q.ToDTO()));
         return dto;

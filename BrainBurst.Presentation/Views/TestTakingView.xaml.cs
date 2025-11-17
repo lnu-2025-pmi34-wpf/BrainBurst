@@ -1,29 +1,30 @@
-﻿using System.Collections.Generic;
-using System.Windows;
-using System.Windows.Controls;
-using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Navigation;
-using BrainBurst.BLL.Interfaces; 
-using System;
-using System.Linq;
-using System.Threading.Tasks;
-using System.Threading;
-
-// Додаємо using для TestMistake з того ж простору імен
-using TestMistake = BrainBurst.Presentation.Views.TestMistake; 
+﻿#pragma warning disable SA1200 // Псевдоніми (alias) мають бути поза namespace
+using TestMistake = BrainBurst.Presentation.Views.TestMistake;
+#pragma warning restore SA1200
 
 namespace BrainBurst.Presentation.Views
 {
+    using System;
+    using System.Collections.Generic;
+    using System.Linq;
+    using System.Threading;
+    using System.Threading.Tasks;
+    using System.Windows;
+    using System.Windows.Controls;
+    using System.Windows.Input;
+    using System.Windows.Media;
+    using System.Windows.Navigation;
+    using BrainBurst.BLL.Interfaces;
+
     public partial class TestTakingView : UserControl
     {
         // 🚨 ТИМЧАСОВО: Фіктивний ID для тесту
-        private const int MockTestId = 1001; 
+        private const int MockTestId = 1001;
 
         private readonly ITestService _testService;
         private readonly IServiceProvider _serviceProvider;
-        private readonly IAuthContext _authContext; 
-        
+        private readonly IAuthContext _authContext;
+
         // --- ВИДАЛЕНО ЛОКАЛЬНЕ ВИЗНАЧЕННЯ TestMistake, ВИКОРИСТОВУЄТЬСЯ З TestResultsView.xaml.cs ---
 
         private List<Question> testQuestions;
@@ -37,29 +38,32 @@ namespace BrainBurst.Presentation.Views
         private class Question
         {
             public int FlashcardId { get; set; } // ID картки для SubmitAsync
+
             public string Topic { get; set; }
+
             public string Text { get; set; }
+
             public string Answer { get; set; }
         }
 
         public TestTakingView(ITestService testService, IServiceProvider serviceProvider, IAuthContext authContext)
         {
-            InitializeComponent();
-            
-            _testService = testService;
-            _serviceProvider = serviceProvider;
-            _authContext = authContext;
+            this.InitializeComponent();
 
-            mistakesList = new List<TestMistake>();
+            this._testService = testService;
+            this._serviceProvider = serviceProvider;
+            this._authContext = authContext;
 
-            LoadDummyQuestions(); // Завантажуємо хардкодовані питання
-            LoadQuestion(currentQuestionIndex);
+            this.mistakesList = new List<TestMistake>();
+
+            this.LoadDummyQuestions(); // Завантажуємо хардкодовані питання
+            this.LoadQuestion(this.currentQuestionIndex);
         }
 
         private void LoadDummyQuestions()
         {
             // Використовуємо реальну структуру з FlashcardId
-            testQuestions = new List<Question>
+            this.testQuestions = new List<Question>
             {
                 new Question { FlashcardId = 10, Topic = "Математика", Text = "Скільки буде 2 + 2?", Answer = "4" },
                 new Question { FlashcardId = 11, Topic = "Географія", Text = "Столиця України?", Answer = "київ" },
@@ -69,50 +73,50 @@ namespace BrainBurst.Presentation.Views
 
         private void LoadQuestion(int index)
         {
-            if (index < testQuestions.Count)
+            if (index < this.testQuestions.Count)
             {
-                Question q = testQuestions[index];
-                QuestionTopic.Text = q.Topic;
-                QuestionText.Text = q.Text;
-                QuestionProgress.Text = $"Питання {index + 1} / {testQuestions.Count}";
-                AnswerTopic.Text = q.Topic;
-                CorrectAnswerText.Text = q.Answer;
+                Question q = this.testQuestions[index];
+                this.QuestionTopic.Text = q.Topic;
+                this.QuestionText.Text = q.Text;
+                this.QuestionProgress.Text = $"Питання {index + 1} / {this.testQuestions.Count}";
+                this.AnswerTopic.Text = q.Topic;
+                this.CorrectAnswerText.Text = q.Answer;
 
-                AnswerCard.Visibility = Visibility.Collapsed;
-                QuestionCard.Visibility = Visibility.Visible;
-                AnswerTextBox.Text = "";
-                AnswerTextBox.Focus();
+                this.AnswerCard.Visibility = Visibility.Collapsed;
+                this.QuestionCard.Visibility = Visibility.Visible;
+                this.AnswerTextBox.Text = string.Empty;
+                this.AnswerTextBox.Focus();
             }
         }
 
         private void AnswerTextBox_KeyDown(object sender, KeyEventArgs e)
         {
-            if (e.Key == Key.Enter && QuestionCard.Visibility == Visibility.Visible)
+            if (e.Key == Key.Enter && this.QuestionCard.Visibility == Visibility.Visible)
             {
-                string userAnswer = AnswerTextBox.Text;
-                Question currentQuestion = testQuestions[currentQuestionIndex];
+                string userAnswer = this.AnswerTextBox.Text;
+                Question currentQuestion = this.testQuestions[this.currentQuestionIndex];
                 string correctAnswer = currentQuestion.Answer;
 
                 // 1. Додаємо відповідь користувача до списку
-                userAnswers.Add((currentQuestion.FlashcardId, userAnswer));
+                this.userAnswers.Add((currentQuestion.FlashcardId, userAnswer));
 
-                UserAnswerText.Text = string.IsNullOrWhiteSpace(userAnswer) ? "[Немає відповіді]" : userAnswer;
-                
+                this.UserAnswerText.Text = string.IsNullOrWhiteSpace(userAnswer) ? "[Немає відповіді]" : userAnswer;
+
                 // 2. Логіка порівняння та збору помилок
                 if (userAnswer.ToLower().Trim() == correctAnswer.ToLower().Trim())
                 {
-                    ResultIcon.Text = "✅";
-                    ResultIcon.Foreground = Brushes.Green;
-                    AnswerCard.Background = (SolidColorBrush)(new BrushConverter().ConvertFrom("#F0FFF0"));
+                    this.ResultIcon.Text = "✅";
+                    this.ResultIcon.Foreground = Brushes.Green;
+                    this.AnswerCard.Background = (SolidColorBrush)(new BrushConverter().ConvertFrom("#F0FFF0"));
                 }
                 else
                 {
-                    ResultIcon.Text = "❌";
-                    ResultIcon.Foreground = Brushes.Red;
-                    AnswerCard.Background = (SolidColorBrush)(new BrushConverter().ConvertFrom("#FFF0F0"));
+                    this.ResultIcon.Text = "❌";
+                    this.ResultIcon.Foreground = Brushes.Red;
+                    this.AnswerCard.Background = (SolidColorBrush)(new BrushConverter().ConvertFrom("#FFF0F0"));
 
                     // Зберігаємо помилку для UI TestResultsView
-                    mistakesList.Add(new TestMistake
+                    this.mistakesList.Add(new TestMistake
                     {
                         QuestionText = currentQuestion.Text,
                         UserAnswer = userAnswer,
@@ -120,18 +124,18 @@ namespace BrainBurst.Presentation.Views
                     });
                 }
 
-                QuestionCard.Visibility = Visibility.Collapsed;
-                AnswerCard.Visibility = Visibility.Visible;
+                this.QuestionCard.Visibility = Visibility.Collapsed;
+                this.AnswerCard.Visibility = Visibility.Visible;
             }
         }
 
         private async void NextCard_Click(object sender, RoutedEventArgs e)
         {
-            currentQuestionIndex++;
+            this.currentQuestionIndex++;
 
-            if (currentQuestionIndex < testQuestions.Count)
+            if (this.currentQuestionIndex < this.testQuestions.Count)
             {
-                LoadQuestion(currentQuestionIndex);
+                this.LoadQuestion(this.currentQuestionIndex);
             }
             else
             {
@@ -139,25 +143,25 @@ namespace BrainBurst.Presentation.Views
                 try
                 {
                     // 3. НАДСИЛАННЯ РЕЗУЛЬТАТІВ ЧЕРЕЗ СЕРВІС
-                    var testResultDto = await _testService.SubmitAsync(
-                        MockTestId, 
-                        _authContext.CurrentUserId,
-                        userAnswers, 
+                    var testResultDto = await this._testService.SubmitAsync(
+                        MockTestId,
+                        this._authContext.CurrentUserId,
+                        this.userAnswers,
                         CancellationToken.None);
 
                     // 4. Перехід до результатів
                     if (NavigationService.GetNavigationService(this) != null)
                     {
-                        var totalQuestions = testQuestions.Count;
+                        var totalQuestions = this.testQuestions.Count;
                         var finalMistakes = testResultDto.Questions
                             .Where(q => !q.IsCorrect)
                             .Select(q => new TestMistake
                             {
-                                QuestionText = testQuestions.First(t => t.FlashcardId == q.FlashcardId).Text,
+                                QuestionText = this.testQuestions.First(t => t.FlashcardId == q.FlashcardId).Text,
                                 UserAnswer = q.UserInput,
-                                CorrectAnswer = testQuestions.First(t => t.FlashcardId == q.FlashcardId).Answer,
+                                CorrectAnswer = this.testQuestions.First(t => t.FlashcardId == q.FlashcardId).Answer,
                             }).ToList();
-                            
+
                         // Тепер тип finalMistakes коректно відповідає очікуваному типу TestResultsView
                         NavigationService.GetNavigationService(this).Navigate(new TestResultsView(finalMistakes, totalQuestions));
                     }
@@ -166,7 +170,7 @@ namespace BrainBurst.Presentation.Views
                 {
                     MessageBox.Show($"Помилка надсилання результатів: {ex.Message}", "Помилка");
                     // Якщо сталася помилка, просто повертаємося
-                    StopTest_Click(sender, e);
+                    this.StopTest_Click(sender, e);
                 }
             }
         }

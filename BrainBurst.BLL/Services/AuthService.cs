@@ -1,15 +1,15 @@
-using BrainBurst.DAL.Abstractions; // ВИПРАВЛЕНО
-using BrainBurst.DAL.Entities;
-using BrainBurst.BLL.Mapping;
-using System.Security.Cryptography;
-using System.Text;
-using BrainBurst.BLL.Services;
-
 namespace BrainBurst.BLL.Services
 {
+    using System.Security.Cryptography;
+    using System.Text;
+    using BrainBurst.BLL.Mapping;
+    using BrainBurst.BLL.Services;
+    using BrainBurst.DAL.Abstractions; // ВИПРАВЛЕНО
+    using BrainBurst.DAL.Entities;
+
     // *** УВАГА: У реальному додатку використовуйте BCrypt.Net або схожі бібліотеки! ***
     // ВИПРАВЛЕНО: Прибрано 'private'
-   
+
     // ********************************************************************************
 
     public sealed class AuthService : IAuthService
@@ -19,10 +19,10 @@ namespace BrainBurst.BLL.Services
 
         public AuthService(IUserRepository users, IRatingService rating)
         {
-            _users = users;
-            _rating = rating;
+            this._users = users;
+            this._rating = rating;
         }
-        
+
         // ... (інші методи RegisterAsync та LoginAsync залишаються без змін)
         public async Task<UserDTO> RegisterAsync(string email, string password, string fullName, CancellationToken ct)
         {
@@ -32,7 +32,7 @@ namespace BrainBurst.BLL.Services
             Guard.Text(fullName, nameof(fullName), max: 100);
 
             // 2. Перевірка наявності користувача
-            if (await _users.GetByEmailAsync(email, ct) != null)
+            if (await this._users.GetByEmailAsync(email, ct) != null)
                 throw new ArgumentException("Користувач з таким email вже існує.");
 
             // 3. Створення та збереження нового користувача
@@ -45,10 +45,10 @@ namespace BrainBurst.BLL.Services
                 CreatedAt = DateTime.UtcNow
             };
 
-            var savedUser = await _users.AddAsync(newUser, ct);
-            
+            var savedUser = await this._users.AddAsync(newUser, ct);
+
             // 4. Повернення DTO (використовуємо ToDTO з MappingExtensions)
-            return savedUser.ToDTO(_rating);
+            return savedUser.ToDTO(this._rating);
         }
 
         public async Task<UserDTO> LoginAsync(string email, string password, CancellationToken ct)
@@ -58,7 +58,7 @@ namespace BrainBurst.BLL.Services
             Guard.Password(password);
 
             // 2. Пошук користувача
-            var user = await _users.GetByEmailAsync(email, ct);
+            var user = await this._users.GetByEmailAsync(email, ct);
 
             if (user == null)
                 throw new KeyNotFoundException("Некоректний email або пароль.");
@@ -68,7 +68,7 @@ namespace BrainBurst.BLL.Services
                 throw new KeyNotFoundException("Некоректний email або пароль.");
 
             // 4. Повернення DTO
-            return user.ToDTO(_rating);
+            return user.ToDTO(this._rating);
         }
     }
 }

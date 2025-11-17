@@ -1,11 +1,11 @@
-﻿using System.Windows;
-using BrainBurst.BLL.Interfaces; 
-using System;
-using System.Threading.Tasks;
-using System.Windows.Media;
-
-namespace BrainBurst.Presentation
+﻿namespace BrainBurst.Presentation
 {
+    using System;
+    using System.Threading.Tasks;
+    using System.Windows;
+    using System.Windows.Media;
+    using BrainBurst.BLL.Interfaces;
+
     public partial class RegistrationWindow : Window
     {
         private readonly IAuthService _authService;
@@ -14,9 +14,9 @@ namespace BrainBurst.Presentation
         // Оновлюємо конструктор для отримання залежностей
         public RegistrationWindow(IAuthService authService, IAuthContext authContext) // <--- ДОДАНО IAuthContext
         {
-            InitializeComponent();
-            _authService = authService;
-            _authContext = authContext; // <--- ІНІЦІАЛІЗАЦІЯ
+            this.InitializeComponent();
+            this._authService = authService;
+            this._authContext = authContext; // <--- ІНІЦІАЛІЗАЦІЯ
         }
 
         private void BackButton_Click(object sender, RoutedEventArgs e)
@@ -25,22 +25,22 @@ namespace BrainBurst.Presentation
             this.Close();
         }
 
-       private async void Register_Click(object sender, RoutedEventArgs e)
+        private async void Register_Click(object sender, RoutedEventArgs e)
         {
-            string email = EmailTextBox.Text;
-            string fullName = FullNameTextBox.Text;
-            string password = PasswordInputBox.Password;
+            string email = this.EmailTextBox.Text;
+            string fullName = this.FullNameTextBox.Text;
+            string password = this.PasswordInputBox.Password;
 
-            StatusText.Text = "";
-            StatusText.Foreground = Brushes.Red;
+            this.StatusText.Text = string.Empty;
+            this.StatusText.Foreground = Brushes.Red;
 
             try
             {
                 // ВИКЛИК РЕАЛЬНОЇ ЛОГІКИ РЕЄСТРАЦІЇ
-                var userDto = await _authService.RegisterAsync(email, password, fullName, CancellationToken.None); // <--- ЗБЕРЕЖЕНО DTO
+                var userDto = await this._authService.RegisterAsync(email, password, fullName, CancellationToken.None); // <--- ЗБЕРЕЖЕНО DTO
 
                 // ВСТАНОВЛЕННЯ КОНТЕКСТУ ПІСЛЯ УСПІШНОЇ РЕЄСТРАЦІЇ
-                _authContext.SetCurrentUser(userDto); // <--- ВИКЛИК SetCurrentUser
+                this._authContext.SetCurrentUser(userDto); // <--- ВИКЛИК SetCurrentUser
 
                 // УСПІШНА РЕЄСТРАЦІЯ
                 this.DialogResult = true;
@@ -49,13 +49,13 @@ namespace BrainBurst.Presentation
             catch (ArgumentException ex)
             {
                 // Помилка валідації (наприклад, некоректний email, короткий пароль, email вже існує)
-                StatusText.Text = ex.Message;
+                this.StatusText.Text = ex.Message;
             }
             catch (Exception ex) // <-- Додано змінну ex, щоб показати внутрішню помилку
             {
                 // Інші помилки (наприклад, проблеми з БД або мережею)
                 // ТЕПЕР ПОКАЗУЄ ВНУТРІШНЮ ПОМИЛКУ БД
-                StatusText.Text = $"Непередбачена помилка реєстрації: {ex.InnerException?.Message ?? ex.Message}. Спробуйте пізніше.";
+                this.StatusText.Text = $"Непередбачена помилка реєстрації: {ex.InnerException?.Message ?? ex.Message}. Спробуйте пізніше.";
             }
         }
     }

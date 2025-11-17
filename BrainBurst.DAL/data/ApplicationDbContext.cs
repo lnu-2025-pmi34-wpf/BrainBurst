@@ -1,36 +1,69 @@
-using BrainBurst.DAL.Entities;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Configuration;
- // ← ПОВЕРНУЛИ
-using Microsoft.Extensions.Configuration.Json;          // ← ПОВЕРНУЛИ
-using System.IO;
-
 namespace BrainBurst.DAL.Data
 {
+    using System.IO;
+    using BrainBurst.DAL.Entities;
+    using Microsoft.EntityFrameworkCore;
+    using Microsoft.Extensions.Configuration;
+    using Microsoft.Extensions.Configuration.Json;
+
+    /// <summary>
+    /// Контекст бази даних Entity Framework для програми.
+    /// Відповідає за зв'язок з БД та визначення таблиць.
+    /// </summary>
     public class ApplicationDbContext : DbContext
     {
-        private readonly IConfiguration _configuration;
-
+        /// <summary>
+        /// Initializes a new instance of the <see cref="ApplicationDbContext"/> class.
+        /// </summary>
+        /// <param name="options">Опції для конфігурації DbContext, зазвичай передаються через DI.</param>
         public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options)
             : base(options)
         {
         }
 
-      
-
-   protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
-    {
-        // Конфігурація відбувається через DI в App.xaml.cs
-    }
-        // === DbSet ===
+        /// <summary>
+        /// Gets or sets отримує або встановлює набір даних (таблицю) для сутностей <see cref="User"/>.
+        /// </summary>
         public DbSet<User> Users { get; set; } = null!;
+
+        /// <summary>
+        /// Gets or sets отримує або встановлює набір даних (таблицю) для сутностей <see cref="Flashcard"/>.
+        /// </summary>
         public DbSet<Flashcard> Flashcards { get; set; } = null!;
+
+        /// <summary>
+        /// Gets or sets отримує або встановлює набір даних (таблицю) для сутностей <see cref="Tag"/>.
+        /// </summary>
         public DbSet<Tag> Tags { get; set; } = null!;
+
+        /// <summary>
+        /// Gets or sets отримує або встановлює набір даних (таблицю) для сутностей <see cref="Test"/>.
+        /// </summary>
         public DbSet<Test> Tests { get; set; } = null!;
+
+        /// <summary>
+        /// Gets or sets отримує або встановлює набір даних (таблицю) для сутностей <see cref="TestResult"/>.
+        /// </summary>
         public DbSet<TestResult> TestResults { get; set; } = null!;
+
+        /// <summary>
+        /// Gets or sets отримує або встановлює набір даних (таблицю) для сутностей <see cref="QuestionResult"/>.
+        /// </summary>
         public DbSet<QuestionResult> QuestionResults { get; set; } = null!;
 
-        // === OnModelCreating ===
+        /// <summary>
+        /// Перевизначений метод для конфігурації опцій DbContext.
+        /// </summary>
+        /// <param name="optionsBuilder">Будівельник опцій для налаштування.</param>
+        protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
+        {
+            // Конфігурація відбувається через DI в App.xaml.cs
+        }
+
+        /// <summary>
+        /// Налаштовує модель бази даних, зв'язки та обмеження за допомогою Fluent API.
+        /// </summary>
+        /// <param name="modelBuilder">Будівельник, що використовується для конструювання моделі.</param>
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);

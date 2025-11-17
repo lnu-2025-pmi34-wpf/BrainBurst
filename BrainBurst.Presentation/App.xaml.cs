@@ -1,15 +1,15 @@
-﻿using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Hosting;
+﻿using System;
 using System.Windows;
-using BrainBurst.DAL.Data;
-using BrainBurst.DAL.Abstractions;
-using BrainBurst.DAL.Repositories;
 using BrainBurst.BLL.Interfaces;
-using BrainBurst.BLL.Services;
 using BrainBurst.BLL.Interfaces.Abstractions;
-using System;
+using BrainBurst.BLL.Services;
+using BrainBurst.DAL.Abstractions;
+using BrainBurst.DAL.Data;
+using BrainBurst.DAL.Repositories;
 using BrainBurst.Presentation.Views;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
 using Npgsql.EntityFrameworkCore.PostgreSQL;
 
 namespace BrainBurst.Presentation;
@@ -17,18 +17,19 @@ namespace BrainBurst.Presentation;
 public partial class App : Application
 {
     private readonly IHost _host;
-    public IHost ServiceHost => _host; 
+
+    public IHost ServiceHost => this._host;
 
     public App()
     {
         // Встановлюємо змінні середовища ДО створення хоста
-        SetupEnvironmentVariables();
+        this.SetupEnvironmentVariables();
 
         AppContext.SetSwitch("Npgsql.EnableLegacyTimestampBehavior", true);
-        _host = Host.CreateDefaultBuilder()
+        this._host = Host.CreateDefaultBuilder()
             .ConfigureServices((context, services) =>
             {
-                ConfigureServices(services);
+                this.ConfigureServices(services);
             })
             .Build();
     }
@@ -47,20 +48,20 @@ public partial class App : Application
     {
         base.OnStartup(e); // Викликаємо базовий метод спочатку
 
-        await _host.StartAsync();
+        await this._host.StartAsync();
 
         // *** СПРОБА МІГРАЦІЇ ПРИ ЗАПУСКУ ***
-        bool migrationSuccess = ApplyMigrations();
+        bool migrationSuccess = this.ApplyMigrations();
 
         if (!migrationSuccess)
         {
             // Якщо міграція не вдалася, закриваємо додаток, щоб не показувати головне вікно
-            Shutdown();
+            this.Shutdown();
             return;
         }
 
         // Якщо міграція пройшла успішно, показуємо головне вікно
-        var mainWindow = _host.Services.GetRequiredService<MainWindow>();
+        var mainWindow = this._host.Services.GetRequiredService<MainWindow>();
         mainWindow.Show();
     }
 
@@ -68,10 +69,10 @@ public partial class App : Application
     {
         try
         {
-            using (var scope = _host.Services.CreateScope())
+            using (var scope = this._host.Services.CreateScope())
             {
                 var dbContext = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
-                
+
                 // Перевіряємо, чи можемо ми взагалі підключитися
                 if (!dbContext.Database.CanConnect())
                 {
@@ -117,7 +118,7 @@ public partial class App : Application
         services.AddTransient<ITestGenerationService, TestGenerationService>();
 
         services.AddTransient<IQuizGenerator, OpenAIQuizGenerator>();
-        
+
         services.AddSingleton<MainWindow>();
         services.AddTransient<LoginWindow>();
         services.AddTransient<RegistrationWindow>();
@@ -140,9 +141,9 @@ public partial class App : Application
 
     protected override async void OnExit(ExitEventArgs e)
     {
-        using (_host)
+        using (this._host)
         {
-            await _host.StopAsync(TimeSpan.FromSeconds(5));
+            await this._host.StopAsync(TimeSpan.FromSeconds(5));
         }
         base.OnExit(e);
     }

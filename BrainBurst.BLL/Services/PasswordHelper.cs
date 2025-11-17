@@ -1,8 +1,8 @@
-using System.Security.Cryptography;
-using System.Text;
-
 namespace BrainBurst.BLL.Services
 {
+    using System.Security.Cryptography;
+    using System.Text;
+
     // Reusable utility for hashing and verification.
     // 🚨 УВАГА: У реальному додатку використовуйте BCrypt.Net або схожі криптографічні бібліотеки!
     public static class PasswordHelper

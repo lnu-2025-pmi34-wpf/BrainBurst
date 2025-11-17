@@ -1,18 +1,18 @@
-﻿using System.Windows;
-using System.Windows.Controls;
-using System.Windows.Navigation;
-using System.Windows.Input;
-using System;
-using Microsoft.Extensions.DependencyInjection;
-using BrainBurst.BLL.Interfaces; // Додаємо для IFlashcardService та IAuthContext
-using System.Threading.Tasks;
-using System.Linq;
-
-namespace BrainBurst.Presentation.Views
+﻿namespace BrainBurst.Presentation.Views
 {
+    using System;
+    using System.Linq;
+    using System.Threading.Tasks;
+    using System.Windows;
+    using System.Windows.Controls;
+    using System.Windows.Input;
+    using System.Windows.Navigation;
+    using BrainBurst.BLL.Interfaces; // Додаємо для IFlashcardService та IAuthContext
+    using Microsoft.Extensions.DependencyInjection;
+
     public partial class TestsView : UserControl
     {
-        // УСУНЕНО: private const int CurrentUserId = 1; 
+        // УСУНЕНО: private const int CurrentUserId = 1;
 
         private readonly IServiceProvider _serviceProvider;
         private readonly IFlashcardService _flashcardService;
@@ -21,24 +21,25 @@ namespace BrainBurst.Presentation.Views
         // Внутрішній DTO для відображення колод-тестів
         private class DeckItem
         {
-            public string DeckTag { get; set; } = string.Empty; 
+            public string DeckTag { get; set; } = string.Empty;
+
             public int CardCount { get; set; }
         }
 
         // ОНОВЛЕНО: Конструктор приймає IAuthContext
         public TestsView(IServiceProvider serviceProvider, IFlashcardService flashcardService, IAuthContext authContext)
         {
-            InitializeComponent();
-            _serviceProvider = serviceProvider;
-            _flashcardService = flashcardService;
-            _authContext = authContext; // <--- ІНІЦІАЛІЗОВАНО
-            
-            this.Loaded += TestsView_Loaded;
+            this.InitializeComponent();
+            this._serviceProvider = serviceProvider;
+            this._flashcardService = flashcardService;
+            this._authContext = authContext; // <--- ІНІЦІАЛІЗОВАНО
+
+            this.Loaded += this.TestsView_Loaded;
         }
 
         private void TestsView_Loaded(object sender, RoutedEventArgs e)
         {
-            LoadTestsAsync(); 
+            this.LoadTestsAsync();
         }
 
         private async Task LoadTestsAsync()
@@ -47,12 +48,12 @@ namespace BrainBurst.Presentation.Views
             {
                 // Отримуємо всі картки поточного користувача
                 // ВИКОРИСТАННЯ: CurrentUserId замінено на _authContext.CurrentUserId
-                var allCards = await _flashcardService.ListAsync(_authContext.CurrentUserId, null, CancellationToken.None);
+                var allCards = await this._flashcardService.ListAsync(this._authContext.CurrentUserId, null, CancellationToken.None);
 
                 // Групуємо картки за першим тегом (імітація доступних тестів)
                 var groupedDecks = allCards
                     .Where(c => c.Tags.Any())
-                    .GroupBy(c => c.Tags.First()) 
+                    .GroupBy(c => c.Tags.First())
                     .Select(g => new DeckItem
                     {
                         DeckTag = g.Key,
@@ -60,22 +61,22 @@ namespace BrainBurst.Presentation.Views
                     })
                     .OrderByDescending(d => d.CardCount)
                     .ToList();
-                
-                DecksItemsControl.ItemsSource = groupedDecks;
-                
+
+                this.DecksItemsControl.ItemsSource = groupedDecks;
+
                 if (!groupedDecks.Any())
                 {
-                    NoTestsMessage.Visibility = Visibility.Visible;
+                    this.NoTestsMessage.Visibility = Visibility.Visible;
                 }
                 else
                 {
-                    NoTestsMessage.Visibility = Visibility.Collapsed;
+                    this.NoTestsMessage.Visibility = Visibility.Collapsed;
                 }
             }
             catch (Exception)
             {
-                NoTestsMessage.Text = "Помилка завантаження тестів.";
-                NoTestsMessage.Visibility = Visibility.Visible;
+                this.NoTestsMessage.Text = "Помилка завантаження тестів.";
+                this.NoTestsMessage.Visibility = Visibility.Visible;
             }
         }
 
@@ -84,16 +85,17 @@ namespace BrainBurst.Presentation.Views
             if (NavigationService.GetNavigationService(this) != null)
             {
                 // Створюємо TestTakingView через DI
-                var testTakingView = _serviceProvider.GetRequiredService<TestTakingView>();
+                var testTakingView = this._serviceProvider.GetRequiredService<TestTakingView>();
                 NavigationService.GetNavigationService(this).Navigate(testTakingView);
             }
         }
+
         private void CreateTest_Click(object sender, RoutedEventArgs e)
         {
             if (NavigationService.GetNavigationService(this) != null)
             {
                 // Створюємо CreateTestView через DI
-                var createTestView = _serviceProvider.GetRequiredService<CreateTestView>();
+                var createTestView = this._serviceProvider.GetRequiredService<CreateTestView>();
                 NavigationService.GetNavigationService(this).Navigate(createTestView);
             }
         }

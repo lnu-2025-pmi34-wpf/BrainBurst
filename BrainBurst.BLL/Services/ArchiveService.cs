@@ -1,24 +1,24 @@
-using BrainBurst.DAL.Abstractions;
-using BrainBurst.BLL.DTO;
-using BrainBurst.BLL.Interfaces;
-using System.Linq;
-
 namespace BrainBurst.BLL.Services
 {
+    using System.Linq;
+    using BrainBurst.BLL.DTO;
+    using BrainBurst.BLL.Interfaces;
+    using BrainBurst.DAL.Abstractions;
+
     public class ArchiveService : IArchiveService
     {
         private readonly ITestResultRepository _results;
-        
+
         public ArchiveService(ITestResultRepository results)
         {
-            _results = results;
+            this._results = results;
         }
 
         public async Task<IReadOnlyList<ArchiveEntryDTO>> GetArchiveAsync(int userId, CancellationToken ct)
         {
             // 1. Отримуємо всі результати тестів для користувача з DAL
-            var testResults = await _results.GetByUserAsync(userId, ct);
-            
+            var testResults = await this._results.GetByUserAsync(userId, ct);
+
             var archive = new List<ArchiveEntryDTO>();
 
             // 2. Конвертуємо результати у DTO для відображення в архіві

@@ -1,11 +1,11 @@
-﻿using System;
-using Microsoft.EntityFrameworkCore.Migrations;
-using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
-
-#nullable disable
+﻿#nullable disable
 
 namespace BrainBurst.DAL.Migrations
 {
+    using System;
+    using Microsoft.EntityFrameworkCore.Migrations;
+    using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
+
     /// <inheritdoc />
     public partial class InitialCreate : Migration
     {
@@ -23,7 +23,7 @@ namespace BrainBurst.DAL.Migrations
                     FullName = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: true),
                     Points = table.Column<int>(type: "integer", nullable: false, defaultValue: 0),
                     Rank = table.Column<string>(type: "character varying(20)", maxLength: 20, nullable: false, defaultValue: "Початківець"),
-                    CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false, defaultValueSql: "CURRENT_TIMESTAMP")
+                    CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false, defaultValueSql: "CURRENT_TIMESTAMP"),
                 },
                 constraints: table =>
                 {
@@ -39,7 +39,7 @@ namespace BrainBurst.DAL.Migrations
                     Question = table.Column<string>(type: "text", nullable: false),
                     Answer = table.Column<string>(type: "text", nullable: false),
                     CreatorId = table.Column<int>(type: "integer", nullable: false),
-                    CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false, defaultValueSql: "CURRENT_TIMESTAMP")
+                    CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false, defaultValueSql: "CURRENT_TIMESTAMP"),
                 },
                 constraints: table =>
                 {
@@ -59,7 +59,7 @@ namespace BrainBurst.DAL.Migrations
                     TagId = table.Column<int>(type: "integer", nullable: false)
                         .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
                     Name = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: false),
-                    CreatorId = table.Column<int>(type: "integer", nullable: true)
+                    CreatorId = table.Column<int>(type: "integer", nullable: true),
                 },
                 constraints: table =>
                 {
@@ -78,7 +78,7 @@ namespace BrainBurst.DAL.Migrations
                 {
                     TestId = table.Column<int>(type: "integer", nullable: false)
                         .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
-                    CreatorId = table.Column<int>(type: "integer", nullable: false)
+                    CreatorId = table.Column<int>(type: "integer", nullable: false),
                 },
                 constraints: table =>
                 {
@@ -101,7 +101,7 @@ namespace BrainBurst.DAL.Migrations
                     UserId = table.Column<int>(type: "integer", nullable: false),
                     CorrectAnswersPercent = table.Column<decimal>(type: "numeric(5,2)", nullable: false),
                     Points = table.Column<int>(type: "integer", nullable: false),
-                    TestDate = table.Column<DateTime>(type: "timestamp with time zone", nullable: false, defaultValueSql: "CURRENT_TIMESTAMP")
+                    TestDate = table.Column<DateTime>(type: "timestamp with time zone", nullable: false, defaultValueSql: "CURRENT_TIMESTAMP"),
                 },
                 constraints: table =>
                 {
@@ -129,7 +129,7 @@ namespace BrainBurst.DAL.Migrations
                     TestResultId = table.Column<int>(type: "integer", nullable: false),
                     FlashcardId = table.Column<int>(type: "integer", nullable: false),
                     UserInput = table.Column<string>(type: "text", nullable: false),
-                    IsCorrect = table.Column<bool>(type: "boolean", nullable: false)
+                    IsCorrect = table.Column<bool>(type: "boolean", nullable: false),
                 },
                 constraints: table =>
                 {

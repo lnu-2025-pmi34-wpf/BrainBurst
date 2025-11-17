@@ -1,16 +1,16 @@
-﻿using System.Windows;
-using System.Windows.Controls;
-using System.Windows.Navigation;
-using BrainBurst.BLL.Interfaces; // Додано для IAuthContext
-using System;
-using System.Linq;
-using System.Threading.Tasks;
-using System.Windows.Media;
-using System.Threading; // Додано для CancellationToken
-using System.Collections.Generic; // Додано для List<T>
-
-namespace BrainBurst.Presentation.Views
+﻿namespace BrainBurst.Presentation.Views
 {
+    using System;
+    using System.Collections.Generic; // Додано для List<T>
+    using System.Linq;
+    using System.Threading; // Додано для CancellationToken
+    using System.Threading.Tasks;
+    using System.Windows;
+    using System.Windows.Controls;
+    using System.Windows.Media;
+    using System.Windows.Navigation;
+    using BrainBurst.BLL.Interfaces; // Додано для IAuthContext
+
     public partial class CreateCardView : UserControl
     {
         private readonly IFlashcardService _flashcardService;
@@ -19,9 +19,9 @@ namespace BrainBurst.Presentation.Views
         // ОНОВЛЕНО: Конструктор приймає IAuthContext
         public CreateCardView(IFlashcardService flashcardService, IAuthContext authContext)
         {
-            InitializeComponent();
-            _flashcardService = flashcardService;
-            _authContext = authContext; // <--- ІНІЦІАЛІЗОВАНО
+            this.InitializeComponent();
+            this._flashcardService = flashcardService;
+            this._authContext = authContext; // <--- ІНІЦІАЛІЗОВАНО
         }
 
         private void BackButton_Click(object sender, RoutedEventArgs e)
@@ -34,9 +34,9 @@ namespace BrainBurst.Presentation.Views
 
         private async void SaveButton_Click(object sender, RoutedEventArgs e)
         {
-            string question = QuestionTextBox.Text;
-            string answer = AnswerTextBox.Text;
-            string tagsInput = TagsTextBox.Text?.Trim(); // Одразу обрізаємо пробіли з країв
+            string question = this.QuestionTextBox.Text;
+            string answer = this.AnswerTextBox.Text;
+            string tagsInput = this.TagsTextBox.Text?.Trim(); // Одразу обрізаємо пробіли з країв
 
             // Нова, більш надійна логіка парсингу тегів
             IEnumerable<string> tags;
@@ -53,33 +53,33 @@ namespace BrainBurst.Presentation.Views
                                 .ToList(); // Матеріалізуємо список одразу
             }
 
-            StatusText.Text = "";
-            StatusText.Foreground = Brushes.Red;
-            
+            this.StatusText.Text = string.Empty;
+            this.StatusText.Foreground = Brushes.Red;
+
             try
             {
                 // ВИКОРИСТАННЯ: CurrentUserId замінено на _authContext.CurrentUserId
-                await _flashcardService.CreateAsync(_authContext.CurrentUserId, question, answer, tags, CancellationToken.None);
+                await this._flashcardService.CreateAsync(this._authContext.CurrentUserId, question, answer, tags, CancellationToken.None);
 
                 // Успіх
-                StatusText.Foreground = Brushes.Green;
-                StatusText.Text = "Картку успішно збережено!";
+                this.StatusText.Foreground = Brushes.Green;
+                this.StatusText.Text = "Картку успішно збережено!";
 
                 // Очищаємо поля після успішного збереження
-                QuestionTextBox.Text = "";
-                AnswerTextBox.Text = "";
+                this.QuestionTextBox.Text = string.Empty;
+                this.AnswerTextBox.Text = string.Empty;
                 // TagsTextBox.Text = ""; // Можна не очищати тему, якщо користувач хоче створити кілька карток підряд в одну тему
             }
             catch (ArgumentException ex)
             {
                 // Помилка валідації (наприклад, порожнє питання чи відповідь)
-                StatusText.Text = ex.Message;
+                this.StatusText.Text = ex.Message;
             }
             catch (Exception ex)
             {
                 // Інші помилки (наприклад, проблеми з БД або мережею)
                 // ТЕПЕР ПОКАЗУЄ ВНУТРІШНЮ ПОМИЛКУ БД
-                StatusText.Text = $"Помилка: {ex.Message}";
+                this.StatusText.Text = $"Помилка: {ex.Message}";
             }
         }
     }
