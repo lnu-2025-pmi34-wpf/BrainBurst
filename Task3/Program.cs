@@ -1,4 +1,4 @@
-﻿using System;
+﻿/*using System;
 using System.Text;
 using Npgsql;
 using DotNetEnv;
@@ -175,6 +175,39 @@ namespace AdoNetPostgresDemo
                     $"Дата: {reader["test_date"]}");
             }
             Console.WriteLine();
+        }
+    }
+}*/
+
+using System;
+using System.Text;
+using Npgsql;
+using DotNetEnv;
+
+namespace AdoNetPostgresDemo
+{
+    internal class Program
+    {
+        static string connectionString;
+
+        static void Main(string[] args)
+        {
+            Console.OutputEncoding = Encoding.UTF8;
+            Env.Load();
+            connectionString = Environment.GetEnvironmentVariable("CONNECTION_STRING");
+
+            using var conn = new NpgsqlConnection(connectionString);
+            conn.Open();
+            Console.WriteLine("✅ Підключення успішне!\n");
+
+            var demo = new DatabaseDemo(conn);
+
+            demo.ShowUsers(Console.Out);
+            demo.ShowFlashcards(Console.Out);
+            demo.ShowTestResults(Console.Out);
+
+            // за бажанням:
+            // demo.GenerateTestData();
         }
     }
 }
