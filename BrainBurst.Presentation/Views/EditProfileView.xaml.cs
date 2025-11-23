@@ -8,21 +8,26 @@
     using System.Windows.Controls;
     using System.Windows.Media;
     using System.Windows.Navigation;
-    using BrainBurst.BLL.Interfaces; // Додаємо для IUserService та IAuthContext
+    using BrainBurst.BLL.Interfaces;
 
+    /// <summary>
+    /// Логіка взаємодії для View редагування профілю користувача.
+    /// </summary>
     public partial class EditProfileView : UserControl
     {
-        // УСУНЕНО: private const int CurrentUserId = 1;
-
         private readonly IUserService _userService;
-        private readonly IAuthContext _authContext; // <--- ДОДАНО ПОЛЕ
+        private readonly IAuthContext _authContext;
 
-        // ОНОВЛЕНО: Конструктор приймає IAuthContext
+        /// <summary>
+        /// Initializes a new instance of the <see cref="EditProfileView"/> class.
+        /// </summary>
+        /// <param name="userService">Сервіс для оновлення даних користувача.</param>
+        /// <param name="authContext">Контекст автентифікації для отримання ID поточного користувача.</param>
         public EditProfileView(IUserService userService, IAuthContext authContext)
         {
             this.InitializeComponent();
             this._userService = userService;
-            this._authContext = authContext; // <--- ІНІЦІАЛІЗОВАНО
+            this._authContext = authContext;
         }
 
         private void BackButton_Click(object sender, RoutedEventArgs e)
@@ -51,31 +56,26 @@
 
                 try
                 {
-                    // ВИКОРИСТАННЯ: CurrentUserId замінено на _authContext.CurrentUserId
                     await this._userService.UpdateProfileAsync(this._authContext.CurrentUserId, newName, CancellationToken.None);
 
                     this.UsernameStatusText.Text = "Ім'я успішно змінено!";
                     this.UsernameStatusText.Foreground = Brushes.Green;
 
-                    // Оновлюємо ім'я у контексті після успішного збереження
                     if (this._authContext.CurrentUser != null)
                     {
-                         this._authContext.CurrentUser.FullName = newName;
+                        this._authContext.CurrentUser.FullName = newName;
                     }
                 }
                 catch (ArgumentException ex)
                 {
-                    // Помилка валідації (наприклад, порожнє ім'я)
                     this.UsernameStatusText.Text = ex.Message;
                 }
                 catch (KeyNotFoundException)
                 {
-                    // Помилка, якщо користувача не знайдено
                     this.UsernameStatusText.Text = "Помилка. Користувача не знайдено.";
                 }
                 catch (Exception)
                 {
-                    // Інші помилки (наприклад, проблеми з БД)
                     this.UsernameStatusText.Text = "Помилка. Не вдалося зберегти зміни.";
                 }
             }

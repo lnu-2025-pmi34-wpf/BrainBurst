@@ -1,4 +1,6 @@
-﻿using System;
+﻿namespace BrainBurst.Presentation;
+
+using System;
 using System.Windows;
 using BrainBurst.BLL.Interfaces;
 using BrainBurst.BLL.Interfaces.Abstractions;
@@ -12,14 +14,17 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Npgsql.EntityFrameworkCore.PostgreSQL;
 
-namespace BrainBurst.Presentation;
-
+/// <summary>
+/// Логіка взаємодії для App.xaml.
+/// Головний клас додатка WPF, який налаштовує Dependency Injection (DI) та керування життєвим циклом хоста.
+/// </summary>
 public partial class App : Application
 {
     private readonly IHost _host;
 
-    public IHost ServiceHost => this._host;
-
+    /// <summary>
+    /// Initializes a new instance of the <see cref="App"/> class.
+    /// </summary>
     public App()
     {
         // Встановлюємо змінні середовища ДО створення хоста
@@ -34,6 +39,49 @@ public partial class App : Application
             .Build();
     }
 
+    /// <summary>
+    /// Gets отримує екземпляр хоста, який містить усі зареєстровані сервіси.
+    /// </summary>
+    public IHost ServiceHost => this._host;
+
+    /// <summary>
+    /// Викликається при закритті WPF-додатку.
+    /// Гарантує коректне зупинення хоста.
+    /// </summary>
+    /// <param name="e">Дані події виходу.</param>
+    protected override async void OnExit(ExitEventArgs e)
+    {
+        using (this._host)
+        {
+            await this._host.StopAsync(TimeSpan.FromSeconds(5));
+        }
+
+        base.OnExit(e);
+    }
+
+    /// <summary>
+    /// Цей метод викликається автоматично при запуску WPF-додатку.
+    /// Запускає хост, застосовує міграції та відображає головне вікно.
+    /// </summary>
+    /// <param name="e">Дані події запуску.</param>
+    protected override async void OnStartup(StartupEventArgs e)
+    {
+        base.OnStartup(e);
+
+        await this._host.StartAsync();
+
+        bool migrationSuccess = this.ApplyMigrations();
+
+        if (!migrationSuccess)
+        {
+            this.Shutdown();
+            return;
+        }
+
+        var mainWindow = this._host.Services.GetRequiredService<MainWindow>();
+        mainWindow.Show();
+    }
+
     private void SetupEnvironmentVariables()
     {
         Environment.SetEnvironmentVariable("DB_HOST", "dpg-d494k1odl3ps73dbasmg-a.frankfurt-postgres.render.com");
@@ -43,28 +91,10 @@ public partial class App : Application
         Environment.SetEnvironmentVariable("DB_PASSWORD", "L1vFCiVN2WUncXGQx5fTx1iAJDBtOmgI");
     }
 
-    // Цей метод викликається автоматично при запуску WPF-додатку
-    protected override async void OnStartup(StartupEventArgs e)
-    {
-        base.OnStartup(e); // Викликаємо базовий метод спочатку
-
-        await this._host.StartAsync();
-
-        // *** СПРОБА МІГРАЦІЇ ПРИ ЗАПУСКУ ***
-        bool migrationSuccess = this.ApplyMigrations();
-
-        if (!migrationSuccess)
-        {
-            // Якщо міграція не вдалася, закриваємо додаток, щоб не показувати головне вікно
-            this.Shutdown();
-            return;
-        }
-
-        // Якщо міграція пройшла успішно, показуємо головне вікно
-        var mainWindow = this._host.Services.GetRequiredService<MainWindow>();
-        mainWindow.Show();
-    }
-
+    /// <summary>
+    /// Створює scope (область видимості) та застосовує міграції бази даних.
+    /// </summary>
+    /// <returns>True, якщо міграція успішна; False, якщо виникла помилка.</returns>
     private bool ApplyMigrations()
     {
         try
@@ -73,17 +103,15 @@ public partial class App : Application
             {
                 var dbContext = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
 
-                // Перевіряємо, чи можемо ми взагалі підключитися
                 if (!dbContext.Database.CanConnect())
                 {
-                     MessageBox.Show("Не вдалося підключитися до бази даних. Перевірте інтернет-з'єднання або правильність Connection String.", "Помилка підключення");
-                     return false;
+                    MessageBox.Show("Не вдалося підключитися до бази даних. Перевірте інтернет-з'єднання або правильність Connection String.", "Помилка підключення");
+                    return false;
                 }
 
-                // Застосовуємо міграції
                 dbContext.Database.Migrate();
             }
-            // Якщо дійдемо сюди, міграція пройшла успішно
+
             return true;
         }
         catch (Exception ex)
@@ -93,11 +121,16 @@ public partial class App : Application
         }
     }
 
+    /// <summary>
+    /// Реєструє всі сервіси, репозиторії та контексти даних у контейнері Dependency Injection.
+    /// </summary>
+    /// <param name="services">Колекція сервісів для конфігурації.</param>
     private void ConfigureServices(IServiceCollection services)
     {
         var connectionString = $"Host={Environment.GetEnvironmentVariable("DB_HOST")};Port={Environment.GetEnvironmentVariable("DB_PORT")};Database={Environment.GetEnvironmentVariable("DB_NAME")};Username={Environment.GetEnvironmentVariable("DB_USER")};Password={Environment.GetEnvironmentVariable("DB_PASSWORD")};Include Error Detail=true;SSL Mode=Require;Trust Server Certificate=True";
 
-        services.AddDbContext<ApplicationDbContext>(options =>
+        services.AddDbContext<ApplicationDbContext>(
+            options =>
         {
             options.UseNpgsql(connectionString);
         }, ServiceLifetime.Transient);
@@ -137,14 +170,5 @@ public partial class App : Application
         services.AddTransient<CreateCardView>();
         services.AddTransient<CreateTestView>();
         services.AddTransient<StudyView>();
-    }
-
-    protected override async void OnExit(ExitEventArgs e)
-    {
-        using (this._host)
-        {
-            await this._host.StopAsync(TimeSpan.FromSeconds(5));
-        }
-        base.OnExit(e);
     }
 }

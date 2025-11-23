@@ -7,57 +7,58 @@
     using System.Windows.Controls;
     using System.Windows.Input;
     using System.Windows.Navigation;
-    using BrainBurst.BLL.Interfaces; // Додаємо для IFlashcardService та IAuthContext
+    using BrainBurst.BLL.Interfaces;
     using Microsoft.Extensions.DependencyInjection;
 
+    /// <summary>
+    /// Логіка взаємодії для View відображення доступних тестів (згрупованих за темами).
+    /// </summary>
     public partial class TestsView : UserControl
     {
-        // УСУНЕНО: private const int CurrentUserId = 1;
-
         private readonly IServiceProvider _serviceProvider;
         private readonly IFlashcardService _flashcardService;
-        private readonly IAuthContext _authContext; // <--- ДОДАНО ПОЛЕ
+        private readonly IAuthContext _authContext;
 
-        // Внутрішній DTO для відображення колод-тестів
-        private class DeckItem
-        {
-            public string DeckTag { get; set; } = string.Empty;
-
-            public int CardCount { get; set; }
-        }
-
-        // ОНОВЛЕНО: Конструктор приймає IAuthContext
+        /// <summary>
+        /// Initializes a new instance of the <see cref="TestsView"/> class.
+        /// </summary>
+        /// <param name="serviceProvider">Постачальник служб DI (для навігації).</param>
+        /// <param name="flashcardService">Сервіс для отримання списку карток.</param>
+        /// <param name="authContext">Контекст автентифікації для отримання ID користувача.</param>
         public TestsView(IServiceProvider serviceProvider, IFlashcardService flashcardService, IAuthContext authContext)
         {
             this.InitializeComponent();
             this._serviceProvider = serviceProvider;
             this._flashcardService = flashcardService;
-            this._authContext = authContext; // <--- ІНІЦІАЛІЗОВАНО
+            this._authContext = authContext;
 
             this.Loaded += this.TestsView_Loaded;
         }
 
-        private void TestsView_Loaded(object sender, RoutedEventArgs e)
+        private async void TestsView_Loaded(object sender, RoutedEventArgs e)
         {
-            this.LoadTestsAsync();
+            try
+            {
+                await this.LoadTestsAsync();
+            }
+            catch (Exception)
+            {
+            }
         }
 
         private async Task LoadTestsAsync()
         {
-             try
+            try
             {
-                // Отримуємо всі картки поточного користувача
-                // ВИКОРИСТАННЯ: CurrentUserId замінено на _authContext.CurrentUserId
                 var allCards = await this._flashcardService.ListAsync(this._authContext.CurrentUserId, null, CancellationToken.None);
 
-                // Групуємо картки за першим тегом (імітація доступних тестів)
                 var groupedDecks = allCards
                     .Where(c => c.Tags.Any())
                     .GroupBy(c => c.Tags.First())
                     .Select(g => new DeckItem
                     {
                         DeckTag = g.Key,
-                        CardCount = g.Count()
+                        CardCount = g.Count(),
                     })
                     .OrderByDescending(d => d.CardCount)
                     .ToList();
@@ -84,7 +85,6 @@
         {
             if (NavigationService.GetNavigationService(this) != null)
             {
-                // Створюємо TestTakingView через DI
                 var testTakingView = this._serviceProvider.GetRequiredService<TestTakingView>();
                 NavigationService.GetNavigationService(this).Navigate(testTakingView);
             }
@@ -94,10 +94,19 @@
         {
             if (NavigationService.GetNavigationService(this) != null)
             {
-                // Створюємо CreateTestView через DI
                 var createTestView = this._serviceProvider.GetRequiredService<CreateTestView>();
                 NavigationService.GetNavigationService(this).Navigate(createTestView);
             }
+        }
+
+        /// <summary>
+        /// Внутрішній клас, що представляє одну доступну колоду (тему) для тесту.
+        /// </summary>
+        private class DeckItem
+        {
+            public string DeckTag { get; set; } = string.Empty;
+
+            public int CardCount { get; set; }
         }
     }
 }

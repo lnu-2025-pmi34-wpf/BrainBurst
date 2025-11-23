@@ -6,12 +6,19 @@
     using System.Windows.Media;
     using BrainBurst.BLL.Interfaces;
 
+    /// <summary>
+    /// Логіка взаємодії для вікна входу користувача (LoginWindow.xaml).
+    /// </summary>
     public partial class LoginWindow : Window
     {
         private readonly IAuthService _authService;
-        private readonly IServiceProvider _serviceProvider; // Потрібен для ProfileWindow
+        private readonly IServiceProvider _serviceProvider;
 
-        // Оновлюємо конструктор для отримання залежностей
+        /// <summary>
+        /// Initializes a new instance of the <see cref="LoginWindow"/> class.
+        /// </summary>
+        /// <param name="authService">Сервіс для автентифікації.</param>
+        /// <param name="serviceProvider">Постачальник служб DI.</param>
         public LoginWindow(IAuthService authService, IServiceProvider serviceProvider)
         {
             this.InitializeComponent();
@@ -35,26 +42,21 @@
 
             try
             {
-                // ВИКЛИК РЕАЛЬНОЇ ЛОГІКИ АУТЕНТИФІКАЦІЇ
                 await this._authService.LoginAsync(email, password, CancellationToken.None);
 
-                // УСПІШНИЙ ВХІД
                 this.DialogResult = true;
                 this.Close();
             }
             catch (ArgumentException ex)
             {
-                // Помилка валідації (наприклад, некоректний email/пароль)
                 this.StatusText.Text = ex.Message;
             }
             catch (KeyNotFoundException ex)
             {
-                // Помилка, коли користувача не знайдено
                 this.StatusText.Text = ex.Message;
             }
             catch (Exception)
             {
-                // Інші помилки (наприклад, проблеми з БД або мережею)
                 this.StatusText.Text = "Непередбачена помилка входу. Спробуйте пізніше.";
             }
         }

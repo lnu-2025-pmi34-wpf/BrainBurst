@@ -6,15 +6,24 @@
     using System.Windows;
     using System.Windows.Controls;
     using System.Windows.Navigation;
-    using BrainBurst.BLL.Interfaces; // Додаємо для IUserService та IAuthContext
+    using BrainBurst.BLL.Interfaces;
     using Microsoft.Extensions.DependencyInjection;
 
+    /// <summary>
+    /// Логіка взаємодії для View підтвердження видалення облікового запису.
+    /// </summary>
     public partial class DeleteAccountView : UserControl
     {
         private readonly IUserService _userService;
         private readonly IServiceProvider _serviceProvider;
         private readonly IAuthContext _authContext;
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="DeleteAccountView"/> class.
+        /// </summary>
+        /// <param name="userService">Сервіс для видалення облікового запису.</param>
+        /// <param name="serviceProvider">Постачальник служб DI (для відкриття MainWindow).</param>
+        /// <param name="authContext">Контекст автентифікації для отримання ID поточного користувача та очищення сесії.</param>
         public DeleteAccountView(IUserService userService, IServiceProvider serviceProvider, IAuthContext authContext)
         {
             this.InitializeComponent();
@@ -27,13 +36,10 @@
         {
             try
             {
-                // ВИКОРИСТАННЯ: Видалення акаунту поточного користувача
                 await this._userService.DeleteAccountAsync(this._authContext.CurrentUserId, CancellationToken.None);
 
-                // Після успішного видалення очищуємо контекст
-                this._authContext.ClearContext(); // <--- ВИПРАВЛЕНО: Викликаємо ClearContext()
+                this._authContext.ClearContext();
 
-                // Перенаправляємо на головне вікно
                 MainWindow mainWindow = this._serviceProvider.GetRequiredService<MainWindow>();
                 Window currentWindow = Window.GetWindow(this);
 
@@ -41,7 +47,7 @@
 
                 if (currentWindow != null)
                 {
-                    currentWindow.Close(); // Закриваємо ProfileWindow
+                    currentWindow.Close();
                 }
             }
             catch (Exception ex)

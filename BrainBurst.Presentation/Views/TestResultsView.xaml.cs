@@ -6,23 +6,50 @@
     using System.Windows.Media;
     using System.Windows.Navigation;
 
+    /// <summary>
+    /// Внутрішній клас, що представляє одну помилку (неправильну відповідь) у тесті.
+    /// </summary>
+#pragma warning disable SA1402 // File may only contain a single type
+#pragma warning disable SA1649 // File name should match first type name
     public class TestMistake
+#pragma warning restore SA1649 // File name should match first type name
+#pragma warning restore SA1402 // File may only contain a single type
     {
-        public string QuestionText { get; set; }
+        /// <summary>
+        /// Gets or sets отримує або встановлює текст питання.
+        /// </summary>
+        public string QuestionText { get; set; } = string.Empty;
 
-        public string UserAnswer { get; set; }
+        /// <summary>
+        /// Gets or sets отримує або встановлює відповідь, яку надав користувач.
+        /// </summary>
+        public string UserAnswer { get; set; } = string.Empty;
 
-        public string CorrectAnswer { get; set; }
+        /// <summary>
+        /// Gets or sets отримує або встановлює правильну відповідь.
+        /// </summary>
+        public string CorrectAnswer { get; set; } = string.Empty;
     }
 
+    /// <summary>
+    /// Логіка взаємодії для View відображення детальних результатів пройденого тесту.
+    /// </summary>
     public partial class TestResultsView : UserControl
     {
+        /// <summary>
+        /// Initializes a new instance of the <see cref="TestResultsView"/> class.
+        /// </summary>
         public TestResultsView()
         {
             this.InitializeComponent();
             this.ScoreText.Text = "Виникла помилка завантаження результатів";
         }
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="TestResultsView"/> class.
+        /// </summary>
+        /// <param name="mistakes">Список помилок (неправильних відповідей) користувача.</param>
+        /// <param name="totalQuestions">Загальна кількість питань у тесті.</param>
         public TestResultsView(List<TestMistake> mistakes, int totalQuestions)
         {
             this.InitializeComponent();
@@ -35,7 +62,7 @@
             }
 
             int score = totalQuestions - mistakes.Count;
-            double percentage = ((double)score / totalQuestions) * 100;
+            double percentage = (double)score / totalQuestions * 100;
 
             this.ScoreText.Text = $"Ваш результат: {score} / {totalQuestions}";
             this.PercentageText.Text = $"{percentage:F0}%";

@@ -1,23 +1,35 @@
-using System;
-using System.IO;
-using Npgsql;
-
 namespace AdoNetPostgresDemo
 {
+    using System;
+    using System.IO;
+    using Npgsql;
+
+    /// <summary>
+    /// Демонстраційний клас для взаємодії з базою даних PostgreSQL за допомогою Ado.Net (Npgsql).
+    /// </summary>
     public class DatabaseDemo
     {
         private readonly NpgsqlConnection _conn;
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="DatabaseDemo"/> class.
+        /// </summary>
+        /// <param name="conn">Активне з'єднання Npgsql, яке буде використовуватися для виконання команд.</param>
         public DatabaseDemo(NpgsqlConnection conn)
         {
-            _conn = conn ?? throw new ArgumentNullException(nameof(conn));
+            this._conn = conn ?? throw new ArgumentNullException(nameof(conn));
         }
 
-        // USERS
-
+        /// <summary>
+        /// Отримує та виводить список усіх користувачів з таблиці 'users'.
+        /// </summary>
+        /// <param name="output">Потік для виводу результатів (зазвичай Console.Out).</param>
         public void ShowUsers(TextWriter output)
         {
-            if (output == null) throw new ArgumentNullException(nameof(output));
+            if (output == null)
+            {
+                throw new ArgumentNullException(nameof(output));
+            }
 
             output.WriteLine("=== 🧑 Таблиця USERS ===");
             const string query = @"
@@ -26,7 +38,7 @@ namespace AdoNetPostgresDemo
                 ORDER BY user_id;
             ";
 
-            using var cmd = new NpgsqlCommand(query, _conn);
+            using var cmd = new NpgsqlCommand(query, this._conn);
             using var reader = cmd.ExecuteReader();
 
             if (!reader.HasRows)
@@ -45,24 +57,29 @@ namespace AdoNetPostgresDemo
                     $"Ранг: {reader["rank"]}, " +
                     $"Створено: {reader["created_at"]}");
             }
+
             output.WriteLine();
         }
 
-        // FLASHCARDS
-
+        /// <summary>
+        /// Отримує та виводить список усіх флеш-карток з таблиці 'flashcards'.
+        /// </summary>
+        /// <param name="output">Потік для виводу результатів.</param>
         public void ShowFlashcards(TextWriter output)
         {
-            if (output == null) throw new ArgumentNullException(nameof(output));
+            if (output == null)
+            {
+                throw new ArgumentNullException(nameof(output));
+            }
 
             output.WriteLine("=== 🃏 Таблиця FLASHCARDS ===");
-            // У схемі БД є creator_id, а не user_id
             const string query = @"
                 SELECT flashcard_id, creator_id, question, answer, created_at
                 FROM flashcards
                 ORDER BY flashcard_id;
             ";
 
-            using var cmd = new NpgsqlCommand(query, _conn);
+            using var cmd = new NpgsqlCommand(query, this._conn);
             using var reader = cmd.ExecuteReader();
 
             if (!reader.HasRows)
@@ -80,14 +97,20 @@ namespace AdoNetPostgresDemo
                     $"Відповідь: {reader["answer"]}, " +
                     $"Створено: {reader["created_at"]}");
             }
+
             output.WriteLine();
         }
 
-        // TEST_RESULTS
-
+        /// <summary>
+        /// Отримує та виводить список усіх результатів тестів з таблиці 'test_results'.
+        /// </summary>
+        /// <param name="output">Потік для виводу результатів.</param>
         public void ShowTestResults(TextWriter output)
         {
-            if (output == null) throw new ArgumentNullException(nameof(output));
+            if (output == null)
+            {
+                throw new ArgumentNullException(nameof(output));
+            }
 
             output.WriteLine("=== 📊 Таблиця TEST_RESULTS ===");
             const string query = @"
@@ -96,7 +119,7 @@ namespace AdoNetPostgresDemo
                 ORDER BY test_result_id;
             ";
 
-            using var cmd = new NpgsqlCommand(query, _conn);
+            using var cmd = new NpgsqlCommand(query, this._conn);
             using var reader = cmd.ExecuteReader();
 
             if (!reader.HasRows)
@@ -115,11 +138,13 @@ namespace AdoNetPostgresDemo
                     $"Бали: {reader["points"]}, " +
                     $"Дата: {reader["test_date"]}");
             }
+
             output.WriteLine();
         }
 
-        // TEST DATA GENERATION
-
+        /// <summary>
+        /// Генерує випадкові тестові дані (користувачів, картки, результати) та вставляє їх у БД.
+        /// </summary>
         public void GenerateTestData()
         {
             var random = new Random();
@@ -136,7 +161,7 @@ namespace AdoNetPostgresDemo
                            @"INSERT INTO users (email, password_hash, full_name, points) 
                              VALUES (@e, @p, @f, @pts) 
                              RETURNING user_id;",
-                           _conn))
+                           this._conn))
                 {
                     cmd.Parameters.AddWithValue("e", email);
                     cmd.Parameters.AddWithValue("p", "testhash");
@@ -149,7 +174,7 @@ namespace AdoNetPostgresDemo
                 using (var flashCmd = new NpgsqlCommand(
                            @"INSERT INTO flashcards (question, answer, creator_id) 
                              VALUES (@q, @a, @cid);",
-                           _conn))
+                           this._conn))
                 {
                     flashCmd.Parameters.AddWithValue("q", $"Питання для {fullName}");
                     flashCmd.Parameters.AddWithValue("a", $"Відповідь для {fullName}");
@@ -162,7 +187,7 @@ namespace AdoNetPostgresDemo
                            @"INSERT INTO tests (creator_id) 
                              VALUES (@cid) 
                              RETURNING test_id;",
-                           _conn))
+                           this._conn))
                 {
                     testCreateCmd.Parameters.AddWithValue("cid", userId);
                     testId = Convert.ToInt32(testCreateCmd.ExecuteScalar());
@@ -180,7 +205,7 @@ namespace AdoNetPostgresDemo
                 using (var testResultCmd = new NpgsqlCommand(
                            @"INSERT INTO test_results (test_id, user_id, correct_answers_percent, points) 
                              VALUES (@tid, @uid, @p, @pts);",
-                           _conn))
+                           this._conn))
                 {
                     testResultCmd.Parameters.AddWithValue("tid", testId);
                     testResultCmd.Parameters.AddWithValue("uid", userId);
@@ -191,35 +216,34 @@ namespace AdoNetPostgresDemo
             }
         }
 
-        // CLEANUP
-        
+        /// <summary>
+        /// Видаляє всі записи з таблиць, крім першого (MIN ID), для очищення тестових даних.
+        /// </summary>
+        /// <param name="output">Опційний потік для виводу кількості видалених рядків.</param>
         public void KeepOnlyFirstRecords(TextWriter? output = null)
         {
-            // USERS
             using (var cmd = new NpgsqlCommand(
                        @"DELETE FROM users 
                          WHERE user_id <> (SELECT MIN(user_id) FROM users);",
-                       _conn))
+                       this._conn))
             {
                 int rowsDeleted = cmd.ExecuteNonQuery();
                 output?.WriteLine($"🧑 Видалено {rowsDeleted} користувачів, крім першого.");
             }
 
-            // FLASHCARDS
             using (var cmd = new NpgsqlCommand(
                        @"DELETE FROM flashcards 
                          WHERE flashcard_id <> (SELECT MIN(flashcard_id) FROM flashcards);",
-                       _conn))
+                       this._conn))
             {
                 int rowsDeleted = cmd.ExecuteNonQuery();
                 output?.WriteLine($"🃏 Видалено {rowsDeleted} флеш-карток, крім першої.");
             }
 
-            // TEST_RESULTS
             using (var cmd = new NpgsqlCommand(
                        @"DELETE FROM test_results 
                          WHERE test_result_id <> (SELECT MIN(test_result_id) FROM test_results);",
-                       _conn))
+                       this._conn))
             {
                 int rowsDeleted = cmd.ExecuteNonQuery();
                 output?.WriteLine($"📊 Видалено {rowsDeleted} результатів тестів, крім першого.");

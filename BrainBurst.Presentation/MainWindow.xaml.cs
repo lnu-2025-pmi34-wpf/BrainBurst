@@ -1,23 +1,27 @@
 ﻿namespace BrainBurst.Presentation
 {
     using System.Windows;
-    using Microsoft.Extensions.DependencyInjection; // Додаємо для доступу до DI
+    using Microsoft.Extensions.DependencyInjection;
 
+    /// <summary>
+    /// Логіка взаємодії для головного вікна додатку (MainWindow.xaml).
+    /// </summary>
     public partial class MainWindow : Window
     {
-        // Видаляємо створення вікон вручну, отримуємо їх через DI
         private readonly IServiceProvider _serviceProvider;
 
-        public MainWindow(IServiceProvider serviceProvider) // Отримуємо IServiceProvider
+        /// <summary>
+        /// Initializes a new instance of the <see cref="MainWindow"/> class.
+        /// </summary>
+        /// <param name="serviceProvider">Постачальник служб DI (для отримання інших вікон).</param>
+        public MainWindow(IServiceProvider serviceProvider)
         {
             this.InitializeComponent();
             this._serviceProvider = serviceProvider;
         }
 
-        // ... (LoginButton_Click та RegisterButton_Click)
         private void RegisterButton_Click(object sender, RoutedEventArgs e)
         {
-            // Отримуємо вікно з DI
             RegistrationWindow registrationWindow = this._serviceProvider.GetRequiredService<RegistrationWindow>();
             this.Hide();
 
@@ -25,7 +29,6 @@
 
             if (result == true)
             {
-                // Отримуємо ProfileWindow з DI
                 ProfileWindow profileWindow = this._serviceProvider.GetRequiredService<ProfileWindow>();
                 profileWindow.Show();
 
@@ -39,7 +42,6 @@
 
         private void LoginButton_Click(object sender, RoutedEventArgs e)
         {
-            // Отримуємо вікно з DI
             LoginWindow loginWindow = this._serviceProvider.GetRequiredService<LoginWindow>();
             this.Hide();
 
@@ -47,7 +49,6 @@
 
             if (result == true)
             {
-                // Отримуємо ProfileWindow з DI
                 ProfileWindow profileWindow = this._serviceProvider.GetRequiredService<ProfileWindow>();
                 profileWindow.Show();
 

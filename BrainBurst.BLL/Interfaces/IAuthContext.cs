@@ -2,17 +2,29 @@ namespace BrainBurst.BLL.Interfaces;
 
 using BrainBurst.BLL.DTO;
 
+/// <summary>
+/// Визначає контракт для сервісу, що зберігає стан поточного автентифікованого користувача.
+/// </summary>
 public interface IAuthContext
 {
-    // ID поточного автентифікованого користувача
+    /// <summary>
+    /// Gets отримує ID поточного автентифікованого користувача.
+    /// </summary>
     int CurrentUserId { get; }
 
-    // Повний DTO поточного користувача
+    /// <summary>
+    /// Gets отримує повний DTO поточного користувача (може бути null, якщо ніхто не ввійшов).
+    /// </summary>
     UserDTO? CurrentUser { get; }
 
-    // Встановлює контекст після успішного входу/реєстрації
+    /// <summary>
+    /// Встановлює контекст поточного користувача після успішного входу або реєстрації.
+    /// </summary>
+    /// <param name="user">DTO користувача, який увійшов у систему.</param>
     void SetCurrentUser(UserDTO user);
 
-    // Очищає контекст при виході з системи
+    /// <summary>
+    /// Очищає контекст автентифікації (використовується при виході з системи).
+    /// </summary>
     void ClearContext();
 }

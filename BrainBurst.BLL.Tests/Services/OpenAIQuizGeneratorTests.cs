@@ -1,34 +1,43 @@
-using System;
-using System.Linq;
-using System.Threading;
-using System.Threading.Tasks;
-using BrainBurst.BLL.Services;
-using Xunit;
-
 namespace BrainBurst.BLL.Tests.Services
 {
+    using System;
+    using System.Linq;
+    using System.Threading;
+    using System.Threading.Tasks;
+    using BrainBurst.BLL.Services;
+    using Xunit;
+
+    /// <summary>
+    /// Містить юніт-тести для <see cref="OpenAIQuizGenerator"/>.
+    /// Оскільки генератор наразі імітує відповідь, ці тести перевіряють логіку парсингу відповіді.
+    /// </summary>
     public class OpenAIQuizGeneratorTests
     {
         private readonly OpenAIQuizGenerator _generator;
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="OpenAIQuizGeneratorTests"/> class.
+        /// </summary>
         public OpenAIQuizGeneratorTests()
         {
-            _generator = new OpenAIQuizGenerator();
+            this._generator = new OpenAIQuizGenerator();
         }
 
-        // 1. метод повертає список карток, розібраних з mockJson
+        /// <summary>
+        /// Тест: GenerateFromTextAsync коректно парсить імітовану JSON-відповідь у список кортежів.
+        /// </summary>
+        /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
         [Fact]
         public async Task GenerateFromTextAsync_ReturnsParsedFlashcards_FromMockJson()
         {
             var ct = CancellationToken.None;
             var inputText = "якийсь навчальний текст";
 
-            var result = await _generator.GenerateFromTextAsync(inputText, ct);
+            var result = await this._generator.GenerateFromTextAsync(inputText, ct);
 
             Assert.NotNull(result);
             Assert.NotEmpty(result);
 
-            // у mockJson у класі зараз 3 об’єкти
             Assert.Equal(3, result.Count);
 
             var first = result[0];
@@ -52,13 +61,16 @@ namespace BrainBurst.BLL.Tests.Services
             Assert.Contains("UI", third.Tags);
         }
 
-        // 2. перевіряємо, що Tags реально IReadOnlyList<string>, а не null
+        /// <summary>
+        /// Тест: GenerateFromTextAsync гарантує, що список тегів у результаті ніколи не є null.
+        /// </summary>
+        /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
         [Fact]
         public async Task GenerateFromTextAsync_TagsAreNonNullAndReadOnlyList()
         {
             var ct = CancellationToken.None;
 
-            var result = await _generator.GenerateFromTextAsync("будь-який текст", ct);
+            var result = await this._generator.GenerateFromTextAsync("будь-який текст", ct);
 
             Assert.All(result, item =>
             {
@@ -67,16 +79,19 @@ namespace BrainBurst.BLL.Tests.Services
             });
         }
 
-        // 3. токен відміни має скасовувати операцію (TaskCanceledException)
+        /// <summary>
+        /// Тест: GenerateFromTextAsync кидає TaskCanceledException, якщо токен скасовано (перевірка імітації Task.Delay).
+        /// </summary>
+        /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
         [Fact]
         public async Task GenerateFromTextAsync_CanceledToken_ThrowsTaskCanceledException()
         {
             using var cts = new CancellationTokenSource();
-            cts.Cancel(); // скасовуємо до виклику, щоб Task.Delay(500, ct) одразу кинув
+            cts.Cancel();
 
             await Assert.ThrowsAsync<TaskCanceledException>(async () =>
             {
-                await _generator.GenerateFromTextAsync("будь-який текст", cts.Token);
+                await this._generator.GenerateFromTextAsync("будь-який текст", cts.Token);
             });
         }
     }

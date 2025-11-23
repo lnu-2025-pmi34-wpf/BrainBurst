@@ -54,7 +54,7 @@ namespace AdoNetPostgresDemo
         static void GenerateTestData(NpgsqlConnection conn)
         {
             var random = new Random();
-            int count = random.Next(30, 51); 
+            int count = random.Next(30, 51);
 
             for (int i = 1; i <= count; i++)
             {
@@ -179,22 +179,28 @@ namespace AdoNetPostgresDemo
     }
 }*/
 
-using System;
-using System.Text;
-using Npgsql;
-using DotNetEnv;
-
 namespace AdoNetPostgresDemo
 {
+    using System;
+    using System.Text;
+    using DotNetEnv;
+    using Npgsql;
+
+    /// <summary>
+    /// Головна точка входу для демонстрації роботи з PostgreSQL через Ado.Net (Npgsql).
+    /// </summary>
     internal class Program
     {
-        static string connectionString;
-
-        static void Main(string[] args)
+        /// <summary>
+        /// Головний метод, що ініціалізує підключення до БД та запускає демонстрацію.
+        /// </summary>
+        /// <param name="args">Аргументи командного рядка (не використовуються).</param>
+        private static void Main(string[] args)
         {
             Console.OutputEncoding = Encoding.UTF8;
             Env.Load();
-            connectionString = Environment.GetEnvironmentVariable("CONNECTION_STRING");
+            string connectionString = Environment.GetEnvironmentVariable("CONNECTION_STRING") ??
+                                                  throw new InvalidOperationException("Змінна оточення CONNECTION_STRING не знайдена.");
 
             using var conn = new NpgsqlConnection(connectionString);
             conn.Open();
@@ -205,9 +211,6 @@ namespace AdoNetPostgresDemo
             demo.ShowUsers(Console.Out);
             demo.ShowFlashcards(Console.Out);
             demo.ShowTestResults(Console.Out);
-
-            // за бажанням:
-            // demo.GenerateTestData();
         }
     }
 }

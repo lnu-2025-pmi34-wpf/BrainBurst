@@ -1,20 +1,24 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using BrainBurst.BLL.DTO;
-using BrainBurst.BLL.Enums;
-using BrainBurst.BLL.Interfaces;
-using BrainBurst.BLL.Mapping;
-using BrainBurst.DAL.Entities;
-using Moq;
-using Xunit;
-
 namespace BrainBurst.BLL.Tests.Mapping
 {
+    using System;
+    using System.Collections.Generic;
+    using System.Linq;
+    using BrainBurst.BLL.DTO;
+    using BrainBurst.BLL.Enums;
+    using BrainBurst.BLL.Interfaces;
+    using BrainBurst.BLL.Mapping;
+    using BrainBurst.DAL.Entities;
+    using Moq;
+    using Xunit;
+
+    /// <summary>
+    /// Містить юніт-тести для методів-розширень мапінгу в <see cref="MappingExtensions"/>.
+    /// </summary>
     public class MappingExtensionsTests
     {
-        // User.ToDTO
-        
+        /// <summary>
+        /// Тест: Метод ToDTO для User коректно мапить всі поля та викликає сервіс рейтингу.
+        /// </summary>
         [Fact]
         public void User_ToDTO_MapsAllFields_AndCallsRatingServiceCorrectly()
         {
@@ -24,7 +28,7 @@ namespace BrainBurst.BLL.Tests.Mapping
                 Email = "user@example.com",
                 FullName = "Test User",
                 Points = 1234,
-                CreatedAt = new DateTime(2025, 1, 2, 3, 4, 5, DateTimeKind.Utc)
+                CreatedAt = new DateTime(2025, 1, 2, 3, 4, 5, DateTimeKind.Utc),
             };
 
             var ratingMock = new Mock<IRatingService>(MockBehavior.Strict);
@@ -51,16 +55,19 @@ namespace BrainBurst.BLL.Tests.Mapping
             ratingMock.Verify(r => r.GetRankLabel(UserRank.Expert), Times.Once);
         }
 
+        /// <summary>
+        /// Тест: Метод ToDTO для User коректно обробляє null значення для Email та FullName.
+        /// </summary>
         [Fact]
         public void User_ToDTO_UsesEmptyString_WhenEmailOrFullNameNull()
         {
             var user = new User
             {
                 UserId = 1,
-                Email = null,
+                Email = null!,
                 FullName = null,
                 Points = 0,
-                CreatedAt = DateTime.UtcNow
+                CreatedAt = DateTime.UtcNow,
             };
 
             var ratingMock = new Mock<IRatingService>(MockBehavior.Loose);
@@ -73,8 +80,9 @@ namespace BrainBurst.BLL.Tests.Mapping
             Assert.Equal(string.Empty, dto.FullName);
         }
 
-        // Flashcard.ToDTO
-
+        /// <summary>
+        /// Тест: Метод ToDTO для Flashcard мапить поля та створює нову копію списку тегів.
+        /// </summary>
         [Fact]
         public void Flashcard_ToDTO_MapsFields_AndCopiesTagsToNewList()
         {
@@ -84,7 +92,7 @@ namespace BrainBurst.BLL.Tests.Mapping
                 Question = "Q?",
                 Answer = "A!",
                 CreatorId = 7,
-                CreatedAt = new DateTime(2024, 5, 6, 7, 8, 9, DateTimeKind.Utc)
+                CreatedAt = new DateTime(2024, 5, 6, 7, 8, 9, DateTimeKind.Utc),
             };
 
             var tags = new List<string> { "tag1", "tag2" };
@@ -102,21 +110,23 @@ namespace BrainBurst.BLL.Tests.Mapping
 
             Assert.False(ReferenceEquals(tags, dto.Tags));
 
-            // модифікуємо вихідний список — DTO не повинен змінитися
             tags.Add("tag3");
             Assert.Equal(2, dto.Tags.Count);
         }
 
+        /// <summary>
+        /// Тест: Метод ToDTO для Flashcard коректно обробляє null для Question, Answer та списку тегів.
+        /// </summary>
         [Fact]
         public void Flashcard_ToDTO_HandlesNullsAndNullTags()
         {
             var card = new Flashcard
             {
                 FlashcardId = 2,
-                Question = null,
-                Answer = null,
+                Question = null!,
+                Answer = null!,
                 CreatorId = 1,
-                CreatedAt = DateTime.UtcNow
+                CreatedAt = DateTime.UtcNow,
             };
 
             var dto = card.ToDTO(null!);
@@ -127,8 +137,9 @@ namespace BrainBurst.BLL.Tests.Mapping
             Assert.Empty(dto.Tags);
         }
 
-        // IEnumerable<Flashcard>.ToTestDTO
-
+        /// <summary>
+        /// Тест: Метод ToTestDTO повертає DTO з порожнім списком питань, якщо на вході порожня колекція карток.
+        /// </summary>
         [Fact]
         public void ToTestDTO_EmptyCards_ReturnsTestDtoWithEmptyQuestions()
         {
@@ -144,6 +155,9 @@ namespace BrainBurst.BLL.Tests.Mapping
             Assert.Empty(dto.Questions);
         }
 
+        /// <summary>
+        /// Тест: Метод ToTestDTO коректно мапить кожну картку на FlashcardDTO з порожніми тегами.
+        /// </summary>
         [Fact]
         public void ToTestDTO_MapsEachCardToQuestionDto_WithEmptyTags()
         {
@@ -151,7 +165,7 @@ namespace BrainBurst.BLL.Tests.Mapping
             var cards = new List<Flashcard>
             {
                 new Flashcard { FlashcardId = 1, Question = "Q1", Answer = "A1", CreatorId = 10, CreatedAt = now.AddMinutes(-1) },
-                new Flashcard { FlashcardId = 2, Question = null,  Answer = null,  CreatorId = 10, CreatedAt = now }
+                new Flashcard { FlashcardId = 2, Question = null !,  Answer = null !,  CreatorId = 10, CreatedAt = now },
             };
 
             int testId = 5;
@@ -182,8 +196,9 @@ namespace BrainBurst.BLL.Tests.Mapping
             Assert.Empty(q2.Tags);
         }
 
-        // QuestionResult.ToDTO 
-
+        /// <summary>
+        /// Тест: Метод ToDTO для QuestionResult мапить поля та замінює null UserInput на порожній рядок.
+        /// </summary>
         [Fact]
         public void QuestionResult_ToDTO_MapsFields_AndReplacesNullUserInput()
         {
@@ -191,8 +206,8 @@ namespace BrainBurst.BLL.Tests.Mapping
             {
                 QuestionResultId = 7,
                 FlashcardId = 3,
-                UserInput = null,
-                IsCorrect = true
+                UserInput = null!,
+                IsCorrect = true,
             };
 
             var dto = qr.ToDTO();
@@ -203,6 +218,9 @@ namespace BrainBurst.BLL.Tests.Mapping
             Assert.True(dto.IsCorrect);
         }
 
+        /// <summary>
+        /// Тест: Метод ToDTO для QuestionResult коректно мапить не-null UserInput.
+        /// </summary>
         [Fact]
         public void QuestionResult_ToDTO_MapsNonNullUserInput()
         {
@@ -211,7 +229,7 @@ namespace BrainBurst.BLL.Tests.Mapping
                 QuestionResultId = 8,
                 FlashcardId = 4,
                 UserInput = " user answer ",
-                IsCorrect = false
+                IsCorrect = false,
             };
 
             var dto = qr.ToDTO();
@@ -222,8 +240,9 @@ namespace BrainBurst.BLL.Tests.Mapping
             Assert.False(dto.IsCorrect);
         }
 
-        // TestResult.ToDTO
-
+        /// <summary>
+        /// Тест: Метод ToDTO для TestResult мапить скалярні поля та копіює список QuestionResultDTO.
+        /// </summary>
         [Fact]
         public void TestResult_ToDTO_MapsScalarFields_AndCopiesQuestionsList()
         {
@@ -234,13 +253,13 @@ namespace BrainBurst.BLL.Tests.Mapping
                 UserId = 3,
                 CorrectAnswersPercent = 87.5m,
                 Points = 40,
-                TestDate = new DateTime(2025, 2, 3, 4, 5, 6, DateTimeKind.Utc)
+                TestDate = new DateTime(2025, 2, 3, 4, 5, 6, DateTimeKind.Utc),
             };
 
             var qrs = new List<QuestionResultDTO>
             {
                 new QuestionResultDTO { Id = 1, FlashcardId = 10, UserInput = "A", IsCorrect = true },
-                new QuestionResultDTO { Id = 2, FlashcardId = 20, UserInput = "B", IsCorrect = false }
+                new QuestionResultDTO { Id = 2, FlashcardId = 20, UserInput = "B", IsCorrect = false },
             };
 
             var dto = tr.ToDTO(qrs);
@@ -257,10 +276,12 @@ namespace BrainBurst.BLL.Tests.Mapping
             Assert.Equal(qrs[0].Id, dto.Questions[0].Id);
             Assert.Equal(qrs[1].Id, dto.Questions[1].Id);
 
-            // перевіряємо, що створено новий список (ToList), а не використано вихідний
             Assert.False(ReferenceEquals(qrs, dto.Questions));
         }
 
+        /// <summary>
+        /// Тест: Метод ToDTO для TestResult повертає DTO з порожнім списком питань, якщо на вході порожня колекція.
+        /// </summary>
         [Fact]
         public void TestResult_ToDTO_EmptyQuestionsEnumerable_ReturnsDtoWithEmptyList()
         {
@@ -271,7 +292,7 @@ namespace BrainBurst.BLL.Tests.Mapping
                 UserId = 3,
                 CorrectAnswersPercent = 0m,
                 Points = 0,
-                TestDate = DateTime.UtcNow
+                TestDate = DateTime.UtcNow,
             };
 
             IEnumerable<QuestionResultDTO> emptyQrs = Array.Empty<QuestionResultDTO>();

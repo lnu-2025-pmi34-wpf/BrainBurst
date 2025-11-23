@@ -12,21 +12,21 @@
     using BrainBurst.BLL.Interfaces;
     using Microsoft.Extensions.DependencyInjection;
 
+    /// <summary>
+    /// Логіка взаємодії для відображення списку флеш-карток та групування їх у колоди.
+    /// </summary>
     public partial class CardsView : UserControl
     {
         private readonly IServiceProvider _serviceProvider;
         private readonly IFlashcardService _flashcardService;
         private readonly IAuthContext _authContext;
 
-        private class DeckItem
-        {
-            public string DeckTag { get; set; } = string.Empty;
-
-            public int CardCount { get; set; }
-
-            public DateTime CreatedAt { get; set; }
-        }
-
+        /// <summary>
+        /// Initializes a new instance of the <see cref="CardsView"/> class.
+        /// </summary>
+        /// <param name="serviceProvider">Постачальник служб DI (для навігації).</param>
+        /// <param name="flashcardService">Сервіс для доступу до флеш-карток.</param>
+        /// <param name="authContext">Контекст автентифікації для отримання ID користувача.</param>
         public CardsView(IServiceProvider serviceProvider, IFlashcardService flashcardService, IAuthContext authContext)
         {
             this.InitializeComponent();
@@ -34,26 +34,20 @@
             this._flashcardService = flashcardService;
             this._authContext = authContext;
 
-            // Змінюємо підписку: тепер реагуємо на зміну видимості, а не лише на перше завантаження
             this.IsVisibleChanged += this.CardsView_IsVisibleChanged;
         }
 
-        // Цей метод спрацьовує щоразу, коли сторінка стає видимою (наприклад, при поверненні назад)
-        private void CardsView_IsVisibleChanged(object sender, DependencyPropertyChangedEventArgs e)
+        private async void CardsView_IsVisibleChanged(object sender, DependencyPropertyChangedEventArgs e)
         {
             if ((bool)e.NewValue == true)
             {
-                // Якщо сторінка стала видимою, перезавантажуємо дані
-                this.LoadCardsAsync();
+                await this.LoadCardsAsync();
             }
         }
 
-        // Старий метод Loaded більше не потрібен, його можна видалити
-        // private void CardsView_Loaded(object sender, RoutedEventArgs e) { ... }
-
         private async Task LoadCardsAsync(string? search = null)
         {
-             try
+            try
             {
                 var allCards = await this._flashcardService.ListAsync(this._authContext.CurrentUserId, search, CancellationToken.None);
 
@@ -64,7 +58,7 @@
                     {
                         DeckTag = g.Key,
                         CardCount = g.Count(),
-                        CreatedAt = g.Min(c => c.CreatedAt)
+                        CreatedAt = g.Min(c => c.CreatedAt),
                     })
                     .OrderByDescending(d => d.CreatedAt)
                     .ToList();
@@ -80,19 +74,17 @@
                     this.NoCardsMessage.Visibility = Visibility.Collapsed;
                 }
             }
-            catch (Exception ex)
+            catch (Exception)
             {
-                // MessageBox.Show($"Помилка завантаження карток: {ex.Message}", "Помилка");
                 this.NoCardsMessage.Text = "Помилка завантаження.";
                 this.NoCardsMessage.Visibility = Visibility.Visible;
             }
         }
 
-        private void SearchTextBox_TextChanged(object sender, TextChangedEventArgs e)
+        private async void SearchTextBox_TextChanged(object sender, TextChangedEventArgs e)
         {
-            this.LoadCardsAsync(this.SearchTextBox.Text);
+            await this.LoadCardsAsync(this.SearchTextBox.Text);
         }
-
 
         private void Deck_Click(object sender, MouseButtonEventArgs e)
         {
@@ -130,6 +122,15 @@
             {
                 MessageBox.Show($"Критична помилка при переході до створення картки:\n\n{ex.Message}\n\nInner Exception: {ex.InnerException?.Message}", "Знайдено помилку!");
             }
+        }
+
+        private class DeckItem
+        {
+            public string DeckTag { get; set; } = string.Empty;
+
+            public int CardCount { get; set; }
+
+            public DateTime CreatedAt { get; set; }
         }
     }
 }

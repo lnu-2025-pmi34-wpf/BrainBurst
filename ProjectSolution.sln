@@ -17,6 +17,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BrainBurst.BLL", "BrainBurs
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BrainBurst.BLL.Tests", "BrainBurst.BLL.Tests\BrainBurst.BLL.Tests.csproj", "{37B222A3-2E28-4B16-9C6E-989B2B878FFD}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Task3", "Task3\Task3.csproj", "{A36E21AC-5E27-824E-ADCA-0E00BD5C010A}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -39,6 +41,10 @@ Global
 		{37B222A3-2E28-4B16-9C6E-989B2B878FFD}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{37B222A3-2E28-4B16-9C6E-989B2B878FFD}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{37B222A3-2E28-4B16-9C6E-989B2B878FFD}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A36E21AC-5E27-824E-ADCA-0E00BD5C010A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A36E21AC-5E27-824E-ADCA-0E00BD5C010A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A36E21AC-5E27-824E-ADCA-0E00BD5C010A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A36E21AC-5E27-824E-ADCA-0E00BD5C010A}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

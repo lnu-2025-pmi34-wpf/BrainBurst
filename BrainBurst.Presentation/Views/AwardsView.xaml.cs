@@ -7,42 +7,42 @@
     using System.Windows.Controls;
     using BrainBurst.BLL.Interfaces;
 
+    /// <summary>
+    /// Логіка взаємодії для відображення таблиці лідерів (рейтингу) користувачів.
+    /// </summary>
     public partial class AwardsView : UserControl
     {
         private const int TopN = 10;
         private readonly IUserService _userService;
 
-        // Оновлений конструктор для DI
+        /// <summary>
+        /// Initializes a new instance of the <see cref="AwardsView"/> class.
+        /// </summary>
+        /// <param name="userService">Сервіс для отримання даних користувачів та таблиці лідерів.</param>
         public AwardsView(IUserService userService)
         {
             this.InitializeComponent();
             this._userService = userService;
 
-            // Завантажуємо дані після того, як елемент завантажиться у вікно
             this.Loaded += this.AwardsView_Loaded;
         }
 
-        // Викликаємо асинхронну логіку після завантаження UI
-        private void AwardsView_Loaded(object sender, RoutedEventArgs e)
+        private async void AwardsView_Loaded(object sender, RoutedEventArgs e)
         {
-            this.LoadLeaderboardAsync();
+            try
+            {
+                await this.LoadLeaderboardAsync();
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Помилка завантаження таблиці лідерів: {ex.Message}", "Помилка");
+            }
         }
 
         private async Task LoadLeaderboardAsync()
         {
-            try
-            {
-                // Отримуємо список лідерів через сервіс
-                var leaderboard = await this._userService.GetLeaderboardAsync(TopN, CancellationToken.None);
-
-                // Встановлюємо ItemsSource для ItemsControl
-                this.LeaderboardItemsControl.ItemsSource = leaderboard;
-            }
-            catch (Exception)
-            {
-                // У реальному додатку: показати повідомлення про помилку завантаження
-                // MessageBox.Show("Помилка завантаження таблиці лідерів.");
-            }
+            var leaderboard = await this._userService.GetLeaderboardAsync(TopN, CancellationToken.None);
+            this.LeaderboardItemsControl.ItemsSource = leaderboard;
         }
     }
 }

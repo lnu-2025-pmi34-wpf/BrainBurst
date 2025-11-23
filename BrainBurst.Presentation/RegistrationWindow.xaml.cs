@@ -6,17 +6,24 @@
     using System.Windows.Media;
     using BrainBurst.BLL.Interfaces;
 
+    /// <summary>
+    /// Логіка взаємодії для вікна реєстрації користувача (RegistrationWindow.xaml).
+    /// </summary>
     public partial class RegistrationWindow : Window
     {
         private readonly IAuthService _authService;
-        private readonly IAuthContext _authContext; // <--- ДОДАНО ПОЛЕ
+        private readonly IAuthContext _authContext;
 
-        // Оновлюємо конструктор для отримання залежностей
-        public RegistrationWindow(IAuthService authService, IAuthContext authContext) // <--- ДОДАНО IAuthContext
+        /// <summary>
+        /// Initializes a new instance of the <see cref="RegistrationWindow"/> class.
+        /// </summary>
+        /// <param name="authService">Сервіс для виконання логіки реєстрації.</param>
+        /// <param name="authContext">Контекст для встановлення поточного користувача після успішної реєстрації.</param>
+        public RegistrationWindow(IAuthService authService, IAuthContext authContext)
         {
             this.InitializeComponent();
             this._authService = authService;
-            this._authContext = authContext; // <--- ІНІЦІАЛІЗАЦІЯ
+            this._authContext = authContext;
         }
 
         private void BackButton_Click(object sender, RoutedEventArgs e)
@@ -36,25 +43,19 @@
 
             try
             {
-                // ВИКЛИК РЕАЛЬНОЇ ЛОГІКИ РЕЄСТРАЦІЇ
-                var userDto = await this._authService.RegisterAsync(email, password, fullName, CancellationToken.None); // <--- ЗБЕРЕЖЕНО DTO
+                var userDto = await this._authService.RegisterAsync(email, password, fullName, CancellationToken.None);
 
-                // ВСТАНОВЛЕННЯ КОНТЕКСТУ ПІСЛЯ УСПІШНОЇ РЕЄСТРАЦІЇ
-                this._authContext.SetCurrentUser(userDto); // <--- ВИКЛИК SetCurrentUser
+                this._authContext.SetCurrentUser(userDto);
 
-                // УСПІШНА РЕЄСТРАЦІЯ
                 this.DialogResult = true;
                 this.Close();
             }
             catch (ArgumentException ex)
             {
-                // Помилка валідації (наприклад, некоректний email, короткий пароль, email вже існує)
                 this.StatusText.Text = ex.Message;
             }
-            catch (Exception ex) // <-- Додано змінну ex, щоб показати внутрішню помилку
+            catch (Exception ex)
             {
-                // Інші помилки (наприклад, проблеми з БД або мережею)
-                // ТЕПЕР ПОКАЗУЄ ВНУТРІШНЮ ПОМИЛКУ БД
                 this.StatusText.Text = $"Непередбачена помилка реєстрації: {ex.InnerException?.Message ?? ex.Message}. Спробуйте пізніше.";
             }
         }

@@ -75,12 +75,12 @@ namespace BrainBurst.DAL.Repositories
         {
             using (var scope = this._serviceProvider.CreateScope())
             {
-                 var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
-                 var user = await context.Users
-                    .AsNoTracking()
-                    .FirstOrDefaultAsync(u => u.UserId == userId, ct);
+                var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+                var user = await context.Users
+                   .AsNoTracking()
+                   .FirstOrDefaultAsync(u => u.UserId == userId, ct);
 
-                 return user ?? throw new KeyNotFoundException($"User with ID {userId} not found.");
+                return user ?? throw new KeyNotFoundException($"User with ID {userId} not found.");
             }
         }
 

@@ -1,12 +1,17 @@
-using BrainBurst.BLL.Services;
-using System;
-using Xunit;
-
 namespace BrainBurst.BLL.Tests.Services
 {
+    using System;
+    using BrainBurst.BLL.Services;
+    using Xunit;
+
+    /// <summary>
+    /// Містить юніт-тести для <see cref="PasswordHelper"/>.
+    /// </summary>
     public class PasswordHelperTests
     {
-        // 1. переконуємось, що HashPassword повертає непорожній Base64
+        /// <summary>
+        /// Тест: HashPassword повертає валідний (не порожній) Base64 рядок.
+        /// </summary>
         [Fact]
         public void HashPassword_ReturnsBase64String()
         {
@@ -16,14 +21,18 @@ namespace BrainBurst.BLL.Tests.Services
 
             Assert.False(string.IsNullOrWhiteSpace(hash));
 
+#pragma warning disable SA1011
             byte[]? bytes = null;
+#pragma warning restore SA1011
             var exception = Record.Exception(() => bytes = Convert.FromBase64String(hash));
 
             Assert.Null(exception);
             Assert.NotNull(bytes);
         }
 
-        // 2. один і той самий пароль -> однаковий хеш
+        /// <summary>
+        /// Тест: HashPassword повертає однаковий хеш для однакових вхідних даних (оскільки "сіль" не використовується).
+        /// </summary>
         [Fact]
         public void HashPassword_SameInput_ReturnsSameHash()
         {
@@ -35,7 +44,9 @@ namespace BrainBurst.BLL.Tests.Services
             Assert.Equal(h1, h2);
         }
 
-        // 3. різні паролі -> різні хеші
+        /// <summary>
+        /// Тест: HashPassword повертає різні хеші для різних паролів.
+        /// </summary>
         [Fact]
         public void HashPassword_DifferentPasswords_ReturnDifferentHashes()
         {
@@ -45,7 +56,9 @@ namespace BrainBurst.BLL.Tests.Services
             Assert.NotEqual(h1, h2);
         }
 
-        // 4. VerifyPassword успішний
+        /// <summary>
+        /// Тест: VerifyPassword повертає true, якщо пароль та хеш співпадають.
+        /// </summary>
         [Fact]
         public void VerifyPassword_CorrectPassword_ReturnsTrue()
         {
@@ -57,7 +70,9 @@ namespace BrainBurst.BLL.Tests.Services
             Assert.True(result);
         }
 
-        // 5. VerifyPassword неправильний пароль -> false
+        /// <summary>
+        /// Тест: VerifyPassword повертає false, якщо пароль не співпадає з хешем.
+        /// </summary>
         [Fact]
         public void VerifyPassword_WrongPassword_ReturnsFalse()
         {
@@ -68,31 +83,37 @@ namespace BrainBurst.BLL.Tests.Services
             Assert.False(result);
         }
 
-        // 6. VerifyPassword: порожній пароль
+        /// <summary>
+        /// Тест: VerifyPassword повертає false, якщо пароль порожній.
+        /// </summary>
         [Fact]
         public void VerifyPassword_EmptyPassword_ReturnsFalse()
         {
             string hash = PasswordHelper.HashPassword("qqq");
 
-            bool result = PasswordHelper.VerifyPassword("", hash);
+            bool result = PasswordHelper.VerifyPassword(string.Empty, hash);
 
             Assert.False(result);
         }
 
-        // 7. VerifyPassword: порожній хеш → завжди false
+        /// <summary>
+        /// Тест: VerifyPassword повертає false, якщо хеш порожній.
+        /// </summary>
         [Fact]
         public void VerifyPassword_EmptyHash_ReturnsFalse()
         {
-            bool result = PasswordHelper.VerifyPassword("pwd", "");
+            bool result = PasswordHelper.VerifyPassword("pwd", string.Empty);
 
             Assert.False(result);
         }
 
-        // 8. VerifyPassword: null-хеш → NRE не кидається, але false
+        /// <summary>
+        /// Тест: VerifyPassword повертає false, якщо хеш є null.
+        /// </summary>
         [Fact]
         public void VerifyPassword_NullHash_ReturnsFalse()
         {
-            bool result = PasswordHelper.VerifyPassword("pwd", hash: null);
+            bool result = PasswordHelper.VerifyPassword("pwd", hash: null!);
 
             Assert.False(result);
         }

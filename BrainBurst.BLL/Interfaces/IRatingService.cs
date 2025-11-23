@@ -16,7 +16,7 @@ public interface IRatingService
     UserRank GetRank(int points);
 
     /// <summary>
-    /// Отримує текстову мітку або емодзі для
+    /// Отримує текстову мітку або емодзі для.
     /// </summary>
     /// <param name="rank">Ранг користувача.</param>
     /// <returns>Рядок, що представляє ранг (наприклад, "Початківець" або "🏆").</returns>

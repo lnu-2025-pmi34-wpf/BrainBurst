@@ -6,57 +6,63 @@
     using System.Windows;
     using System.Windows.Controls;
     using System.Windows.Navigation;
-    using BrainBurst.BLL.Interfaces; // Додаємо для IUserService, IFlashcardService та IAuthContext
-    using Microsoft.Extensions.DependencyInjection; // Для DI
+    using BrainBurst.BLL.Interfaces;
+    using Microsoft.Extensions.DependencyInjection;
 
+    /// <summary>
+    /// Логіка взаємодії для View відображення основного профілю користувача.
+    /// </summary>
     public partial class ProfileView : UserControl
     {
-        // УСУНЕНО: private const int CurrentUserId = 1;
-
         private readonly IServiceProvider _serviceProvider;
         private readonly IUserService _userService;
         private readonly IFlashcardService _flashcardService;
-        private readonly IAuthContext _authContext; // <--- ДОДАНО ПОЛЕ
+        private readonly IAuthContext _authContext;
 
-        // ОНОВЛЕНО: Конструктор приймає IAuthContext
+        /// <summary>
+        /// Initializes a new instance of the <see cref="ProfileView"/> class.
+        /// </summary>
+        /// <param name="serviceProvider">Постачальник служб DI (для навігації).</param>
+        /// <param name="userService">Сервіс для доступу до даних користувача.</param>
+        /// <param name="flashcardService">Сервіс для доступу до флеш-карток (для підрахунку).</param>
+        /// <param name="authContext">Контекст автентифікації для отримання ID поточного користувача.</param>
         public ProfileView(IServiceProvider serviceProvider, IUserService userService, IFlashcardService flashcardService, IAuthContext authContext)
         {
             this.InitializeComponent();
             this._serviceProvider = serviceProvider;
             this._userService = userService;
             this._flashcardService = flashcardService;
-            this._authContext = authContext; // <--- ІНІЦІАЛІЗОВАНО
+            this._authContext = authContext;
 
-            // Встановлюємо ім'я з контексту одразу, щоб уникнути затримок
             this.UsernameTextBlock.Text = this._authContext.CurrentUser?.FullName ?? this._authContext.CurrentUser?.Email ?? "Завантаження...";
 
             this.Loaded += this.ProfileView_Loaded;
         }
 
-        // Завантажуємо дані після завантаження елемента в UI
-        private void ProfileView_Loaded(object sender, RoutedEventArgs e)
+        private async void ProfileView_Loaded(object sender, RoutedEventArgs e)
         {
-            this.LoadProfileAsync();
+            try
+            {
+                await this.LoadProfileAsync();
+            }
+            catch (Exception)
+            {
+            }
         }
 
         private async Task LoadProfileAsync()
         {
             try
             {
-                // 1. ПЕРЕВІРКА: Використовуємо дані з контексту, якщо вони доступні
                 var currentUser = this._authContext.CurrentUser;
 
                 if (currentUser == null)
                 {
-                    // Якщо контекст пустий (наприклад, після виходу), ми повинні спробувати завантажити
-                    // АБО завершити, оскільки користувач має бути аутентифікований.
                     throw new InvalidOperationException("Користувач не автентифікований.");
                 }
 
                 this.UsernameTextBlock.Text = currentUser.FullName ?? currentUser.Email;
 
-                // 2. Завантаження кількості карток
-                // Якщо користувач щойно зареєстрований, він повинен мати ID > 0.
                 if (currentUser.Id > 0)
                 {
                     var flashcards = await this._flashcardService.ListAsync(currentUser.Id, null, CancellationToken.None);
@@ -66,16 +72,11 @@
                 {
                     this.FlashcardsCountTextBlock.Text = "0 флешкарток";
                 }
-
             }
-            catch (Exception ex)
+            catch (Exception)
             {
-                // Якщо помилка трапилась тут, це KeyNotFoundException або DB-помилка.
                 this.UsernameTextBlock.Text = "Помилка завантаження профілю";
                 this.FlashcardsCountTextBlock.Text = "--- флешкарток";
-
-                // ⚠️ Запустіть програму в Debug, щоб побачити точний InnerException тут!
-                // MessageBox.Show($"Debug Error: {ex.InnerException?.Message ?? ex.Message}");
             }
         }
 

@@ -10,48 +10,46 @@
     using System.Windows.Media;
     using System.Windows.Navigation;
     using BrainBurst.BLL.DTO;
-    using BrainBurst.BLL.Interfaces; // Додано для IAuthContext
+    using BrainBurst.BLL.Interfaces;
     using Microsoft.Extensions.DependencyInjection;
 
+    /// <summary>
+    /// Логіка взаємодії для View створення нового тесту з наявних флеш-карток.
+    /// </summary>
     public partial class CreateTestView : UserControl
     {
-        // УСУНЕНО: private const int CurrentUserId = 1;
-
-        // Внутрішній DTO для відображення колод
-        private class DeckItem
-        {
-            public int FlashcardId { get; set; }
-
-            public string TagsStr { get; set; }
-
-            public DateTime CreatedAt { get; set; }
-        }
-
         private readonly IFlashcardService _flashcardService;
         private readonly ITestService _testService;
-        private readonly IAuthContext _authContext; // <--- ДОДАНО ПОЛЕ
+        private readonly IAuthContext _authContext;
+        private IReadOnlyList<FlashcardDTO> allCards = Array.Empty<FlashcardDTO>();
 
-        // Зберігаємо всі картки, щоб потім відфільтрувати їх за обраними "колодами"
-        private IReadOnlyList<FlashcardDTO> AllCards = Array.Empty<FlashcardDTO>();
-
-        // ОНОВЛЕНО: Конструктор приймає IAuthContext
+        /// <summary>
+        /// Initializes a new instance of the <see cref="CreateTestView"/> class.
+        /// </summary>
+        /// <param name="flashcardService">Сервіс для отримання списку карток.</param>
+        /// <param name="testService">Сервіс для генерації тесту.</param>
+        /// <param name="authContext">Контекст автентифікації для отримання ID користувача.</param>
         public CreateTestView(IFlashcardService flashcardService, ITestService testService, IAuthContext authContext)
         {
             this.InitializeComponent();
             this._flashcardService = flashcardService;
             this._testService = testService;
-            this._authContext = authContext; // <--- ІНІЦІАЛІЗОВАНО
+            this._authContext = authContext;
 
-            // Завантажуємо дані при завантаженні UI
             this.Loaded += this.CreateTestView_Loaded;
         }
 
-        private void CreateTestView_Loaded(object sender, RoutedEventArgs e)
+        private async void CreateTestView_Loaded(object sender, RoutedEventArgs e)
         {
-            this.LoadDecksAsync();
+            try
+            {
+                await this.LoadDecksAsync();
+            }
+            catch
+            {
+            }
         }
 
-        // Завантажує всі картки та групує їх, імітуючи колоди
         private async Task LoadDecksAsync()
         {
             try
@@ -59,18 +57,16 @@
                 this.StatusText.Text = "Завантаження карток...";
                 this.StatusText.Foreground = Brushes.Gray;
 
-                // ВИКОРИСТАННЯ: CurrentUserId замінено на _authContext.CurrentUserId
-                this.AllCards = await this._flashcardService.ListAsync(this._authContext.CurrentUserId, null, CancellationToken.None);
+                this.allCards = await this._flashcardService.ListAsync(this._authContext.CurrentUserId, null, CancellationToken.None);
 
-                // Групуємо картки за першим тегом (імітація колод)
-                var decks = this.AllCards
+                var decks = this.allCards
                     .Where(c => c.Tags.Any())
-                    .GroupBy(c => c.Tags.First()) // Групуємо за першим тегом
+                    .GroupBy(c => c.Tags.First())
                     .Select(g => new DeckItem
                     {
-                        FlashcardId = g.First().Id, // ID першої картки як представника колоди
+                        FlashcardId = g.First().Id,
                         TagsStr = g.Key,
-                        CreatedAt = g.Min(c => c.CreatedAt)
+                        CreatedAt = g.Min(c => c.CreatedAt),
                     })
                     .OrderBy(d => d.TagsStr)
                     .ToList();
@@ -86,7 +82,6 @@
                 this.StatusText.Foreground = Brushes.Red;
             }
         }
-
 
         private void BackButton_Click(object sender, RoutedEventArgs e)
         {
@@ -112,9 +107,8 @@
 
             try
             {
-                // 1. Отримуємо ID всіх карток, що належать обраним "колодам"
                 var selectedTags = selectedDecks.Select(d => d.TagsStr).ToList();
-                var flashcardIds = this.AllCards
+                var flashcardIds = this.allCards
                     .Where(c => c.Tags.Any() && selectedTags.Contains(c.Tags.First()))
                     .Select(c => c.Id)
                     .ToList();
@@ -126,11 +120,8 @@
                     return;
                 }
 
-                // 2. Генеруємо тест
-                // ВИКОРИСТАННЯ: CurrentUserId замінено на _authContext.CurrentUserId
                 await this._testService.GenerateFromFlashcardsAsync(this._authContext.CurrentUserId, flashcardIds, CancellationToken.None);
 
-                // 3. Успіх: повертаємось на попередній екран (TestsView).
                 this.StatusText.Text = "Тест успішно згенеровано!";
                 this.StatusText.Foreground = Brushes.Green;
 
@@ -149,6 +140,15 @@
                 this.StatusText.Text = "Непередбачена помилка при генерації тесту.";
                 this.StatusText.Foreground = Brushes.Red;
             }
+        }
+
+        private class DeckItem
+        {
+            public int FlashcardId { get; set; }
+
+            public string TagsStr { get; set; } = string.Empty;
+
+            public DateTime CreatedAt { get; set; }
         }
     }
 }

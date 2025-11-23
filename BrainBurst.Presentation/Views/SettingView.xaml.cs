@@ -5,13 +5,20 @@
     using System.Windows.Controls;
     using System.Windows.Navigation;
     using BrainBurst.Presentation.Views;
-    using Microsoft.Extensions.DependencyInjection; // Додаємо для DI
+    using Microsoft.Extensions.DependencyInjection;
 
+    /// <summary>
+    /// Логіка взаємодії для View налаштувань користувача.
+    /// Містить кнопки для зміни пароля, видалення акаунту та виходу із системи.
+    /// </summary>
     public partial class SettingsView : UserControl
     {
         private readonly IServiceProvider _serviceProvider;
 
-        // Конструктор вже був оновлений на кроці 15, додаємо using для DI
+        /// <summary>
+        /// Initializes a new instance of the <see cref="SettingsView"/> class.
+        /// </summary>
+        /// <param name="serviceProvider">Постачальник служб DI (для навігації та доступу до MainWindow).</param>
         public SettingsView(IServiceProvider serviceProvider)
         {
             this.InitializeComponent();
@@ -20,7 +27,6 @@
 
         private void LogoutButton_Click(object sender, RoutedEventArgs e)
         {
-            // Отримуємо MainWindow з DI-контейнера
             MainWindow mainWindow = this._serviceProvider.GetRequiredService<MainWindow>();
             Window currentWindow = Window.GetWindow(this);
 
@@ -36,7 +42,6 @@
         {
             if (NavigationService.GetNavigationService(this) != null)
             {
-                // ВИПРАВЛЕНО: Створюємо ChangePasswordView через DI
                 var changePasswordView = this._serviceProvider.GetRequiredService<ChangePasswordView>();
                 NavigationService.GetNavigationService(this).Navigate(changePasswordView);
             }
@@ -46,7 +51,6 @@
         {
             if (NavigationService.GetNavigationService(this) != null)
             {
-                // ВИПРАВЛЕНО: Створюємо DeleteAccountView через DI
                 var deleteAccountView = this._serviceProvider.GetRequiredService<DeleteAccountView>();
                 NavigationService.GetNavigationService(this).Navigate(deleteAccountView);
             }
