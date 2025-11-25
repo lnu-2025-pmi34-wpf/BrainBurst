@@ -11,7 +11,23 @@
     using Microsoft.Extensions.DependencyInjection;
 
     /// <summary>
-    /// Логіка взаємодії для View відображення доступних тестів (згрупованих за темами).
+    /// Внутрішній клас, що представляє одну доступну колоду (тему) для тесту.
+    /// </summary>
+    public class TestDeckItem
+    {
+        /// <summary>
+        /// Gets or sets назву тегу (теми).
+        /// </summary>
+        public string DeckTag { get; set; } = string.Empty;
+
+        /// <summary>
+        /// Gets or sets кількість карток.
+        /// </summary>
+        public int CardCount { get; set; }
+    }
+
+    /// <summary>
+    /// Логіка взаємодії для View відображення доступних тестів.
     /// </summary>
     public partial class TestsView : UserControl
     {
@@ -22,9 +38,6 @@
         /// <summary>
         /// Initializes a new instance of the <see cref="TestsView"/> class.
         /// </summary>
-        /// <param name="serviceProvider">Постачальник служб DI (для навігації).</param>
-        /// <param name="flashcardService">Сервіс для отримання списку карток.</param>
-        /// <param name="authContext">Контекст автентифікації для отримання ID користувача.</param>
         public TestsView(IServiceProvider serviceProvider, IFlashcardService flashcardService, IAuthContext authContext)
         {
             this.InitializeComponent();
@@ -43,6 +56,7 @@
             }
             catch (Exception)
             {
+                this.NoTestsMessage.Text = "Помилка завантаження.";
             }
         }
 
@@ -53,9 +67,9 @@
                 var allCards = await this._flashcardService.ListAsync(this._authContext.CurrentUserId, null, CancellationToken.None);
 
                 var groupedDecks = allCards
-                    .Where(c => c.Tags.Any())
+                    .Where(c => c.Tags != null && c.Tags.Any())
                     .GroupBy(c => c.Tags.First())
-                    .Select(g => new DeckItem
+                    .Select(g => new TestDeckItem // Використовуємо нове ім'я класу
                     {
                         DeckTag = g.Key,
                         CardCount = g.Count(),
@@ -65,14 +79,7 @@
 
                 this.DecksItemsControl.ItemsSource = groupedDecks;
 
-                if (!groupedDecks.Any())
-                {
-                    this.NoTestsMessage.Visibility = Visibility.Visible;
-                }
-                else
-                {
-                    this.NoTestsMessage.Visibility = Visibility.Collapsed;
-                }
+                this.NoTestsMessage.Visibility = groupedDecks.Any() ? Visibility.Collapsed : Visibility.Visible;
             }
             catch (Exception)
             {
@@ -81,32 +88,44 @@
             }
         }
 
-        private void Test_Click(object sender, MouseButtonEventArgs e)
+        private async void Test_Click(object sender, MouseButtonEventArgs e)
         {
-            if (NavigationService.GetNavigationService(this) != null)
+            try
             {
-                var testTakingView = this._serviceProvider.GetRequiredService<TestTakingView>();
-                NavigationService.GetNavigationService(this).Navigate(testTakingView);
+                var border = sender as Border;
+                // Приводимо DataContext до нового типу TestDeckItem
+                if (border?.DataContext is TestDeckItem deckItem)
+                {
+                    if (NavigationService.GetNavigationService(this) != null)
+                    {
+                        var testTakingView = this._serviceProvider.GetRequiredService<TestTakingView>();
+                        
+                        NavigationService.GetNavigationService(this).Navigate(testTakingView);
+
+                        await testTakingView.InitializeTestByTagAsync(deckItem.DeckTag);
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Помилка запуску тесту: {ex.Message}", "Помилка");
             }
         }
 
         private void CreateTest_Click(object sender, RoutedEventArgs e)
         {
-            if (NavigationService.GetNavigationService(this) != null)
+            try
             {
-                var createTestView = this._serviceProvider.GetRequiredService<CreateTestView>();
-                NavigationService.GetNavigationService(this).Navigate(createTestView);
+                if (NavigationService.GetNavigationService(this) != null)
+                {
+                    var createTestView = this._serviceProvider.GetRequiredService<CreateTestView>();
+                    NavigationService.GetNavigationService(this).Navigate(createTestView);
+                }
             }
-        }
-
-        /// <summary>
-        /// Внутрішній клас, що представляє одну доступну колоду (тему) для тесту.
-        /// </summary>
-        private class DeckItem
-        {
-            public string DeckTag { get; set; } = string.Empty;
-
-            public int CardCount { get; set; }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Не вдалося відкрити вікно створення тесту: {ex.Message}", "Помилка");
+            }
         }
     }
 }

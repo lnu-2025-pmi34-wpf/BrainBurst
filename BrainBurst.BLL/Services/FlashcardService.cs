@@ -130,7 +130,7 @@ namespace BrainBurst.BLL.Services
         {
             var cards = await this._cards.FindAsync(ownerId, search, ct);
 
-            return cards.Select(c => c.ToDTO(Array.Empty<string>())).ToList();
+            return cards.Select(c => c.ToDTO(c.Tags.Select(t => t.Name))).ToList();
         }
     }
 }

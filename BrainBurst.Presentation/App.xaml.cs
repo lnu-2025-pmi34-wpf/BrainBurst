@@ -89,6 +89,7 @@ public partial class App : Application
         Environment.SetEnvironmentVariable("DB_NAME", "brainburst_ge7w");
         Environment.SetEnvironmentVariable("DB_USER", "whylek");
         Environment.SetEnvironmentVariable("DB_PASSWORD", "L1vFCiVN2WUncXGQx5fTx1iAJDBtOmgI");
+        Environment.SetEnvironmentVariable("OPENAI_API_KEY", "dummy");
     }
 
     /// <summary>
@@ -156,6 +157,7 @@ public partial class App : Application
         services.AddTransient<LoginWindow>();
         services.AddTransient<RegistrationWindow>();
         services.AddTransient<ProfileWindow>();
+        services.AddTransient<TestTakingView>();
 
         services.AddTransient<ProfileView>();
         services.AddTransient<CardsView>();

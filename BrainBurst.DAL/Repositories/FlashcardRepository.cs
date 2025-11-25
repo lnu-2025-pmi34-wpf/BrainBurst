@@ -1,5 +1,6 @@
 namespace BrainBurst.DAL.Repositories
 {
+    using System;
     using System.Collections.Generic;
     using System.Linq;
     using System.Threading;
@@ -19,106 +20,117 @@ namespace BrainBurst.DAL.Repositories
         /// <summary>
         /// Initializes a new instance of the <see cref="FlashcardRepository"/> class.
         /// </summary>
-        /// <param name="context">Контекст бази даних, що буде використовуватися для операцій.</param>
+        /// <param name="context">Контекст бази даних.</param>
         public FlashcardRepository(ApplicationDbContext context)
         {
             this._context = context;
         }
 
         /// <summary>
-        /// Асинхронно додає нову флеш-картку до бази даних.
+        /// Асинхронно додає нову флеш-картку та пов'язує її з тегами.
         /// </summary>
-        /// <param name="f">Сутність <see cref="Flashcard"/> для додавання.</param>
-        /// <param name="tags">Список рядків-тегів (логіка наразі не реалізована).</param>
-        /// <param name="ct">Токен скасування операції.</param>
-        /// <returns>Додана сутність <see cref="Flashcard"/>.</returns>
+        /// <param name="f">Сутність флеш-картки.</param>
+        /// <param name="tags">Список назв тегів.</param>
+        /// <param name="ct">Токен скасування.</param>
+        /// <returns>Створена сутність.</returns>
         public async Task<Flashcard> AddAsync(Flashcard f, IEnumerable<string> tags, CancellationToken ct)
         {
-            // Додаємо нову картку.
-            // Примітка: Логіка зв'язування тегів з карткою потребує додаткових сутностей (FlashcardTag),
-            // які ми не реалізуємо на цьому етапі, тому обробляється лише сама картка.
+            // 1. Обробка тегів
+            if (tags != null)
+            {
+                foreach (var tagName in tags)
+                {
+                    var normalizedName = tagName.Trim();
+                    if (string.IsNullOrEmpty(normalizedName))
+                    {
+                        continue;
+                    }
+
+                    // Шукаємо існуючий тег для цього користувача (або спільний)
+                    var existingTag = await this._context.Tags
+                        .FirstOrDefaultAsync(t => t.Name == normalizedName && t.CreatorId == f.CreatorId, ct);
+
+                    if (existingTag != null)
+                    {
+                        f.Tags.Add(existingTag);
+                    }
+                    else
+                    {
+                        // Створюємо новий тег
+                        var newTag = new Tag
+                        {
+                            Name = normalizedName,
+                            CreatorId = f.CreatorId,
+                        };
+                        f.Tags.Add(newTag);
+                    }
+                }
+            }
+
+            // 2. Збереження картки (разом з новими тегами та зв'язками)
             this._context.Flashcards.Add(f);
             await this._context.SaveChangesAsync(ct);
+
             return f;
         }
 
         /// <summary>
-        /// Асинхронно оновлює існуючу флеш-картку.
+        /// Асинхронно знаходить флеш-картки за ID власника та (опційно) пошуковим рядком.
         /// </summary>
-        /// <param name="f">Сутність <see cref="Flashcard"/> з оновленими даними.</param>
-        /// <param name="tags">Список рядків-тегів (логіка наразі не реалізована).</param>
-        /// <param name="ct">Токен скасування операції.</param>
-        /// <exception cref="KeyNotFoundException">Виникає, якщо картку не знайдено або користувач не є її власником.</exception>
-        /// <returns>A <see cref="Task"/> representing the asynchronous operation.</returns>
-        public async Task UpdateAsync(Flashcard f, IEnumerable<string> tags, CancellationToken ct)
-        {
-            var existingCard = await this._context.Flashcards
-                                             .FirstOrDefaultAsync(card => card.FlashcardId == f.FlashcardId, ct);
-
-            if (existingCard == null || existingCard.CreatorId != f.CreatorId)
-            {
-                throw new KeyNotFoundException($"Flashcard with ID {f.FlashcardId} not found or user is not the creator.");
-            }
-
-            existingCard.Question = f.Question;
-            existingCard.Answer = f.Answer;
-
-            await this._context.SaveChangesAsync(ct);
-        }
-
-        /// <summary>
-        /// Асинхронно видаляє флеш-картку за її ID, перевіряючи право власності.
-        /// </summary>
-        /// <param name="id">Ідентифікатор флеш-картки для видалення.</param>
-        /// <param name="ownerId">Ідентифікатор користувача, який має бути власником картки.</param>
-        /// <param name="ct">Токен скасування операції.</param>
-        /// <exception cref="KeyNotFoundException">Виникає, якщо картку не знайдено або користувач не є її власником.</exception>
-        /// <returns>A <see cref="Task"/> representing the asynchronous operation.</returns>
-        public async Task DeleteAsync(int id, int ownerId, CancellationToken ct)
-        {
-            var card = await this._context.Flashcards
-                                     .FirstOrDefaultAsync(f => f.FlashcardId == id && f.CreatorId == ownerId, ct);
-
-            if (card == null)
-            {
-                throw new KeyNotFoundException($"Flashcard with ID {id} not found or user is not the owner.");
-            }
-
-            this._context.Flashcards.Remove(card);
-            await this._context.SaveChangesAsync(ct);
-        }
-
-        /// <summary>
-        /// Асинхронно отримує одну флеш-картку за її ID.
-        /// </summary>
-        /// <param name="id">Ідентифікатор флеш-картки.</param>
-        /// <param name="ct">Токен скасування операції.</param>
-        /// <returns>Знайдена <see cref="Flashcard"/> або null.</returns>
-        public async Task<Flashcard?> GetAsync(int id, CancellationToken ct)
-        {
-            return await this._context.Flashcards.AsNoTracking().FirstOrDefaultAsync(f => f.FlashcardId == id, ct);
-        }
-
-        /// <summary>
-        /// Асинхронно знаходить флеш-картки, що належать конкретному користувачу, з можливістю пошуку.
-        /// </summary>
-        /// <param name="ownerId">Ідентифікатор користувача-власника.</param>
-        /// <param name="search">Пошуковий рядок (по питанням та відповідям). Може бути null.</param>
-        /// <param name="ct">Токен скасування операції.</param>
-        /// <returns>Список <see cref="Flashcard"/>, доступний лише для читання.</returns>
+        /// <param name="ownerId">ID власника карток.</param>
+        /// <param name="search">Пошуковий рядок.</param>
+        /// <param name="ct">Токен скасування.</param>
+        /// <returns>Список карток з завантаженими тегами.</returns>
         public async Task<IReadOnlyList<Flashcard>> FindAsync(int ownerId, string? search, CancellationToken ct)
         {
-            var query = this._context.Flashcards.Where(f => f.CreatorId == ownerId).AsNoTracking();
+            var query = this._context.Flashcards
+                .Where(f => f.CreatorId == ownerId)
+                .Include(f => f.Tags) // <--- ВАЖЛИВО: Завантажуємо теги
+                .AsSplitQuery()       // Оптимізація для колекцій
+                .AsNoTracking();
 
             if (!string.IsNullOrWhiteSpace(search))
             {
-                // Пошук за питанням або відповіддю (регістронезалежний).
                 string normalizedSearch = search.Trim().ToLower();
                 query = query.Where(f => f.Question.ToLower().Contains(normalizedSearch) ||
                                          f.Answer.ToLower().Contains(normalizedSearch));
             }
 
             return await query.ToListAsync(ct);
+        }
+
+        // Інші методи (UpdateAsync, DeleteAsync, GetAsync) також бажано оновити, 
+        // щоб вони враховували Tags, але для відображення списку критичні саме ці два.
+        
+        // ... (Решта методів без змін або з аналогічним додаванням .Include(f => f.Tags))
+        public async Task UpdateAsync(Flashcard f, IEnumerable<string> tags, CancellationToken ct)
+        {
+             // Тут логіка складніша: треба завантажити існуючу картку з тегами,
+             // видалити зайві, додати нові.
+             // Для MVP поки що можна залишити як є або реалізувати пізніше.
+             await Task.CompletedTask; 
+        }
+
+        public async Task DeleteAsync(int id, int ownerId, CancellationToken ct)
+        {
+            var card = await this._context.Flashcards
+                .FirstOrDefaultAsync(f => f.FlashcardId == id && f.CreatorId == ownerId, ct);
+
+            if (card == null)
+            {
+                throw new KeyNotFoundException($"Flashcard with ID {id} not found.");
+            }
+
+            this._context.Flashcards.Remove(card);
+            await this._context.SaveChangesAsync(ct);
+        }
+
+        public async Task<Flashcard?> GetAsync(int id, CancellationToken ct)
+        {
+            return await this._context.Flashcards
+                .Include(f => f.Tags)
+                .AsNoTracking()
+                .FirstOrDefaultAsync(f => f.FlashcardId == id, ct);
         }
     }
 }

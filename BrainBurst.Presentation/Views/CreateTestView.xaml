@@ -20,9 +20,25 @@
             <TextBlock Text="Назва тесту" FontWeight="Bold" Margin="0,0,0,5" Foreground="#555"/>
             <TextBox x:Name="TestNameTextBox" 
                      Style="{StaticResource InputTextBox}" 
-                     Tag="Назва вашого тесту (напр., 'Тест з математики')" Text=""/>
+                     Tag="Назва вашого тесту (напр., 'Тест з математики')" 
+                     Text=""/>
 
-            <TextBlock Text="Оберіть колоди карток" FontWeight="Bold" Margin="0,10,0,5" Foreground="#555"/>
+            <TextBlock Text="Або згенеруйте з файлу" FontWeight="Bold" Margin="0,20,0,5" Foreground="#555"/>
+            <StackPanel Orientation="Horizontal" Margin="0,0,0,20">
+                <Button Content="Завантажити .txt файл" 
+                        Style="{StaticResource SecondaryButton}"
+                        Width="200"
+                        Click="ImportFile_Click"/>
+                <TextBlock Text=" (AI згенерує питання автоматично)" 
+                           VerticalAlignment="Center" 
+                           Foreground="Gray" 
+                           Margin="10,0,0,0"
+                           FontStyle="Italic"/>
+            </StackPanel>
+
+            <Separator Margin="0,10,0,10"/>
+
+            <TextBlock Text="Оберіть колоди карток (для ручного створення)" FontWeight="Bold" Margin="0,10,0,5" Foreground="#555"/>
 
             <ListBox x:Name="DeckListBox" 
                      SelectionMode="Multiple"
@@ -38,7 +54,7 @@
                 <ListBox.ItemTemplate>
                     <DataTemplate>
                          <StackPanel>
-                            <TextBlock Text="{Binding TagsStr}" Style="{StaticResource AwardTitleText}"/> 
+                             <TextBlock Text="{Binding TagsStr}" Style="{StaticResource AwardTitleText}"/> 
                             <TextBlock Text="{Binding CreatedAt, StringFormat='створено: {0:dd/MM/yyyy}'}" Style="{StaticResource AwardSubText}" Margin="0,10,0,0"/>
                          </StackPanel>
                     </DataTemplate>

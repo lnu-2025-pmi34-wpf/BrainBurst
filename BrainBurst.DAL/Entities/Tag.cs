@@ -1,34 +1,46 @@
 namespace BrainBurst.DAL.Entities
 {
+    using System.Collections.Generic;
     using System.ComponentModel.DataAnnotations;
-    using System.ComponentModel.DataAnnotations.Schema;
 
     /// <summary>
-    /// Представляє сутність "Тег", яка використовується для категоризації флеш-карток.
+    /// РџСЂРµРґСЃС‚Р°РІР»СЏС” СЃСѓС‚РЅС–СЃС‚СЊ "РўРµРі", СЏРєР° РІРёРєРѕСЂРёСЃС‚РѕРІСѓС”С‚СЊСЃСЏ РґР»СЏ РєР°С‚РµРіРѕСЂРёР·Р°С†С–С— С„Р»РµС€-РєР°СЂС‚РѕРє.
     /// </summary>
     public class Tag
     {
         /// <summary>
-        /// Gets or sets отримує або встановлює унікальний ідентифікатор тегу (Первинний ключ).
+        /// Initializes a new instance of the <see cref="Tag"/> class.
+        /// </summary>
+        public Tag()
+        {
+            this.Flashcards = new HashSet<Flashcard>();
+        }
+
+        /// <summary>
+        /// Gets or sets РѕС‚СЂРёРјСѓС” Р°Р±Рѕ РІСЃС‚Р°РЅРѕРІР»СЋС” СѓРЅС–РєР°Р»СЊРЅРёР№ С–РґРµРЅС‚РёС„С–РєР°С‚РѕСЂ С‚РµРіСѓ (РџРµСЂРІРёРЅРЅРёР№ РєР»СЋС‡).
         /// </summary>
         public int TagId { get; set; }
 
         /// <summary>
-        /// Gets or sets отримує або встановлює назву тегу.
+        /// Gets or sets РѕС‚СЂРёРјСѓС” Р°Р±Рѕ РІСЃС‚Р°РЅРѕРІР»СЋС” РЅР°Р·РІСѓ С‚РµРіСѓ.
         /// </summary>
         [Required]
         [MaxLength(50)]
         public string Name { get; set; } = null!;
 
         /// <summary>
-        /// Gets or sets отримує або встановлює ID користувача, який створив цей тег (Зовнішній ключ).
-        /// Може бути null, якщо тег створений системою.
+        /// Gets or sets РѕС‚СЂРёРјСѓС” Р°Р±Рѕ РІСЃС‚Р°РЅРѕРІР»СЋС” ID РєРѕСЂРёСЃС‚СѓРІР°С‡Р°, СЏРєРёР№ СЃС‚РІРѕСЂРёРІ С†РµР№ С‚РµРі.
         /// </summary>
         public int? CreatorId { get; set; }
 
         /// <summary>
-        /// Gets or sets отримує або встановлює навігаційну властивість до користувача-творця.
+        /// Gets or sets РѕС‚СЂРёРјСѓС” Р°Р±Рѕ РІСЃС‚Р°РЅРѕРІР»СЋС” РЅР°РІС–РіР°С†С–Р№РЅСѓ РІР»Р°СЃС‚РёРІС–СЃС‚СЊ РґРѕ РєРѕСЂРёСЃС‚СѓРІР°С‡Р°-С‚РІРѕСЂС†СЏ.
         /// </summary>
         public User? Creator { get; set; }
+
+        /// <summary>
+        /// Gets or sets РѕС‚СЂРёРјСѓС” Р°Р±Рѕ РІСЃС‚Р°РЅРѕРІР»СЋС” РєРѕР»РµРєС†С–СЋ С„Р»РµС€-РєР°СЂС‚РѕРє, СЏРєС– РјР°СЋС‚СЊ С†РµР№ С‚РµРі.
+        /// </summary>
+        public ICollection<Flashcard> Flashcards { get; set; }
     }
 }

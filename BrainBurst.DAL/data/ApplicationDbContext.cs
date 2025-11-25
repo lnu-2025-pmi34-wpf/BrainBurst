@@ -88,10 +88,9 @@ namespace BrainBurst.DAL.Data
                 entity.Property(f => f.Answer).HasColumnType("text").IsRequired();
                 entity.Property(f => f.CreatedAt).HasDefaultValueSql("CURRENT_TIMESTAMP");
 
-                entity.HasOne(f => f.Creator)
-                      .WithMany(u => u.Flashcards)
-                      .HasForeignKey(f => f.CreatorId)
-                      .OnDelete(DeleteBehavior.Cascade);
+                entity.HasMany(f => f.Tags)
+                    .WithMany(t => t.Flashcards)
+                    .UsingEntity(j => j.ToTable("FlashcardTags"));
             });
 
             modelBuilder.Entity<Tag>(entity =>

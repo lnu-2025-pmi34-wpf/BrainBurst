@@ -98,6 +98,10 @@
                     try
                     {
                         var studyView = this._serviceProvider.GetRequiredService<StudyView>();
+                        
+                        // Передаємо назву тегу (колоди), щоб завантажити правильні картки
+                        studyView.Configure(deckItem.DeckTag);
+                        
                         NavigationService.GetNavigationService(this).Navigate(studyView);
                     }
                     catch (Exception ex)

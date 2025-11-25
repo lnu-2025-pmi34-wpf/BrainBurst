@@ -1,46 +1,62 @@
 namespace BrainBurst.DAL.Entities
 {
+    using System;
+    using System.Collections.Generic;
     using System.ComponentModel.DataAnnotations;
     using System.ComponentModel.DataAnnotations.Schema;
 
     /// <summary>
-    /// Представляє сутність "Флеш-картка" в базі даних.
+    /// РџСЂРµРґСЃС‚Р°РІР»СЏС” СЃСѓС‚РЅС–СЃС‚СЊ "Р¤Р»РµС€-РєР°СЂС‚РєР°" РІ Р±Р°Р·С– РґР°РЅРёС….
     /// </summary>
     public class Flashcard
     {
         /// <summary>
-        /// Gets or sets отримує або встановлює унікальний ідентифікатор флеш-картки (Первинний ключ).
+        /// Initializes a new instance of the <see cref="Flashcard"/> class.
+        /// </summary>
+        public Flashcard()
+        {
+            this.Tags = new HashSet<Tag>();
+            this.QuestionResults = new HashSet<QuestionResult>();
+        }
+
+        /// <summary>
+        /// Gets or sets РѕС‚СЂРёРјСѓС” Р°Р±Рѕ РІСЃС‚Р°РЅРѕРІР»СЋС” СѓРЅС–РєР°Р»СЊРЅРёР№ С–РґРµРЅС‚РёС„С–РєР°С‚РѕСЂ С„Р»РµС€-РєР°СЂС‚РєРё (РџРµСЂРІРёРЅРЅРёР№ РєР»СЋС‡).
         /// </summary>
         public int FlashcardId { get; set; }
 
         /// <summary>
-        /// Gets or sets отримує або встановлює текст питання флеш-картки.
+        /// Gets or sets РѕС‚СЂРёРјСѓС” Р°Р±Рѕ РІСЃС‚Р°РЅРѕРІР»СЋС” С‚РµРєСЃС‚ РїРёС‚Р°РЅРЅСЏ С„Р»РµС€-РєР°СЂС‚РєРё.
         /// </summary>
         public string Question { get; set; } = null!;
 
         /// <summary>
-        /// Gets or sets отримує або встановлює текст відповіді на флеш-картку.
+        /// Gets or sets РѕС‚СЂРёРјСѓС” Р°Р±Рѕ РІСЃС‚Р°РЅРѕРІР»СЋС” С‚РµРєСЃС‚ РІС–РґРїРѕРІС–РґС– РЅР° С„Р»РµС€-РєР°СЂС‚РєСѓ.
         /// </summary>
         public string Answer { get; set; } = null!;
 
         /// <summary>
-        /// Gets or sets отримує або встановлює ID користувача, який створив цю картку (Зовнішній ключ).
+        /// Gets or sets РѕС‚СЂРёРјСѓС” Р°Р±Рѕ РІСЃС‚Р°РЅРѕРІР»СЋС” ID РєРѕСЂРёСЃС‚СѓРІР°С‡Р°, СЏРєРёР№ СЃС‚РІРѕСЂРёРІ С†СЋ РєР°СЂС‚РєСѓ (Р—РѕРІРЅС–С€РЅС–Р№ РєР»СЋС‡).
         /// </summary>
         public int CreatorId { get; set; }
 
         /// <summary>
-        /// Gets or sets отримує або встановлює навігаційну властивість до користувача-творця.
+        /// Gets or sets РѕС‚СЂРёРјСѓС” Р°Р±Рѕ РІСЃС‚Р°РЅРѕРІР»СЋС” РЅР°РІС–РіР°С†С–Р№РЅСѓ РІР»Р°СЃС‚РёРІС–СЃС‚СЊ РґРѕ РєРѕСЂРёСЃС‚СѓРІР°С‡Р°-С‚РІРѕСЂС†СЏ.
         /// </summary>
         public User Creator { get; set; } = null!;
 
         /// <summary>
-        /// Gets or sets отримує або встановлює дату та час створення флеш-картки.
+        /// Gets or sets РѕС‚СЂРёРјСѓС” Р°Р±Рѕ РІСЃС‚Р°РЅРѕРІР»СЋС” РґР°С‚Сѓ С‚Р° С‡Р°СЃ СЃС‚РІРѕСЂРµРЅРЅСЏ С„Р»РµС€-РєР°СЂС‚РєРё.
         /// </summary>
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
         /// <summary>
-        /// Gets or sets отримує або встановлює колекцію результатів питань, пов'язаних з цією флеш-карткою.
+        /// Gets or sets РѕС‚СЂРёРјСѓС” Р°Р±Рѕ РІСЃС‚Р°РЅРѕРІР»СЋС” РєРѕР»РµРєС†С–СЋ С‚РµРіС–РІ, РїРѕРІ'СЏР·Р°РЅРёС… Р· С†С–С”СЋ РєР°СЂС‚РєРѕСЋ.
         /// </summary>
-        public ICollection<QuestionResult> QuestionResults { get; set; } = new List<QuestionResult>();
+        public ICollection<Tag> Tags { get; set; }
+
+        /// <summary>
+        /// Gets or sets РѕС‚СЂРёРјСѓС” Р°Р±Рѕ РІСЃС‚Р°РЅРѕРІР»СЋС” РєРѕР»РµРєС†С–СЋ СЂРµР·СѓР»СЊС‚Р°С‚С–РІ РїРёС‚Р°РЅСЊ, РїРѕРІ'СЏР·Р°РЅРёС… Р· С†С–С”СЋ С„Р»РµС€-РєР°СЂС‚РєРѕСЋ.
+        /// </summary>
+        public ICollection<QuestionResult> QuestionResults { get; set; }
     }
 }
