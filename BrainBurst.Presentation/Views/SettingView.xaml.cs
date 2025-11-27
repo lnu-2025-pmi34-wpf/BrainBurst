@@ -4,6 +4,7 @@
     using System.Windows;
     using System.Windows.Controls;
     using System.Windows.Navigation;
+    using BrainBurst.BLL.Interfaces;
     using BrainBurst.Presentation.Views;
     using Microsoft.Extensions.DependencyInjection;
 
@@ -14,27 +15,43 @@
     public partial class SettingsView : UserControl
     {
         private readonly IServiceProvider _serviceProvider;
+        private readonly IAuthContext _authContext;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="SettingsView"/> class.
         /// </summary>
-        /// <param name="serviceProvider">Постачальник служб DI (для навігації та доступу до MainWindow).</param>
-        public SettingsView(IServiceProvider serviceProvider)
+        /// <param name="serviceProvider">Постачальник служб DI.</param>
+        /// <param name="authContext">Контекст автентифікації для очищення сеансу користувача.</param>
+        public SettingsView(IServiceProvider serviceProvider, IAuthContext authContext)
         {
             this.InitializeComponent();
             this._serviceProvider = serviceProvider;
+            this._authContext = authContext;
         }
 
         private void LogoutButton_Click(object sender, RoutedEventArgs e)
         {
-            MainWindow mainWindow = this._serviceProvider.GetRequiredService<MainWindow>();
-            Window currentWindow = Window.GetWindow(this);
-
-            mainWindow.Show();
-
-            if (currentWindow != null)
+            try
             {
-                currentWindow.Close();
+                // Очищуємо контекст автентифікації
+                this._authContext.ClearContext();
+
+                // Отримуємо поточне вікно
+                Window currentWindow = Window.GetWindow(this);
+
+                // Показуємо вікно входу
+                var loginWindow = this._serviceProvider.GetRequiredService<LoginWindow>();
+                loginWindow.Show();
+
+                // Закриваємо поточне вікно
+                if (currentWindow != null && currentWindow != loginWindow)
+                {
+                    currentWindow.Close();
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Помилка при виході: {ex.Message}", "Помилка", MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
 

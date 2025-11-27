@@ -7,42 +7,47 @@ namespace BrainBurst.BLL.Services
     using System.Threading;
     using System.Threading.Tasks;
     using BrainBurst.BLL.Interfaces.Abstractions;
-    using OpenAI.Chat; // Переконайтеся, що пакет OpenAI встановлено (версія 2.0+)
+    using OpenAI.Chat;
 
     /// <summary>
     /// Реалізація генератора квізів, що використовує реальний OpenAI API.
     /// </summary>
     public sealed class OpenAIQuizGenerator : IQuizGenerator
     {
-        // Використовуємо модель gpt-4o або gpt-3.5-turbo (дешевше)
+        // Використовуємо модель gpt-4o
         private const string ModelName = "gpt-4o"; 
 
         /// <summary>
         /// Системний промпт, який інструктує ШІ щодо формату відповіді.
-        /// Ми суворо вимагаємо JSON формат.
+        /// Ми суворо вимагаємо JSON формат без тегів.
         /// </summary>
         private const string SystemPrompt =
             "Ти — помічник для створення навчальних флеш-карток. " +
             "Твоє завдання: проаналізувати наданий текст і створити на його основі список питань та відповідей. " +
             "Вимоги до формату: ПОВИНЕН повернути лише валідний JSON-масив без жодного додаткового тексту чи форматування (наприклад, без ```json). " +
-            "Структура JSON об'єкта: { \"Question\": \"текст питання\", \"Answer\": \"текст відповіді\", \"Tags\": [\"тег1\", \"тег2\"] }. " +
-            "Створи від 3 до 10 карток залежно від розміру тексту. Мова: українська.";
+            "Структура JSON об'єкта: { \"Question\": \"текст питання\", \"Answer\": \"текст відповіді\" }. " +
+            "Створи від 3 до 10 карток залежно від розміру тексту. Мова: українська. " +
+            "Не додавай теги до карток - це зроблять користувачі. Зосередься тільки на якісних питаннях та відповідях.";
 
-        public async Task<IReadOnlyList<(string Question, string Answer, IReadOnlyList<string> Tags)>> GenerateFromTextAsync(
+        /// <summary>
+        /// Асинхронно генерує список пар "питання-відповідь" на основі наданого тексту.
+        /// </summary>
+        /// <param name="text">Вхідний текст для аналізу.</param>
+        /// <param name="ct">Токен скасування операції.</param>
+        /// <returns>Список кортежів (Питання, Відповідь).</returns>
+        public async Task<IReadOnlyList<(string Question, string Answer)>> GenerateFromTextAsync(
             string text, CancellationToken ct)
         {
             if (string.IsNullOrWhiteSpace(text))
             {
-                return Array.Empty<(string, string, IReadOnlyList<string>)>();
+                return Array.Empty<(string, string)>();
             }
 
-            // Отримуємо ключ з змінних середовища (рекомендований спосіб)
+            // Отримуємо ключ з змінних середовища
             string? apiKey = Environment.GetEnvironmentVariable("OPENAI_API_KEY");
 
             if (string.IsNullOrEmpty(apiKey))
             {
-                // Тимчасовий фоллбек для тестування (замініть на свій ключ, якщо не налаштували Env Var)
-                // apiKey = "sk-proj-...."; 
                 throw new InvalidOperationException("OpenAI API Key не знайдено. Встановіть змінну середовища 'OPENAI_API_KEY'.");
             }
 
@@ -64,7 +69,7 @@ namespace BrainBurst.BLL.Services
                 // Отримуємо відповідь
                 string jsonResponse = completion.Content[0].Text.Trim();
 
-                // Очищаємо від можливих маркерів коду (```json ... ```)
+                // Очищаємо від можливих маркерів коду (```json ... ```, від 3 до 10 карток)
                 if (jsonResponse.StartsWith("```"))
                 {
                     jsonResponse = jsonResponse.Trim('`');
@@ -80,20 +85,15 @@ namespace BrainBurst.BLL.Services
 
                 if (cards == null)
                 {
-                    return Array.Empty<(string, string, IReadOnlyList<string>)>();
+                    return Array.Empty<(string, string)>();
                 }
 
-                // Перетворюємо у формат кортежів, який очікує наш сервіс
-                return cards.Select(c => (
-                    c.Question, 
-                    c.Answer, 
-                    (IReadOnlyList<string>)c.Tags
-                )).ToList();
+                // Перетворюємо у формат кортежів (Question, Answer)
+                return cards.Select(c => (c.Question, c.Answer)).ToList();
             }
             catch (Exception ex)
             {
-                // Логування помилки (можна додати logger пізніше)
-                // Наразі просто повертаємо пустий список або кидаємо помилку далі
+                // Логування помилки
                 throw new InvalidOperationException($"Помилка OpenAI: {ex.Message}", ex);
             }
         }
@@ -103,7 +103,6 @@ namespace BrainBurst.BLL.Services
         {
             public string Question { get; set; } = string.Empty;
             public string Answer { get; set; } = string.Empty;
-            public string[] Tags { get; set; } = Array.Empty<string>();
         }
     }
 }

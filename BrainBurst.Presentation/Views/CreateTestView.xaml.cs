@@ -72,7 +72,7 @@
             var decks = this._allCards
                 .Where(c => c.Tags != null && c.Tags.Any())
                 .GroupBy(c => c.Tags.First())
-                .Select(g => new GenerationDeckItem // Використовуємо нове ім'я класу
+                .Select(g => new GenerationDeckItem
                 {
                     FlashcardId = g.First().Id,
                     TagsStr = g.Key,
@@ -106,7 +106,6 @@
         {
             try
             {
-                // Приводимо до нового типу
                 var selectedDecks = this.DeckListBox.SelectedItems.Cast<GenerationDeckItem>().ToList();
 
                 if (!selectedDecks.Any())
@@ -142,6 +141,16 @@
 
         private async void ImportFile_Click(object sender, RoutedEventArgs e)
         {
+            // Перевіряємо, чи введена назва тесту
+            string testName = this.TestNameTextBox.Text?.Trim() ?? string.Empty;
+            
+            if (string.IsNullOrWhiteSpace(testName))
+            {
+                this.StatusText.Text = "Спочатку введіть назву тесту.";
+                this.StatusText.Foreground = Brushes.Orange;
+                return;
+            }
+
             var openFileDialog = new OpenFileDialog
             {
                 Filter = "Text files (*.txt)|*.txt|All files (*.*)|*.*",
@@ -157,10 +166,11 @@
 
                     var newCards = await this._testGenerationService.CreateFlashcardsFromTextAsync(
                         this._authContext.CurrentUserId, 
-                        text, 
+                        text,
+                        new List<string> { testName },
                         CancellationToken.None);
 
-                    this.StatusText.Text = $"Згенеровано {newCards.Count} карток!";
+                    this.StatusText.Text = $"Згенеровано {newCards.Count} карток з тегом '{testName}'!";
                     this.StatusText.Foreground = Brushes.Green;
 
                     await this.LoadDecksAsync();

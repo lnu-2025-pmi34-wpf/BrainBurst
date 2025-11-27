@@ -1,11 +1,11 @@
-#pragma warning disable SA1200
+п»ї#pragma warning disable SA1200
 using BrainBurst.BLL.Mapping;
 #pragma warning restore SA1200
 
 namespace BrainBurst.BLL.Services;
 
 /// <summary>
-/// Реалізація сервісу, що відповідає за генерацію флеш-карток з тексту.
+/// Р РµР°Р»С–Р·Р°С†С–СЏ СЃРµСЂРІС–СЃСѓ, С‰Рѕ РІС–РґРїРѕРІС–РґР°С” Р·Р° РіРµРЅРµСЂР°С†С–СЋ С„Р»РµС€-РєР°СЂС‚РѕРє Р· С‚РµРєСЃС‚Сѓ.
 /// </summary>
 public sealed class TestGenerationService : ITestGenerationService
 {
@@ -15,8 +15,8 @@ public sealed class TestGenerationService : ITestGenerationService
     /// <summary>
     /// Initializes a new instance of the <see cref="TestGenerationService"/> class.
     /// </summary>
-    /// <param name="ai">Сервіс-генератор квізів (наприклад, OpenAI).</param>
-    /// <param name="cards">Репозиторій для збереження флеш-карток.</param>
+    /// <param name="ai">РЎРµСЂРІС–СЃ-РіРµРЅРµСЂР°С‚РѕСЂ РєРІС–Р·С–РІ (РЅР°РїСЂРёРєР»Р°Рґ, OpenAI).</param>
+    /// <param name="cards">Р РµРїРѕР·РёС‚РѕСЂС–Р№ РґР»СЏ Р·Р±РµСЂРµР¶РµРЅРЅСЏ С„Р»РµС€-РєР°СЂС‚РѕРє.</param>
     public TestGenerationService(IQuizGenerator ai, IFlashcardRepository cards)
     {
         this._ai = ai;
@@ -24,30 +24,34 @@ public sealed class TestGenerationService : ITestGenerationService
     }
 
     /// <summary>
-    /// Асинхронно створює та зберігає флеш-картки на основі наданого тексту.
+    /// РђСЃРёРЅС…СЂРѕРЅРЅРѕ СЃС‚РІРѕСЂСЋС” С‚Р° Р·Р±РµСЂС–РіР°С” С„Р»РµС€-РєР°СЂС‚РєРё РЅР° РѕСЃРЅРѕРІС– РЅР°РґР°РЅРѕРіРѕ С‚РµРєСЃС‚Сѓ.
+    /// РўРµРіРё РїРµСЂРµРґР°СЋС‚СЊСЃСЏ РѕРєСЂРµРјРѕ РІС–Рґ РєРѕСЂРёСЃС‚СѓРІР°С‡Р° С‡РµСЂРµР· UI.
     /// </summary>
-    /// <param name="creatorId">ID користувача, який створює картки.</param>
-    /// <param name="text">Вхідний текст для аналізу та генерації карток.</param>
-    /// <param name="ct">Токен скасування операції.</param>
-    /// <returns>Список <see cref="FlashcardDTO"/> новостворених флеш-карток.</returns>
+    /// <param name="creatorId">ID РєРѕСЂРёСЃС‚СѓРІР°С‡Р°, СЏРєРёР№ СЃС‚РІРѕСЂСЋС” РєР°СЂС‚РєРё.</param>
+    /// <param name="text">Р’С…С–РґРЅРёР№ С‚РµРєСЃС‚ РґР»СЏ Р°РЅР°Р»С–Р·Сѓ С‚Р° РіРµРЅРµСЂР°С†С–С— РєР°СЂС‚РѕРє.</param>
+    /// <param name="tags">РЎРїРёСЃРѕРє С‚РµРіС–РІ, СЏРєС– РїСЂРёР·РЅР°С‡РёС‚Рё РІСЃС–Рј СЃС‚РІРѕСЂРµРЅРёРј РєР°СЂС‚РєР°Рј.</param>
+    /// <param name="ct">РўРѕРєРµРЅ СЃРєР°СЃСѓРІР°РЅРЅСЏ РѕРїРµСЂР°С†С–С—.</param>
+    /// <returns>РЎРїРёСЃРѕРє <see cref="FlashcardDTO"/> РЅРѕРІРѕСЃС‚РІРѕСЂРµРЅРёС… С„Р»РµС€-РєР°СЂС‚РѕРє.</returns>
     public async Task<IReadOnlyList<FlashcardDTO>> CreateFlashcardsFromTextAsync(
-        int creatorId, string text, CancellationToken ct)
+        int creatorId, string text, IEnumerable<string> tags, CancellationToken ct)
     {
         var items = await this._ai.GenerateFromTextAsync(text, ct);
         var result = new List<FlashcardDTO>();
-        foreach (var (q, a, tags) in items)
+        var tagsList = tags.ToList();
+
+        foreach (var (question, answer) in items)
         {
             var saved = await this._cards.AddAsync(
                 new Flashcard
                 {
-                    Question = q,
-                    Answer = a,
+                    Question = question,
+                    Answer = answer,
                     CreatorId = creatorId,
                     CreatedAt = DateTime.UtcNow,
-                }, tags,
+                }, tagsList,
                 ct);
 
-            result.Add(saved.ToDTO(tags));
+            result.Add(saved.ToDTO(tagsList));
         }
 
         return result;

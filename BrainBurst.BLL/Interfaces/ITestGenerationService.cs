@@ -1,18 +1,21 @@
-namespace BrainBurst.BLL.Interfaces;
+п»їnamespace BrainBurst.BLL.Interfaces;
 
 using BrainBurst.BLL.DTO;
 
 /// <summary>
-/// Визначає контракт для сервісу, що відповідає за генерацію флеш-карток з тексту.
+/// Р’РёР·РЅР°С‡Р°С” РѕРїРµСЂР°С†С–С— РґР»СЏ СЂРѕР±РѕС‚Рё Р· С‚РµСЃС‚Р°РјРё С‚Р° РіРµРЅРµСЂР°С†С–С”СЋ С„Р»РµС€-РєР°СЂС‚РѕРє Р· С‚РµРєСЃС‚Сѓ.
 /// </summary>
 public interface ITestGenerationService
 {
     /// <summary>
-    /// Асинхронно створює та зберігає флеш-картки на основі наданого тексту.
+    /// РђСЃРёРЅС…СЂРѕРЅРЅРѕ СЃС‚РІРѕСЂСЋС” С‚Р° Р·Р±РµСЂС–РіР°С” С„Р»РµС€-РєР°СЂС‚РєРё РЅР° РѕСЃРЅРѕРІС– РЅР°РґР°РЅРѕРіРѕ С‚РµРєСЃС‚Сѓ.
+    /// РўРµРіРё РїРµСЂРµРґР°СЋС‚СЊСЃСЏ РѕРєСЂРµРјРѕ РІС–Рґ РєРѕСЂРёСЃС‚СѓРІР°С‡Р° С‡РµСЂРµР· UI.
     /// </summary>
-    /// <param name="creatorId">ID користувача, який створює картки.</param>
-    /// <param name="text">Вхідний текст для аналізу та генерації карток.</param>
-    /// <param name="ct">Токен скасування операції.</param>
-    /// <returns>Список <see cref="FlashcardDTO"/> новостворених флеш-карток.</returns>
-    Task<IReadOnlyList<FlashcardDTO>> CreateFlashcardsFromTextAsync(int creatorId, string text, CancellationToken ct);
+    /// <param name="creatorId">ID РєРѕСЂРёСЃС‚СѓРІР°С‡Р°, СЏРєРёР№ СЃС‚РІРѕСЂСЋС” РєР°СЂС‚РєРё.</param>
+    /// <param name="text">Р’С…С–РґРЅРёР№ С‚РµРєСЃС‚ РґР»СЏ Р°РЅР°Р»С–Р·Сѓ С‚Р° РіРµРЅРµСЂР°С†С–С— РєР°СЂС‚РѕРє.</param>
+    /// <param name="tags">РЎРїРёСЃРѕРє С‚РµРіС–РІ, СЏРєС– РїСЂРёР·РЅР°С‡РёС‚Рё РІСЃС–Рј СЃС‚РІРѕСЂРµРЅРёРј РєР°СЂС‚РєР°Рј.</param>
+    /// <param name="ct">РўРѕРєРµРЅ СЃРєР°СЃСѓРІР°РЅРЅСЏ РѕРїРµСЂР°С†С–С—.</param>
+    /// <returns>РЎРїРёСЃРѕРє <see cref="FlashcardDTO"/> РЅРѕРІРѕСЃС‚РІРѕСЂРµРЅРёС… С„Р»РµС€-РєР°СЂС‚РѕРє.</returns>
+    Task<IReadOnlyList<FlashcardDTO>> CreateFlashcardsFromTextAsync(
+        int creatorId, string text, IEnumerable<string> tags, CancellationToken ct);
 }

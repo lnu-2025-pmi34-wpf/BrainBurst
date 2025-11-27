@@ -8,11 +8,12 @@ using BrainBurst.BLL.DTO;
 public interface IQuizGenerator
 {
     /// <summary>
-    /// Асинхронно генерує список пар "питання-відповідь" та тегів на основі наданого тексту.
+    /// Асинхронно генерує список пар "питання-відповідь" на основі наданого тексту.
+    /// Тегирування здійснює користувач окремо через UI.
     /// </summary>
     /// <param name="text">Вхідний текст, з якого потрібно згенерувати флеш-картки.</param>
     /// <param name="ct">Токен скасування операції.</param>
-    /// <returns>Список кортежів, що містять (Питання, Відповідь, Список тегів).</returns>
-    Task<IReadOnlyList<(string Question, string Answer, IReadOnlyList<string> Tags)>> GenerateFromTextAsync(
+    /// <returns>Список кортежів, що містять (Питання, Відповідь).</returns>
+    Task<IReadOnlyList<(string Question, string Answer)>> GenerateFromTextAsync(
         string text, CancellationToken ct);
 }
