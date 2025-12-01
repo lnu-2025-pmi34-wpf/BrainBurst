@@ -7,6 +7,7 @@ namespace BrainBurst.BLL.Services
     using System.Threading;
     using System.Threading.Tasks;
     using BrainBurst.BLL.Interfaces.Abstractions;
+    using Microsoft.Extensions.Logging;
     using OpenAI.Chat;
 
     /// <summary>
@@ -15,7 +16,7 @@ namespace BrainBurst.BLL.Services
     public sealed class OpenAIQuizGenerator : IQuizGenerator
     {
         // Використовуємо модель gpt-4o
-        private const string ModelName = "gpt-4o"; 
+        private const string ModelName = "gpt-4o";
 
         /// <summary>
         /// Системний промпт, який інструктує ШІ щодо формату відповіді.
@@ -29,6 +30,18 @@ namespace BrainBurst.BLL.Services
             "Створи від 3 до 10 карток залежно від розміру тексту. Мова: українська. " +
             "Не додавай теги до карток - це зроблять користувачі. Зосередься тільки на якісних питаннях та відповідях.";
 
+        private readonly ILogger<OpenAIQuizGenerator> _logger;
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="OpenAIQuizGenerator"/> class.
+        /// </summary>
+        /// <param name="logger">Логер для запису подій.</param> // <-- ДОДАЙТЕ КОМЕНТАР
+        public OpenAIQuizGenerator(ILogger<OpenAIQuizGenerator> logger) // <-- ДОДАЙТЕ КОНСТРУКТОР
+        {
+            this._logger = logger;
+            this._logger.LogDebug("OpenAIQuizGenerator: Сервіс ініціалізовано.");
+        }
+
         /// <summary>
         /// Асинхронно генерує список пар "питання-відповідь" на основі наданого тексту.
         /// </summary>
@@ -38,8 +51,11 @@ namespace BrainBurst.BLL.Services
         public async Task<IReadOnlyList<(string Question, string Answer)>> GenerateFromTextAsync(
             string text, CancellationToken ct)
         {
+            this._logger.LogDebug("GenerateFromTextAsync: Запущено генерацію для тексту довжиною {TextLength}.", text.Length);
+
             if (string.IsNullOrWhiteSpace(text))
             {
+                this._logger.LogWarning("GenerateFromTextAsync: Вхідний текст порожній. Повертаємо пустий список.");
                 return Array.Empty<(string, string)>();
             }
 
@@ -48,6 +64,7 @@ namespace BrainBurst.BLL.Services
 
             if (string.IsNullOrEmpty(apiKey))
             {
+                this._logger.LogError("GenerateFromTextAsync: OpenAI API Key не знайдено.");
                 throw new InvalidOperationException("OpenAI API Key не знайдено. Встановіть змінну середовища 'OPENAI_API_KEY'.");
             }
 
@@ -63,11 +80,15 @@ namespace BrainBurst.BLL.Services
                     new UserChatMessage($"Текст для аналізу:\n{text}")
                 };
 
+                this._logger.LogDebug("GenerateFromTextAsync: Відправка запиту до моделі {ModelName}.", ModelName);
+
                 // Відправляємо запит
                 ChatCompletion completion = await client.CompleteChatAsync(messages, cancellationToken: ct);
 
                 // Отримуємо відповідь
                 string jsonResponse = completion.Content[0].Text.Trim();
+
+                this._logger.LogDebug("GenerateFromTextAsync: Отримана відповідь від AI: {Response}", jsonResponse);
 
                 // Очищаємо від можливих маркерів коду (```json ... ```, від 3 до 10 карток)
                 if (jsonResponse.StartsWith("```"))
@@ -85,8 +106,11 @@ namespace BrainBurst.BLL.Services
 
                 if (cards == null)
                 {
+                    this._logger.LogWarning("GenerateFromTextAsync: Десеріалізація повернула null. JSON не відповідає очікуваному формату.");
                     return Array.Empty<(string, string)>();
                 }
+
+                this._logger.LogInformation("GenerateFromTextAsync: Успішно згенеровано {Count} карток.", cards.Length);
 
                 // Перетворюємо у формат кортежів (Question, Answer)
                 return cards.Select(c => (c.Question, c.Answer)).ToList();
@@ -94,6 +118,7 @@ namespace BrainBurst.BLL.Services
             catch (Exception ex)
             {
                 // Логування помилки
+                this._logger.LogError(ex, "GenerateFromTextAsync: Критична помилка під час взаємодії з OpenAI API.");
                 throw new InvalidOperationException($"Помилка OpenAI: {ex.Message}", ex);
             }
         }
@@ -102,6 +127,7 @@ namespace BrainBurst.BLL.Services
         private class FlashcardResponse
         {
             public string Question { get; set; } = string.Empty;
+
             public string Answer { get; set; } = string.Empty;
         }
     }

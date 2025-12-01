@@ -10,6 +10,7 @@ namespace BrainBurst.DAL.Repositories
     using BrainBurst.DAL.Entities;
     using Microsoft.EntityFrameworkCore;
     using Microsoft.Extensions.DependencyInjection;
+    using Microsoft.Extensions.Logging;
 
     /// <summary>
     /// Реалізація репозиторію для роботи з сутностями <see cref="User"/>.
@@ -19,14 +20,19 @@ namespace BrainBurst.DAL.Repositories
     public class UserRepository : IUserRepository
     {
         private readonly IServiceProvider _serviceProvider;
+        private readonly ILogger<UserRepository> _logger;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="UserRepository"/> class.
         /// </summary>
         /// <param name="serviceProvider">Постачальник служб (DI) для створення "scopes".</param>
-        public UserRepository(IServiceProvider serviceProvider)
+        /// <param name="logger">Логер для запису подій.</param>
+        public UserRepository(IServiceProvider serviceProvider, ILogger<UserRepository> logger)
         {
             this._serviceProvider = serviceProvider;
+            this._logger = logger;
+
+            this._logger.LogDebug("UserRepository: Репозиторій користувачів ініціалізовано.");
         }
 
         /// <summary>
@@ -37,13 +43,24 @@ namespace BrainBurst.DAL.Repositories
         /// <returns>Додана сутність <see cref="User"/>.</returns>
         public async Task<User> AddAsync(User user, CancellationToken ct)
         {
-            using (var scope = this._serviceProvider.CreateScope())
+            this._logger.LogDebug("AddAsync: Спроба додати нового користувача.");
+            try
             {
-                var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+                using (var scope = this._serviceProvider.CreateScope())
+                {
+                    var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
 
-                context.Users.Add(user);
-                await context.SaveChangesAsync(ct);
-                return user;
+                    context.Users.Add(user);
+                    await context.SaveChangesAsync(ct);
+
+                    this._logger.LogInformation("AddAsync: Користувача {UserId} успішно додано.", user.UserId);
+                    return user;
+                }
+            }
+            catch (Exception ex)
+            {
+                this._logger.LogError(ex, "AddAsync: Критична помилка при додаванні користувача.");
+                throw;
             }
         }
 
@@ -55,12 +72,33 @@ namespace BrainBurst.DAL.Repositories
         /// <returns>Знайдений <see cref="User"/> або null.</returns>
         public async Task<User?> GetByEmailAsync(string email, CancellationToken ct)
         {
-            using (var scope = this._serviceProvider.CreateScope())
+            this._logger.LogDebug("GetByEmailAsync: Пошук користувача за email: {Email}", email);
+
+            try
             {
-                var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
-                return await context.Users
-                    .AsNoTracking()
-                    .FirstOrDefaultAsync(u => u.Email == email, ct);
+                using (var scope = this._serviceProvider.CreateScope())
+                {
+                    var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+                    var user = await context.Users
+                        .AsNoTracking()
+                        .FirstOrDefaultAsync(u => u.Email == email, ct);
+
+                    if (user != null)
+                    {
+                        this._logger.LogDebug("GetByEmailAsync: Користувача {Email} знайдено.", email);
+                    }
+                    else
+                    {
+                        this._logger.LogDebug("GetByEmailAsync: Користувача {Email} не знайдено.", email);
+                    }
+
+                    return user;
+                }
+            }
+            catch (Exception ex)
+            {
+                this._logger.LogError(ex, "GetByEmailAsync: Критична помилка при пошуку за email: {Email}", email);
+                throw;
             }
         }
 
@@ -73,14 +111,35 @@ namespace BrainBurst.DAL.Repositories
         /// <exception cref="KeyNotFoundException">Виникає, якщо користувача з таким ID не знайдено.</exception>
         public async Task<User> GetByIdAsync(int userId, CancellationToken ct)
         {
-            using (var scope = this._serviceProvider.CreateScope())
-            {
-                var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
-                var user = await context.Users
-                   .AsNoTracking()
-                   .FirstOrDefaultAsync(u => u.UserId == userId, ct);
+            this._logger.LogDebug("GetByIdAsync: Пошук користувача за ID: {UserId}", userId);
 
-                return user ?? throw new KeyNotFoundException($"User with ID {userId} not found.");
+            try
+            {
+                using (var scope = this._serviceProvider.CreateScope())
+                {
+                    var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+                    var user = await context.Users
+                       .AsNoTracking()
+                       .FirstOrDefaultAsync(u => u.UserId == userId, ct);
+
+                    if (user == null)
+                    {
+                        this._logger.LogWarning("GetByIdAsync: Користувача з ID {UserId} не знайдено.", userId);
+                        throw new KeyNotFoundException($"User with ID {userId} not found.");
+                    }
+
+                    this._logger.LogDebug("GetByIdAsync: Користувача {UserId} знайдено.", userId);
+                    return user;
+                }
+            }
+            catch (Exception ex)
+            {
+                if (ex is not KeyNotFoundException)
+                {
+                    this._logger.LogError(ex, "GetByIdAsync: Критична помилка при пошуку за ID: {UserId}", userId);
+                }
+
+                throw;
             }
         }
 
@@ -92,15 +151,27 @@ namespace BrainBurst.DAL.Repositories
         /// <returns>A <see cref="Task"/>, що представляє асинхронну операцію.</returns>
         public async Task UpdateAsync(User user, CancellationToken ct)
         {
-            using (var scope = this._serviceProvider.CreateScope())
+            this._logger.LogDebug("UpdateAsync: Спроба оновити дані користувача з ID: {UserId}", user.UserId);
+
+            try
             {
-                var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+                using (var scope = this._serviceProvider.CreateScope())
+                {
+                    var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
 
-                context.Attach(user).State = EntityState.Modified;
+                    context.Attach(user).State = EntityState.Modified;
 
-                context.Entry(user).Property(u => u.PasswordHash).IsModified = false;
+                    context.Entry(user).Property(u => u.PasswordHash).IsModified = false;
 
-                await context.SaveChangesAsync(ct);
+                    await context.SaveChangesAsync(ct);
+
+                    this._logger.LogInformation("UpdateAsync: Користувача {UserId} успішно оновлено.", user.UserId);
+                }
+            }
+            catch (Exception ex)
+            {
+                this._logger.LogError(ex, "UpdateAsync: Критична помилка при оновленні користувача з ID: {UserId}", user.UserId);
+                throw;
             }
         }
 
@@ -112,14 +183,27 @@ namespace BrainBurst.DAL.Repositories
         /// <returns>Список <see cref="User"/>, доступний лише для читання.</returns>
         public async Task<IReadOnlyList<User>> GetTopAsync(int take, CancellationToken ct)
         {
-            using (var scope = this._serviceProvider.CreateScope())
+            this._logger.LogDebug("GetTopAsync: Отримання топ-{Count} користувачів.", take);
+
+            try
             {
-                var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
-                return await context.Users
-                    .OrderByDescending(u => u.Points)
-                    .Take(take)
-                    .AsNoTracking()
-                    .ToListAsync(ct);
+                using (var scope = this._serviceProvider.CreateScope())
+                {
+                    var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+                    var users = await context.Users
+                        .OrderByDescending(u => u.Points)
+                        .Take(take)
+                        .AsNoTracking()
+                        .ToListAsync(ct);
+
+                    this._logger.LogInformation("GetTopAsync: Успішно отримано {Count} топ користувачів.", users.Count);
+                    return users;
+                }
+            }
+            catch (Exception ex)
+            {
+                this._logger.LogError(ex, "GetTopAsync: Критична помилка при отриманні топ-користувачів.");
+                throw;
             }
         }
 
@@ -132,17 +216,33 @@ namespace BrainBurst.DAL.Repositories
         /// <exception cref="KeyNotFoundException">Виникає, якщо користувача з таким ID не знайдено.</exception>
         public async Task DeleteAsync(int id, CancellationToken ct)
         {
-            using (var scope = this._serviceProvider.CreateScope())
+            this._logger.LogDebug("DeleteAsync: Спроба видалити користувача з ID: {UserId}", id);
+            try
             {
-                var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
-                var user = await context.Users.FirstOrDefaultAsync(u => u.UserId == id, ct);
-                if (user == null)
+                using (var scope = this._serviceProvider.CreateScope())
                 {
-                    throw new KeyNotFoundException($"User with ID {id} not found.");
+                    var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+                    var user = await context.Users.FirstOrDefaultAsync(u => u.UserId == id, ct);
+                    if (user == null)
+                    {
+                        this._logger.LogWarning("DeleteAsync: Видалення невдале. Користувача з ID {UserId} не знайдено.", id);
+                        throw new KeyNotFoundException($"User with ID {id} not found.");
+                    }
+
+                    context.Users.Remove(user);
+                    await context.SaveChangesAsync(ct);
+
+                    this._logger.LogInformation("DeleteAsync: Користувача з ID {UserId} успішно видалено.", id);
+                }
+            }
+            catch (Exception ex)
+            {
+                if (ex is not KeyNotFoundException)
+                {
+                    this._logger.LogError(ex, "DeleteAsync: Критична помилка при видаленні користувача з ID {UserId}.", id);
                 }
 
-                context.Users.Remove(user);
-                await context.SaveChangesAsync(ct);
+                throw;
             }
         }
 

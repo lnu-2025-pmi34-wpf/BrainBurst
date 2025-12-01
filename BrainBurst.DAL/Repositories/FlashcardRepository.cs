@@ -9,6 +9,8 @@ namespace BrainBurst.DAL.Repositories
     using BrainBurst.DAL.Data;
     using BrainBurst.DAL.Entities;
     using Microsoft.EntityFrameworkCore;
+    using Microsoft.Extensions.Logging;
+    using Serilog.Core;
 
     /// <summary>
     /// Реалізація репозиторію для роботи з сутностями <see cref="Flashcard"/>.
@@ -16,14 +18,19 @@ namespace BrainBurst.DAL.Repositories
     public class FlashcardRepository : IFlashcardRepository
     {
         private readonly ApplicationDbContext _context;
+        private readonly ILogger<FlashcardRepository> _logger;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="FlashcardRepository"/> class.
         /// </summary>
         /// <param name="context">Контекст бази даних.</param>
-        public FlashcardRepository(ApplicationDbContext context)
+        /// /// <param name="logger">Логер для запису подій.</param>
+        public FlashcardRepository(ApplicationDbContext context, ILogger<FlashcardRepository> logger)
         {
             this._context = context;
+            this._logger = logger;
+
+            this._logger.LogDebug("FlashcardRepository: Репозиторій карток ініціалізовано.");
         }
 
         /// <summary>
@@ -35,43 +42,57 @@ namespace BrainBurst.DAL.Repositories
         /// <returns>Створена сутність.</returns>
         public async Task<Flashcard> AddAsync(Flashcard f, IEnumerable<string> tags, CancellationToken ct)
         {
-            // 1. Обробка тегів
-            if (tags != null)
+            this._logger.LogDebug("AddAsync: Спроба додати нову картку. CreatorId: {CreatorId}", f.CreatorId);
+            try
             {
-                foreach (var tagName in tags)
+                // 1. Обробка тегів
+                if (tags != null)
                 {
-                    var normalizedName = tagName.Trim();
-                    if (string.IsNullOrEmpty(normalizedName))
+                    foreach (var tagName in tags)
                     {
-                        continue;
-                    }
-
-                    // Шукаємо існуючий тег для цього користувача
-                    var existingTag = await this._context.Tags
-                        .FirstOrDefaultAsync(t => t.Name == normalizedName && t.CreatorId == f.CreatorId, ct);
-
-                    if (existingTag != null)
-                    {
-                        f.Tags.Add(existingTag);
-                    }
-                    else
-                    {
-                        // Створюємо новий тег
-                        var newTag = new Tag
+                        var normalizedName = tagName.Trim();
+                        if (string.IsNullOrEmpty(normalizedName))
                         {
-                            Name = normalizedName,
-                            CreatorId = f.CreatorId,
-                        };
-                        f.Tags.Add(newTag);
+                            this._logger.LogDebug("AddAsync: Пропущено порожній тег.");
+                            continue;
+                        }
+
+                        // Шукаємо існуючий тег для цього користувача
+                        var existingTag = await this._context.Tags
+                            .FirstOrDefaultAsync(t => t.Name == normalizedName && t.CreatorId == f.CreatorId, ct);
+
+                        if (existingTag != null)
+                        {
+                            f.Tags.Add(existingTag);
+                            this._logger.LogDebug("AddAsync: Знайдено існуючий тег: {Tag}", normalizedName);
+                        }
+                        else
+                        {
+                            // Створюємо новий тег
+                            var newTag = new Tag
+                            {
+                                Name = normalizedName,
+                                CreatorId = f.CreatorId,
+                            };
+                            f.Tags.Add(newTag);
+                            this._logger.LogInformation("AddAsync: Створено новий тег: {Tag}", normalizedName);
+                        }
                     }
                 }
+
+                // 2. Збереження картки (разом з новими тегами та зв'язками)
+                this._context.Flashcards.Add(f);
+                await this._context.SaveChangesAsync(ct);
+
+                this._logger.LogInformation("AddAsync: Картка {CardId} успішно додана.", f.FlashcardId);
+
+                return f;
             }
-
-            // 2. Збереження картки (разом з новими тегами та зв'язками)
-            this._context.Flashcards.Add(f);
-            await this._context.SaveChangesAsync(ct);
-
-            return f;
+            catch (Exception ex)
+            {
+                this._logger.LogError(ex, "AddAsync: Критична помилка БД при додаванні картки для CreatorId: {CreatorId}", f.CreatorId);
+                throw;
+            }
         }
 
         /// <summary>
@@ -83,58 +104,76 @@ namespace BrainBurst.DAL.Repositories
         /// <returns>A <see cref="Task"/>, що представляє асинхронну операцію.</returns>
         public async Task UpdateAsync(Flashcard f, IEnumerable<string> tags, CancellationToken ct)
         {
-            // 1. Завантажуємо існуючу картку з тегами
-            var existingCard = await this._context.Flashcards
-                .Include(c => c.Tags)
-                .FirstOrDefaultAsync(c => c.FlashcardId == f.FlashcardId, ct);
+            this._logger.LogDebug("UpdateAsync: Спроба оновити картку {CardId}. CreatorId: {CreatorId}", f.FlashcardId, f.CreatorId);
 
-            if (existingCard == null)
+            try
             {
-                throw new KeyNotFoundException($"Flashcard with ID {f.FlashcardId} not found.");
-            }
+                // 1. Завантажуємо існуючу картку з тегами
+                var existingCard = await this._context.Flashcards
+                    .Include(c => c.Tags)
+                    .FirstOrDefaultAsync(c => c.FlashcardId == f.FlashcardId, ct);
 
-            // 2. Оновлюємо текст питання та відповіді
-            existingCard.Question = f.Question;
-            existingCard.Answer = f.Answer;
-
-            // 3. Очищуємо старі теги
-            existingCard.Tags.Clear();
-
-            // 4. Додаємо нові теги
-            if (tags != null)
-            {
-                foreach (var tagName in tags)
+                if (existingCard == null)
                 {
-                    var normalizedName = tagName.Trim();
-                    if (string.IsNullOrEmpty(normalizedName))
-                    {
-                        continue;
-                    }
+                    this._logger.LogWarning("UpdateAsync: Картка {CardId} не знайдена для оновлення.", f.FlashcardId);
+                    throw new KeyNotFoundException($"Flashcard with ID {f.FlashcardId} not found.");
+                }
 
-                    // Шукаємо існуючий тег
-                    var existingTag = await this._context.Tags
-                        .FirstOrDefaultAsync(t => t.Name == normalizedName && t.CreatorId == f.CreatorId, ct);
+                // 2. Оновлюємо текст питання та відповіді
+                existingCard.Question = f.Question;
+                existingCard.Answer = f.Answer;
 
-                    if (existingTag != null)
+                // 3. Очищуємо старі теги
+                existingCard.Tags.Clear();
+                this._logger.LogDebug("UpdateAsync: Видалено старі теги для {CardId}.", f.FlashcardId);
+
+                // 4. Додаємо нові теги
+                if (tags != null)
+                {
+                    foreach (var tagName in tags)
                     {
-                        existingCard.Tags.Add(existingTag);
-                    }
-                    else
-                    {
-                        // Створюємо новий тег
-                        var newTag = new Tag
+                        var normalizedName = tagName.Trim();
+                        if (string.IsNullOrEmpty(normalizedName))
                         {
-                            Name = normalizedName,
-                            CreatorId = f.CreatorId,
-                        };
-                        existingCard.Tags.Add(newTag);
+                            continue;
+                        }
+
+                        // Шукаємо існуючий тег
+                        var existingTag = await this._context.Tags
+                            .FirstOrDefaultAsync(t => t.Name == normalizedName && t.CreatorId == f.CreatorId, ct);
+
+                        if (existingTag != null)
+                        {
+                            existingCard.Tags.Add(existingTag);
+                        }
+                        else
+                        {
+                            // Створюємо новий тег
+                            var newTag = new Tag
+                            {
+                                Name = normalizedName,
+                                CreatorId = f.CreatorId,
+                            };
+                            existingCard.Tags.Add(newTag);
+                        }
                     }
                 }
-            }
 
-            // 5. Зберігаємо зміни
-            this._context.Flashcards.Update(existingCard);
-            await this._context.SaveChangesAsync(ct);
+                // 5. Зберігаємо зміни
+                this._context.Flashcards.Update(existingCard);
+                await this._context.SaveChangesAsync(ct);
+
+                this._logger.LogInformation("UpdateAsync: Картка {CardId} успішно оновлена.", f.FlashcardId);
+            }
+            catch (Exception ex)
+            {
+                if (ex is not KeyNotFoundException)
+                {
+                    this._logger.LogError(ex, "UpdateAsync: Критична помилка БД при оновленні картки {CardId}", f.FlashcardId); // <-- ЛОГУВАННЯ ПОМИЛКИ
+                }
+
+                throw;
+            }
         }
 
         /// <summary>
@@ -146,16 +185,33 @@ namespace BrainBurst.DAL.Repositories
         /// <returns>A <see cref="Task"/>, що представляє асинхронну операцію.</returns>
         public async Task DeleteAsync(int id, int ownerId, CancellationToken ct)
         {
-            var card = await this._context.Flashcards
-                .FirstOrDefaultAsync(f => f.FlashcardId == id && f.CreatorId == ownerId, ct);
+            this._logger.LogDebug("DeleteAsync: Спроба видалити картку {CardId} користувачем {OwnerId}.", id, ownerId);
 
-            if (card == null)
+            try
             {
-                throw new KeyNotFoundException($"Flashcard with ID {id} not found.");
-            }
+                var card = await this._context.Flashcards
+                    .FirstOrDefaultAsync(f => f.FlashcardId == id && f.CreatorId == ownerId, ct);
 
-            this._context.Flashcards.Remove(card);
-            await this._context.SaveChangesAsync(ct);
+                if (card == null)
+                {
+                    this._logger.LogWarning("DeleteAsync: Видалення невдале. Картка {CardId} не знайдена або CreatorId не співпадає ({OwnerId}).", id, ownerId);
+                    throw new KeyNotFoundException($"Flashcard with ID {id} not found.");
+                }
+
+                this._context.Flashcards.Remove(card);
+                await this._context.SaveChangesAsync(ct);
+
+                this._logger.LogInformation("DeleteAsync: Картка {CardId} успішно видалена.", id);
+            }
+            catch (Exception ex)
+            {
+                if (ex is not KeyNotFoundException)
+                {
+                    this._logger.LogError(ex, "DeleteAsync: Критична помилка БД при видаленні картки {CardId}", id);
+                }
+
+                throw;
+            }
         }
 
         /// <summary>
@@ -166,10 +222,27 @@ namespace BrainBurst.DAL.Repositories
         /// <returns>Знайдена <see cref="Flashcard"/> або null.</returns>
         public async Task<Flashcard?> GetAsync(int id, CancellationToken ct)
         {
-            return await this._context.Flashcards
-                .Include(f => f.Tags)
-                .AsNoTracking()
-                .FirstOrDefaultAsync(f => f.FlashcardId == id, ct);
+            this._logger.LogDebug("GetAsync: Отримання картки за ID: {CardId}", id);
+
+            try
+            {
+                var card = await this._context.Flashcards
+                    .Include(f => f.Tags)
+                    .AsNoTracking()
+                    .FirstOrDefaultAsync(f => f.FlashcardId == id, ct);
+
+                if (card == null)
+                {
+                    this._logger.LogDebug("GetAsync: Картка {CardId} не знайдена.", id);
+                }
+
+                return card;
+            }
+            catch (Exception ex)
+            {
+                this._logger.LogError(ex, "GetAsync: Критична помилка БД при отриманні картки {CardId}", id);
+                throw;
+            }
         }
 
         /// <summary>
@@ -181,20 +254,33 @@ namespace BrainBurst.DAL.Repositories
         /// <returns>Список карток з завантаженими тегами.</returns>
         public async Task<IReadOnlyList<Flashcard>> FindAsync(int ownerId, string? search, CancellationToken ct)
         {
-            var query = this._context.Flashcards
-                .Where(f => f.CreatorId == ownerId)
-                .Include(f => f.Tags)
-                .AsSplitQuery()
-                .AsNoTracking();
+            this._logger.LogDebug("FindAsync: Пошук карток для власника {OwnerId}. Запит: {Search}", ownerId, search ?? "відсутній");
 
-            if (!string.IsNullOrWhiteSpace(search))
+            try
             {
-                string normalizedSearch = search.Trim().ToLower();
-                query = query.Where(f => f.Question.ToLower().Contains(normalizedSearch) ||
-                                         f.Answer.ToLower().Contains(normalizedSearch));
-            }
+                var query = this._context.Flashcards
+                    .Where(f => f.CreatorId == ownerId)
+                    .Include(f => f.Tags)
+                    .AsSplitQuery()
+                    .AsNoTracking();
 
-            return await query.ToListAsync(ct);
+                if (!string.IsNullOrWhiteSpace(search))
+                {
+                    string normalizedSearch = search.Trim().ToLower();
+                    query = query.Where(f => f.Question.ToLower().Contains(normalizedSearch) ||
+                                             f.Answer.ToLower().Contains(normalizedSearch));
+                }
+
+                var result = await query.ToListAsync(ct);
+
+                this._logger.LogInformation("FindAsync: Знайдено {Count} карток для власника {OwnerId}.", result.Count, ownerId);
+                return result;
+            }
+            catch (Exception ex)
+            {
+                this._logger.LogError(ex, "FindAsync: Критична помилка БД при пошуку карток для власника {OwnerId}.", ownerId);
+                throw;
+            }
         }
     }
 }

@@ -12,6 +12,8 @@
     using System.Windows.Navigation;
     using BrainBurst.BLL.DTO;
     using BrainBurst.BLL.Interfaces;
+    using Microsoft.Extensions.DependencyInjection;
+    using Microsoft.Extensions.Logging;
 
     /// <summary>
     /// Логіка взаємодії для View проходження тесту.
@@ -21,6 +23,8 @@
         private readonly ITestService _testService;
         private readonly IFlashcardService _flashcardService;
         private readonly IAuthContext _authContext;
+        private readonly ILogger<TestTakingView> _logger;
+        private readonly IServiceProvider _serviceProvider;
 
         private List<FlashcardDTO> _questions = new List<FlashcardDTO>();
         private List<(int flashcardId, string? userInput)> _userAnswers = new List<(int, string?)>();
@@ -35,15 +39,23 @@
         /// <param name="testService">Сервіс для роботи з тестами.</param>
         /// <param name="flashcardService">Сервіс для завантаження карток.</param>
         /// <param name="authContext">Контекст автентифікації.</param>
+        /// <param name="logger">Логер для запису подій.</param>
+        /// <param name="serviceProvider">Провайдер сервісів для отримання інших View.</param>
         public TestTakingView(
             ITestService testService,
             IFlashcardService flashcardService,
-            IAuthContext authContext)
+            IAuthContext authContext,
+            ILogger<TestTakingView> logger,
+            IServiceProvider serviceProvider)
         {
             this.InitializeComponent();
             this._testService = testService;
             this._flashcardService = flashcardService;
             this._authContext = authContext;
+            this._logger = logger;
+            this._serviceProvider = serviceProvider;
+
+            this._logger.LogDebug("TestTakingView: View ініціалізовано.");
         }
 
         /// <summary>
@@ -53,12 +65,15 @@
         /// <returns>A <see cref="Task"/> representing the asynchronous operation.</returns>
         public async Task InitializeTestByTagAsync(string tag)
         {
+            this._logger.LogInformation("InitializeTestByTagAsync: Запуск ініціалізації тесту для тегу: {Tag}", tag);
+
             try
             {
                 this.QuestionText.Text = "Генерація тесту...";
-                
+
                 // 1. Отримуємо всі картки юзера
                 var allCards = await this._flashcardService.ListAsync(this._authContext.CurrentUserId, null, CancellationToken.None);
+                this._logger.LogDebug("InitializeTestByTagAsync: Отримано {Count} карток для фільтрації.", allCards.Count);
 
                 // 2. Фільтруємо за тегом
                 var filteredCards = allCards
@@ -68,6 +83,7 @@
 
                 if (!filteredCards.Any())
                 {
+                    this._logger.LogWarning("InitializeTestByTagAsync: У колоді {Tag} немає карток. Скасування.", tag);
                     MessageBox.Show("У цій колоді немає карток.", "Увага");
                     this.StopTest_Click(this, new RoutedEventArgs());
                     return;
@@ -75,19 +91,22 @@
 
                 // 3. Створюємо запис тесту в БД
                 var testDto = await this._testService.GenerateFromFlashcardsAsync(
-                    this._authContext.CurrentUserId, 
-                    filteredCards, 
+                    this._authContext.CurrentUserId,
+                    filteredCards,
                     CancellationToken.None);
 
                 this._currentTestId = testDto.Id;
                 this._questions = testDto.Questions.ToList();
                 this._currentQuestionIndex = 0;
 
+                this._logger.LogInformation("InitializeTestByTagAsync: Тест ID {TestId} успішно створено з {Count} питань.", this._currentTestId, this._questions.Count);
+
                 // 4. Показуємо перше питання
                 this.LoadQuestion(this._currentQuestionIndex);
             }
             catch (Exception ex)
             {
+                this._logger.LogError(ex, "InitializeTestByTagAsync: Критична помилка ініціалізації тесту для тегу: {Tag}", tag);
                 MessageBox.Show($"Помилка запуску тесту: {ex.Message}", "Помилка");
                 this.StopTest_Click(this, new RoutedEventArgs());
             }
@@ -98,14 +117,14 @@
             if (index < this._questions.Count)
             {
                 var q = this._questions[index];
-                
+
                 // Встановлюємо тему (перший тег або заглушка)
                 this.QuestionTopic.Text = q.Tags.FirstOrDefault() ?? "Тест";
                 this.AnswerTopic.Text = this.QuestionTopic.Text;
 
                 this.QuestionText.Text = q.Question;
                 this.QuestionProgress.Text = $"Питання {index + 1} / {this._questions.Count}";
-                
+
                 this.CorrectAnswerText.Text = q.Answer;
 
                 // Скидаємо стан UI
@@ -132,12 +151,15 @@
                 // Перевірка (проста, без case-sensitive)
                 if (userAnswer.Trim().Equals(correctAnswer.Trim(), StringComparison.OrdinalIgnoreCase))
                 {
+                    this._logger.LogDebug("AnswerTextBox_KeyDown: Питання {Index} відповідено ПРАВИЛЬНО.", this._currentQuestionIndex + 1);
                     this.ResultIcon.Text = "✅";
                     this.ResultIcon.Foreground = Brushes.Green;
                     this.AnswerCard.Background = (SolidColorBrush)new BrushConverter().ConvertFrom("#F0FFF0") !;
                 }
                 else
                 {
+                    this._logger.LogWarning("AnswerTextBox_KeyDown: Питання {Index} відповідено НЕПРАВИЛЬНО. Користувач: '{UserAnswer}', Правильно: '{CorrectAnswer}'",
+                        this._currentQuestionIndex + 1, userAnswer, correctAnswer);
                     this.ResultIcon.Text = "❌";
                     this.ResultIcon.Foreground = Brushes.Red;
                     this.AnswerCard.Background = (SolidColorBrush)new BrushConverter().ConvertFrom("#FFF0F0") !;
@@ -163,9 +185,12 @@
             if (this._currentQuestionIndex < this._questions.Count)
             {
                 this.LoadQuestion(this._currentQuestionIndex);
+                this._logger.LogDebug("NextCard_Click: Завантажено питання {Index}.", this._currentQuestionIndex + 1);
             }
             else
             {
+                this._logger.LogInformation("NextCard_Click: Кінець тесту. Запуск відправки результатів (TestId: {TestId}).", this._currentTestId);
+
                 // Кінець тесту - відправляємо результати
                 try
                 {
@@ -178,13 +203,23 @@
                     if (NavigationService.GetNavigationService(this) != null)
                     {
                         var totalQuestions = this._questions.Count;
-                        
+
+                        this._logger.LogInformation("NextCard_Click: Результати успішно збережено. Правильно: {CorrectCount}, Неправильно: {MistakesCount}.",
+                            testResultDto.CorrectAnswersPercent, this._mistakesList.Count);
+
                         // Переходимо на екран результатів
-                        NavigationService.GetNavigationService(this).Navigate(new TestResultsView(this._mistakesList, totalQuestions));
+                        var resultsView = this._serviceProvider.GetRequiredService<TestResultsView>();
+
+                        // Ініціалізація даними через метод
+                        resultsView.InitializeResults(this._mistakesList, totalQuestions);
+
+                        // Переходимо на екран результатів
+                        NavigationService.GetNavigationService(this).Navigate(resultsView);
                     }
                 }
                 catch (Exception ex)
                 {
+                    this._logger.LogError(ex, "NextCard_Click: Критична помилка при збереженні результатів тесту {TestId}.", this._currentTestId);
                     MessageBox.Show($"Помилка збереження результатів: {ex.Message}", "Помилка");
                     this.StopTest_Click(sender, e);
                 }

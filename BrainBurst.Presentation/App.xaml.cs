@@ -1,5 +1,7 @@
 ﻿namespace BrainBurst.Presentation;
 
+using Serilog;
+using System.IO;
 using System;
 using System.Windows;
 using BrainBurst.BLL.Interfaces;
@@ -13,6 +15,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Npgsql.EntityFrameworkCore.PostgreSQL;
+using Microsoft.Extensions.Logging;
 
 /// <summary>
 /// Логіка взаємодії для App.xaml.
@@ -31,7 +34,26 @@ public partial class App : Application
         this.SetupEnvironmentVariables();
 
         AppContext.SetSwitch("Npgsql.EnableLegacyTimestampBehavior", true);
-        this._host = Host.CreateDefaultBuilder()
+        this._host = Host.CreateDefaultBuilder(args: null)
+            .UseSerilog((context, services, configuration) =>
+            {
+                string logDirectory = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Logs");
+                string logFilePath = Path.Combine(logDirectory, "log-.txt");
+
+                configuration
+                    .MinimumLevel.Information()
+
+                    .MinimumLevel.Override("BrainBurst", Serilog.Events.LogEventLevel.Debug)
+
+                    .MinimumLevel.Override("Microsoft.EntityFrameworkCore", Serilog.Events.LogEventLevel.Warning)
+                   .WriteTo.File(
+                        path: logFilePath,
+                        rollingInterval: RollingInterval.Day,
+                        outputTemplate: "{Timestamp:HH:mm:ss.fff} [{Level:u3}] [{ThreadId}] {Message:lj}{NewLine}{Exception}")
+                    .Enrich.WithThreadId()
+                    .ReadFrom.Configuration(context.Configuration)
+                    .ReadFrom.Services(services);
+            })
             .ConfigureServices((context, services) =>
             {
                 this.ConfigureServices(services);
@@ -51,6 +73,8 @@ public partial class App : Application
     /// <param name="e">Дані події виходу.</param>
     protected override async void OnExit(ExitEventArgs e)
     {
+        Log.CloseAndFlush();
+
         using (this._host)
         {
             await this._host.StopAsync(TimeSpan.FromSeconds(5));
@@ -69,6 +93,9 @@ public partial class App : Application
         base.OnStartup(e);
 
         await this._host.StartAsync();
+
+        var logger = this._host.Services.GetRequiredService<ILogger<App>>();
+        logger.LogInformation("✅ WPF Host started successfully.");
 
         bool migrationSuccess = this.ApplyMigrations();
 
@@ -89,7 +116,7 @@ public partial class App : Application
         Environment.SetEnvironmentVariable("DB_NAME", "brainburst_ge7w");
         Environment.SetEnvironmentVariable("DB_USER", "whylek");
         Environment.SetEnvironmentVariable("DB_PASSWORD", "L1vFCiVN2WUncXGQx5fTx1iAJDBtOmgI");
-        Environment.SetEnvironmentVariable("OPENAI_API_KEY", dummy);
+        Environment.SetEnvironmentVariable("OPENAI_API_KEY", "dummy");
     }
 
     /// <summary>
@@ -117,6 +144,9 @@ public partial class App : Application
         }
         catch (Exception ex)
         {
+            var logger = this._host.Services.GetRequiredService<ILogger<App>>();
+            logger.LogError(ex, "Критична помилка при виконанні міграції бази даних.");
+
             MessageBox.Show($"Критична помилка при оновленні бази даних:\n{ex.Message}\n\nДеталі: {ex.InnerException?.Message}", "Помилка міграції");
             return false;
         }

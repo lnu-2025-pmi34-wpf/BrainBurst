@@ -1,10 +1,12 @@
 ﻿namespace BrainBurst.Presentation.Views
 {
     using System.Collections.Generic;
+    using System.Linq;
     using System.Windows;
     using System.Windows.Controls;
     using System.Windows.Media;
     using System.Windows.Navigation;
+    using Microsoft.Extensions.Logging;
 
     /// <summary>
     /// Внутрішній клас, що представляє одну помилку (неправильну відповідь) у тесті.
@@ -36,28 +38,32 @@
     /// </summary>
     public partial class TestResultsView : UserControl
     {
-        /// <summary>
-        /// Initializes a new instance of the <see cref="TestResultsView"/> class.
-        /// </summary>
-        public TestResultsView()
-        {
-            this.InitializeComponent();
-            this.ScoreText.Text = "Виникла помилка завантаження результатів";
-        }
+        private readonly ILogger<TestResultsView> _logger;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="TestResultsView"/> class.
         /// </summary>
-        /// <param name="mistakes">Список помилок (неправильних відповідей) користувача.</param>
-        /// <param name="totalQuestions">Загальна кількість питань у тесті.</param>
-        public TestResultsView(List<TestMistake> mistakes, int totalQuestions)
+        public TestResultsView(ILogger<TestResultsView> logger)
         {
             this.InitializeComponent();
+            this._logger = logger;
+            this.ScoreText.Text = "Виникла помилка завантаження результатів";
+            this._logger.LogWarning("TestResultsView: Ініціалізовано через порожній конструктор. Дані відсутні.");
+        }
+
+        /// <summary>
+        /// Встановлює результати тесту після отримання View з контейнера DI.
+        /// Цей метод замінює старий конструктор з даними.
+        /// </summary>
+        public void InitializeResults(List<TestMistake> mistakes, int totalQuestions)
+        {
+            this._logger.LogInformation("InitializeResults: Відображення результатів. Всього: {Total}, Помилок: {Mistakes}", totalQuestions, mistakes.Count);
 
             if (totalQuestions <= 0)
             {
                 this.ScoreText.Text = "Немає даних для відображення";
                 this.PercentageText.Text = "-";
+                this._logger.LogWarning("InitializeResults: Некоректна кількість питань ({Total}).", totalQuestions);
                 return;
             }
 
@@ -67,6 +73,9 @@
             this.ScoreText.Text = $"Ваш результат: {score} / {totalQuestions}";
             this.PercentageText.Text = $"{percentage:F0}%";
 
+            this._logger.LogInformation("InitializeResults: Фінальний результат: {Score}/{Total} ({Percent:F0}%)", score, totalQuestions, percentage);
+
+            // Логіка встановлення кольору
             if (percentage < 50)
             {
                 this.PercentageText.Foreground = Brushes.Red;
@@ -84,6 +93,7 @@
             {
                 this.MistakesHeader.Visibility = Visibility.Visible;
                 this.MistakesItemsControl.ItemsSource = mistakes;
+                this._logger.LogDebug("InitializeResults: Показано список помилок.");
             }
         }
 
@@ -92,7 +102,12 @@
             if (NavigationService.GetNavigationService(this) != null &&
                 NavigationService.GetNavigationService(this).CanGoBack)
             {
+                this._logger.LogInformation("BackButton_Click: Повернення до попереднього View.");
                 NavigationService.GetNavigationService(this).GoBack();
+            }
+            else
+            {
+                this._logger.LogWarning("BackButton_Click: Навігація неможлива.");
             }
         }
     }
