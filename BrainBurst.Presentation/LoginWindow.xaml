@@ -10,11 +10,42 @@
         WindowStartupLocation="CenterScreen"
         Background="White">
 
+    <!-- 1. АНІМАЦІЯ ПОЯВИ ВІКНА -->
+    <Window.Triggers>
+        <EventTrigger RoutedEvent="Window.Loaded">
+            <BeginStoryboard>
+                <Storyboard>
+                    <!-- Прозорість від 0 до 1 (Fade In) -->
+                    <DoubleAnimation Storyboard.TargetName="MainForm"
+                                     Storyboard.TargetProperty="Opacity"
+                                     From="0.0" To="1.0" 
+                                     Duration="0:0:1.5" />
+
+                    <!-- Зсув знизу вгору (Slide Up) -->
+                    <DoubleAnimation Storyboard.TargetName="FormTransfer"
+                                     Storyboard.TargetProperty="Y"
+                                     From="50" To="0" 
+                                     Duration="0:0:1.0" 
+                                     DecelerationRatio="0.9"/>
+                </Storyboard>
+            </BeginStoryboard>
+        </EventTrigger>
+    </Window.Triggers>
+
     <Grid>
         <Button Content="← Повернутися на головну"
             Style="{StaticResource BackButton}"
             Click="BackButton_Click"/>
-        <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center" Width="500">
+
+        <!-- Додали x:Name="MainForm" та RenderTransform для анімації -->
+        <StackPanel x:Name="MainForm" 
+                    VerticalAlignment="Center" 
+                    HorizontalAlignment="Center" 
+                    Width="500">
+
+            <StackPanel.RenderTransform>
+                <TranslateTransform x:Name="FormTransfer" Y="0"/>
+            </StackPanel.RenderTransform>
 
             <Image Source="/Assets/logo.png" 
                    Height="150"
@@ -36,18 +67,54 @@
                        FontWeight="Bold" 
                        Margin="0,0,0,5" 
                        Foreground="#555"/>
+
             <PasswordBox x:Name="PasswordInputBox" Style="{StaticResource InputPasswordBox}"/>
 
             <TextBlock x:Name="StatusText" 
                        Margin="0,10,0,0" 
                        Foreground="Red" 
                        HorizontalAlignment="Center" 
-                       FontWeight="SemiBold"/> 
+                       FontWeight="SemiBold"/>
 
+            <!-- 2. АНІМАЦІЯ КНОПКИ ПРИ НАВЕДЕННІ -->
             <Button Content="Увійти"
-                 Style="{StaticResource PrimaryButton}"
+                    Style="{StaticResource PrimaryButton}"
                     Margin="0,20,0,0"
-                    Click="Login_Click"/>
+                    Click="Login_Click"
+                    RenderTransformOrigin="0.5,0.5">
+
+                <Button.RenderTransform>
+                    <ScaleTransform x:Name="ButtonScale" ScaleX="1" ScaleY="1"/>
+                </Button.RenderTransform>
+
+                <Button.Triggers>
+                    <EventTrigger RoutedEvent="MouseEnter">
+                        <BeginStoryboard>
+                            <Storyboard>
+                                <!-- Збільшення кнопки -->
+                                <DoubleAnimation Storyboard.TargetName="ButtonScale"
+                                                 Storyboard.TargetProperty="ScaleX"
+                                                 To="1.05" Duration="0:0:0.2"/>
+                                <DoubleAnimation Storyboard.TargetName="ButtonScale"
+                                                 Storyboard.TargetProperty="ScaleY"
+                                                 To="1.05" Duration="0:0:0.2"/>
+                            </Storyboard>
+                        </BeginStoryboard>
+                    </EventTrigger>
+                    <EventTrigger RoutedEvent="MouseLeave">
+                        <BeginStoryboard>
+                            <Storyboard>
+                                <DoubleAnimation Storyboard.TargetName="ButtonScale"
+                                                 Storyboard.TargetProperty="ScaleX"
+                                                 To="1.0" Duration="0:0:0.2"/>
+                                <DoubleAnimation Storyboard.TargetName="ButtonScale"
+                                                 Storyboard.TargetProperty="ScaleY"
+                                                 To="1.0" Duration="0:0:0.2"/>
+                            </Storyboard>
+                        </BeginStoryboard>
+                    </EventTrigger>
+                </Button.Triggers>
+            </Button>
 
         </StackPanel>
     </Grid>
