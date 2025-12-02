@@ -63,11 +63,7 @@
                 // Встановлюємо поточного користувача в контекст
                 this._authContext.SetCurrentUser(userDto);
 
-                // Отримуємо та показуємо вікно профілю
-                var profileWindow = this._serviceProvider.GetRequiredService<ProfileWindow>();
-                profileWindow.Show();
-
-                // Закриваємо вікно входу
+                this.DialogResult = true;
                 this.Close();
             }
             catch (ArgumentException ex)

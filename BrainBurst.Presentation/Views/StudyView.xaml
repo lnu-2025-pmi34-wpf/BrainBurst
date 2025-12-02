@@ -9,10 +9,12 @@
              Background="White">
     <Grid>
         <Button Content="◀" Style="{StaticResource StudyArrowButton}" 
-                HorizontalAlignment="Left" VerticalAlignment="Center" Margin="30,0,0,0"/>
+                HorizontalAlignment="Left" VerticalAlignment="Center" Margin="30,0,0,0"
+                Click="PreviousCard_Click"/>
 
         <Button Content="▶" Style="{StaticResource StudyArrowButton}" 
-                HorizontalAlignment="Right" VerticalAlignment="Center" Margin="0,0,30,0"/>
+                HorizontalAlignment="Right" VerticalAlignment="Center" Margin="0,0,30,0"
+                Click="NextCard_Click"/>
 
         <Grid HorizontalAlignment="Center" VerticalAlignment="Center">
 
@@ -47,10 +49,11 @@
 
                     <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" Margin="0,30,0,0">
                         <TextBlock Text="ВАША ВІДПОВІДЬ:" FontSize="14" FontWeight="Bold" Foreground="Gray"/>
-                        <TextBlock x:Name="UserAnswerText" Text="[Ваша відповідь]" FontSize="18" Margin="0,5,0,0"/>
-
+                        <TextBlock x:Name="UserAnswerText" Text="[Ваша відповідь]" FontSize="18" Margin="0,5,0,0" 
+                                   TextWrapping="Wrap" MaxWidth="600"/>
                         <TextBlock Text="ПРАВИЛЬНА ВІДПОВІДЬ:" FontSize="14" FontWeight="Bold" Foreground="Gray" Margin="0,20,0,0"/>
-                        <TextBlock x:Name="CorrectAnswerText" Text="[Правильна відповідь]" FontSize="18" Margin="0,5,0,0"/>
+                        <TextBlock x:Name="CorrectAnswerText" Text="[Правильна відповідь]" FontSize="18" Margin="0,5,0,0" 
+                                   TextWrapping="Wrap" MaxWidth="600"/>                    
                     </StackPanel>
 
                     <Button Content="Наступне питання →" 

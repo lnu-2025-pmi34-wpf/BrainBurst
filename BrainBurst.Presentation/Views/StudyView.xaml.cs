@@ -191,5 +191,23 @@
             this.DisplayCard(this._currentCardIndex);
             this._logger.LogDebug("NextCard_Click: Перехід до картки {Index}/{Total}.", this._currentCardIndex + 1, this._flashcards.Count);
         }
+
+        private void PreviousCard_Click(object sender, RoutedEventArgs e)
+        {
+            if (!this._flashcards.Any())
+            {
+                return;
+            }
+
+            this._currentCardIndex--;
+            if (this._currentCardIndex < 0)
+            {
+                this._currentCardIndex = this._flashcards.Count - 1;
+                this._logger.LogDebug("PreviousCard_Click: Перехід до останньої картки (цикл).");
+            }
+
+            this.DisplayCard(this._currentCardIndex);
+            this._logger.LogDebug("PreviousCard_Click: Перехід до картки {Index}/{Total}.", this._currentCardIndex + 1, this._flashcards.Count);
+        }
     }
 }

@@ -183,7 +183,7 @@ public partial class App : Application
 
         services.AddTransient<IQuizGenerator, OpenAIQuizGenerator>();
 
-        services.AddSingleton<MainWindow>();
+        services.AddTransient<MainWindow>();
         services.AddTransient<LoginWindow>();
         services.AddTransient<RegistrationWindow>();
         services.AddTransient<ProfileWindow>();

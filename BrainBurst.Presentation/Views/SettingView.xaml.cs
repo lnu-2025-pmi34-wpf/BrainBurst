@@ -49,11 +49,13 @@
                 Window currentWindow = Window.GetWindow(this);
 
                 // Показуємо вікно входу
-                var loginWindow = this._serviceProvider.GetRequiredService<LoginWindow>();
-                loginWindow.Show();
+                var mainWindow = this._serviceProvider.GetRequiredService<MainWindow>();
+                mainWindow.Show();
+
+                this._logger.LogInformation("LogoutButton_Click: Показано MainWindow.");
 
                 // Закриваємо поточне вікно
-                if (currentWindow != null && currentWindow != loginWindow)
+                if (currentWindow != null && currentWindow != mainWindow)
                 {
                     currentWindow.Close();
                     this._logger.LogInformation("LogoutButton_Click: Попереднє вікно закрито.");

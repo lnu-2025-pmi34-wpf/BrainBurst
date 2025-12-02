@@ -68,7 +68,7 @@
             }
             catch (Exception ex)
             {
-                this._logger.LogError(ex, "Register_Click: Непередбачена критична помилка реєстрації для {Email}", email);  
+                this._logger.LogError(ex, "Register_Click: Непередбачена критична помилка реєстрації для {Email}", email);
                 this.StatusText.Text = $"Непередбачена помилка реєстрації: {ex.InnerException?.Message ?? ex.Message}. Спробуйте пізніше.";
             }
         }

@@ -50,10 +50,12 @@
 
                     <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" Margin="0,30,0,0">
                         <TextBlock Text="ВАША ВІДПОВІДЬ:" FontSize="14" FontWeight="Bold" Foreground="Gray"/>
-                        <TextBlock x:Name="UserAnswerText" Text="[Ваша відповідь]" FontSize="18" Margin="0,5,0,0"/>
-
+                        <TextBlock x:Name="UserAnswerText" Text="[Ваша відповідь]" FontSize="18" Margin="0,5,0,0" 
+                                   TextWrapping="Wrap" MaxWidth="600"/>
+                        
                         <TextBlock Text="ПРАВИЛЬНА ВІДПОВІДЬ:" FontSize="14" FontWeight="Bold" Foreground="Gray" Margin="0,20,0,0"/>
-                        <TextBlock x:Name="CorrectAnswerText" Text="[Правильна відповідь]" FontSize="18" Margin="0,5,0,0"/>
+                        <TextBlock x:Name="CorrectAnswerText" Text="[Правильна відповідь]" FontSize="18" Margin="0,5,0,0" 
+                                   TextWrapping="Wrap" MaxWidth="600"/>                    
                     </StackPanel>
 
                     <Button Content="Наступне питання →" 
