@@ -238,5 +238,6 @@ namespace AdoNetPostgresDemo.Tests
                 demo.KeepOnlyFirstRecords(null);
             });
         }
+
     }
 }

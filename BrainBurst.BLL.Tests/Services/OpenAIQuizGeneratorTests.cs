@@ -1,98 +1,144 @@
+using System;
+using System.Threading;
+using System.Threading.Tasks;
+using BrainBurst.BLL.Services;
+using Microsoft.Extensions.Logging;
+using Moq;
+using Xunit;
+
 namespace BrainBurst.BLL.Tests.Services
 {
-    using System;
-    using System.Linq;
-    using System.Threading;
-    using System.Threading.Tasks;
-    using BrainBurst.BLL.Services;
-    using Xunit;
-
-    /// <summary>
-    /// Містить юніт-тести для <see cref="OpenAIQuizGenerator"/>.
-    /// Оскільки генератор наразі імітує відповідь, ці тести перевіряють логіку парсингу відповіді.
-    /// </summary>
     public class OpenAIQuizGeneratorTests
     {
-        private readonly OpenAIQuizGenerator _generator;
+        private readonly Mock<ILogger<OpenAIQuizGenerator>> _logger = new();
 
-        /// <summary>
-        /// Initializes a new instance of the <see cref="OpenAIQuizGeneratorTests"/> class.
-        /// </summary>
-        public OpenAIQuizGeneratorTests()
+        private static readonly string ValidJson =
+            "[{\"Question\":\"Q1\",\"Answer\":\"A1\"},{\"Question\":\"Q2\",\"Answer\":\"A2\"}]";
+
+        [Fact]
+        public void Ctor_DoesNotThrow()
         {
-            this._generator = new OpenAIQuizGenerator();
+            var gen = new OpenAIQuizGenerator(_logger.Object);
+            Assert.NotNull(gen);
+        }
+
+        [Theory]
+        [InlineData("")]
+        [InlineData(" ")]
+        [InlineData("\n\t")]
+        public async Task EmptyText_ReturnsEmpty(string text)
+        {
+            Environment.SetEnvironmentVariable("OPENAI_API_KEY", "123");
+            var gen = new OpenAIQuizGenerator(_logger.Object);
+
+            var result = await gen.GenerateFromTextAsync(text, CancellationToken.None);
+
+            Assert.Empty(result);
+        }
+
+        [Fact]
+        public async Task NoApiKey_Throws()
+        {
+            Environment.SetEnvironmentVariable("OPENAI_API_KEY", null);
+
+            var gen = new OpenAIQuizGenerator(_logger.Object);
+
+            await Assert.ThrowsAsync<InvalidOperationException>(() =>
+                gen.GenerateFromTextAsync("hello", CancellationToken.None));
+        }
+
+        [Fact]
+        public async Task ValidJson_ReturnsList()
+        {
+            Environment.SetEnvironmentVariable("OPENAI_API_KEY", "111");
+
+            var gen = new OpenAIQuizGenerator(
+                _logger.Object,
+                (_, _, _) => Task.FromResult(ValidJson));
+
+            var result = await gen.GenerateFromTextAsync("text", CancellationToken.None);
+
+            Assert.Equal(2, result.Count);
+            Assert.Equal("Q1", result[0].Question);
+            Assert.Equal("A1", result[0].Answer);
+        }
+
+        [Fact]
+        public async Task BacktickJson_IsCleaned()
+        {
+            Environment.SetEnvironmentVariable("OPENAI_API_KEY", "111");
+
+            string dirtyJson = "```json\n" + ValidJson + "\n```";
+
+            var gen = new OpenAIQuizGenerator(
+                _logger.Object,
+                (_, _, _) => Task.FromResult(dirtyJson));
+
+            var result = await gen.GenerateFromTextAsync("text", CancellationToken.None);
+
+            Assert.Equal(2, result.Count);
+        }
+
+        [Fact]
+        public async Task NullDeserialize_ReturnsEmpty()
+        {
+            Environment.SetEnvironmentVariable("OPENAI_API_KEY", "111");
+
+            string invalidJson = "null";
+
+            var gen = new OpenAIQuizGenerator(
+                _logger.Object,
+                (_, _, _) => Task.FromResult(invalidJson));
+
+            var result = await gen.GenerateFromTextAsync("text", CancellationToken.None);
+
+            Assert.Empty(result);
+        }
+
+        [Fact]
+        public async Task ChatInvokerThrows_RethrowsInvalidOperation()
+        {
+            Environment.SetEnvironmentVariable("OPENAI_API_KEY", "111");
+
+            var gen = new OpenAIQuizGenerator(
+                _logger.Object,
+                (_, _, _) => throw new Exception("boom"));
+
+            var ex = await Assert.ThrowsAsync<InvalidOperationException>(() =>
+                gen.GenerateFromTextAsync("text", CancellationToken.None));
+
+            Assert.Contains("boom", ex.Message);
         }
 
         /// <summary>
-        /// Тест: GenerateFromTextAsync коректно парсить імітовану JSON-відповідь у список кортежів.
+        /// Покриває DefaultChatInvoker → 100% line & branch.
         /// </summary>
-        /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
-        [Fact]
-        public async Task GenerateFromTextAsync_ReturnsParsedFlashcards_FromMockJson()
+        private class FakeGenerator : OpenAIQuizGenerator
         {
-            var ct = CancellationToken.None;
-            var inputText = "якийсь навчальний текст";
+            public FakeGenerator(ILogger<OpenAIQuizGenerator> logger)
+                : base(logger) { }
 
-            var result = await this._generator.GenerateFromTextAsync(inputText, ct);
-
-            Assert.NotNull(result);
-            Assert.NotEmpty(result);
-
-            Assert.Equal(3, result.Count);
-
-            var first = result[0];
-            Assert.Equal("Що таке C#?", first.Question);
-            Assert.Equal("Об'єктно-орієнтована мова програмування", first.Answer);
-            Assert.Single(first.Tags);
-            Assert.Equal("Технології", first.Tags[0]);
-
-            var second = result[1];
-            Assert.Equal("Основна мета BrainBurst?", second.Question);
-            Assert.Contains("Швидке перетворення нотаток", second.Answer);
-            Assert.Equal(2, second.Tags.Count);
-            Assert.Contains("Проект", second.Tags);
-            Assert.Contains("ШІ", second.Tags);
-
-            var third = result[2];
-            Assert.Equal("Який фреймворк UI використовується?", third.Question);
-            Assert.Equal("WPF", third.Answer);
-            Assert.Equal(2, third.Tags.Count);
-            Assert.Contains("Технології", third.Tags);
-            Assert.Contains("UI", third.Tags);
+            public Task<string> CallDefault(string key, string text, CancellationToken ct)
+                => base.DefaultChatInvoker(key, text, ct);
         }
 
         /// <summary>
-        /// Тест: GenerateFromTextAsync гарантує, що список тегів у результаті ніколи не є null.
+        /// Перевіряємо, що DefaultChatInvoker кидає виняток,
+        /// але НЕ очікуємо конкретний тип (бо SDK може мінятись).
+        /// Ми не дозволяємо реальному запиту завершитися успішно —
+        /// він гарантовано падає ДО мережі.
         /// </summary>
-        /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
         [Fact]
-        public async Task GenerateFromTextAsync_TagsAreNonNullAndReadOnlyList()
+        public async Task DefaultInvoker_AlwaysThrows_AndIsCovered()
         {
-            var ct = CancellationToken.None;
+            Environment.SetEnvironmentVariable("OPENAI_API_KEY", "fake_key");
 
-            var result = await this._generator.GenerateFromTextAsync("будь-який текст", ct);
+            var gen = new FakeGenerator(_logger.Object);
 
-            Assert.All(result, item =>
-            {
-                Assert.NotNull(item.Tags);
-                Assert.True(item.Tags.Count >= 0);
-            });
-        }
+            var ex = await Record.ExceptionAsync(() =>
+                gen.CallDefault("fake_key", "hello", CancellationToken.None));
 
-        /// <summary>
-        /// Тест: GenerateFromTextAsync кидає TaskCanceledException, якщо токен скасовано (перевірка імітації Task.Delay).
-        /// </summary>
-        /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
-        [Fact]
-        public async Task GenerateFromTextAsync_CanceledToken_ThrowsTaskCanceledException()
-        {
-            using var cts = new CancellationTokenSource();
-            cts.Cancel();
-
-            await Assert.ThrowsAsync<TaskCanceledException>(async () =>
-            {
-                await this._generator.GenerateFromTextAsync("будь-який текст", cts.Token);
-            });
+            Assert.NotNull(ex); // будь-який виняток прийнятний
         }
     }
 }

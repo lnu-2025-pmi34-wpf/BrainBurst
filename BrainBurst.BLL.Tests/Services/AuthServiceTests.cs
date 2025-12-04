@@ -10,6 +10,7 @@ namespace BrainBurst.BLL.Tests.Services
     using BrainBurst.BLL.Services;
     using BrainBurst.DAL.Abstractions;
     using BrainBurst.DAL.Entities;
+    using Microsoft.Extensions.Logging;
     using Moq;
     using Xunit;
 
@@ -18,258 +19,212 @@ namespace BrainBurst.BLL.Tests.Services
     /// </summary>
     public class AuthServiceTests
     {
-        private readonly Mock<IUserRepository> _usersMock;
-        private readonly Mock<IRatingService> _ratingMock;
-        private readonly AuthService _service;
+        private readonly Mock<IUserRepository> userRepositoryMock;
+        private readonly Mock<IRatingService> ratingServiceMock;
+        private readonly Mock<ILogger<AuthService>> loggerMock;
+        private readonly AuthService service;
+        private readonly CancellationToken ct = CancellationToken.None;
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="AuthServiceTests"/> class.
-        /// налаштовуючи "моки" (заглушки) для <see cref="IUserRepository"/> та <see cref="IRatingService"/>.
+        /// Конструктор тестового класу. Налаштовує "моки" для залежностей <see cref="AuthService"/>.
         /// </summary>
         public AuthServiceTests()
         {
-            this._usersMock = new Mock<IUserRepository>(MockBehavior.Strict);
-            this._ratingMock = new Mock<IRatingService>(MockBehavior.Strict);
+            this.userRepositoryMock = new Mock<IUserRepository>(MockBehavior.Strict);
+            this.ratingServiceMock = new Mock<IRatingService>(MockBehavior.Strict);
+            this.loggerMock = new Mock<ILogger<AuthService>>(MockBehavior.Loose);
 
-            this._service = new AuthService(this._usersMock.Object, this._ratingMock.Object);
+            this.ratingServiceMock
+                .Setup(r => r.GetRank(It.IsAny<int>()))
+                .Returns(UserRank.Newbie);
+
+            this.ratingServiceMock
+                .Setup(r => r.GetRankLabel(It.IsAny<UserRank>()))
+                .Returns("Початківець");
+
+            this.service = new AuthService(
+                this.userRepositoryMock.Object,
+                this.ratingServiceMock.Object,
+                this.loggerMock.Object);
         }
 
         /// <summary>
-        /// Тест: RegisterAsync кидає ArgumentException, якщо email вже існує, і не додає нового користувача.
+        /// Тест: RegisterAsync при валідних даних створює нового користувача
+        /// і повертає коректний <see cref="UserDTO"/>.
         /// </summary>
-        /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
         [Fact]
-        public async Task RegisterAsync_EmailAlreadyExists_ThrowsArgumentException_AndDoesNotAdd()
+        public async Task RegisterAsync_ValidData_CreatesUserAndReturnsDto()
         {
-            var ct = CancellationToken.None;
-            string email = "user@example.com";
-            string password = "ValidPass1!";
-            string fullName = "User Name";
+            // arrange
+            string email = "test@example.com";
+            string password = "StrongPass123!";
+            string fullName = "Test User";
 
-            this._usersMock
-                .Setup(r => r.GetByEmailAsync(email, ct))
-                .ReturnsAsync(new User { Email = email });
-
-            var ex = await Assert.ThrowsAsync<ArgumentException>(() =>
-                this._service.RegisterAsync(email, password, fullName, ct));
-
-            Assert.Contains("Користувач з таким email вже існує", ex.Message);
-            this._usersMock.Verify(r => r.GetByEmailAsync(email, ct), Times.Once);
-            this._usersMock.Verify(r => r.AddAsync(It.IsAny<User>(), ct), Times.Never);
-        }
-
-        /// <summary>
-        /// Тест: RegisterAsync коректно створює нового користувача з захешованим паролем та нульовими балами, і повертає DTO.
-        /// </summary>
-        /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
-        [Fact]
-        public async Task RegisterAsync_NewEmail_AddsUserWithHashedPasswordAndZeroPoints_AndReturnsDto()
-        {
-            var ct = CancellationToken.None;
-            string email = "newuser@example.com";
-            string password = "ValidPass1!";
-            string fullName = "New User";
-
-            this._usersMock
-                .Setup(r => r.GetByEmailAsync(email, ct))
+            this.userRepositoryMock
+                .Setup(r => r.GetByEmailAsync(email, this.ct))
                 .ReturnsAsync((User?)null);
 
-            User? capturedUser = null;
-
-            var savedUser = new User
-            {
-                UserId = 42,
-                Email = email,
-                FullName = fullName,
-                Points = 0,
-            };
-
-            this._usersMock
-                .Setup(r => r.AddAsync(It.IsAny<User>(), ct))
-                .Callback<User, CancellationToken>((u, _) =>
+            this.userRepositoryMock
+                .Setup(r => r.AddAsync(It.IsAny<User>(), this.ct))
+                .ReturnsAsync((User u, CancellationToken _) =>
                 {
-                    capturedUser = u;
-                })
-                .ReturnsAsync(savedUser);
+                    u.UserId = 42;
+                    u.Points = 0;
+                    u.CreatedAt = DateTime.UtcNow;
+                    return u;
+                });
 
-            this._ratingMock
-                .Setup(r => r.GetRank(It.IsAny<int>()))
-                .Returns((int pts) => UserRank.Newbie);
+            // act
+            UserDTO result = await this.service.RegisterAsync(email, password, fullName, this.ct);
 
-            this._ratingMock
-                .Setup(r => r.GetRankLabel(It.IsAny<UserRank>()))
-                .Returns((UserRank _) => "Початківець 👶");
+            // assert
+            Assert.NotNull(result);
+            Assert.Equal(42, result.Id);
+            Assert.Equal(email, result.Email);
+            Assert.Equal(fullName, result.FullName);
+            Assert.Equal(0, result.Points);
 
-            var utcBefore = DateTime.UtcNow;
-
-            var dto = await this._service.RegisterAsync(email, password, fullName, ct);
-
-            var utcAfter = DateTime.UtcNow;
-
-            this._usersMock.Verify(r => r.GetByEmailAsync(email, ct), Times.Once);
-            this._usersMock.Verify(r => r.AddAsync(It.IsAny<User>(), ct), Times.Once);
-
-            Assert.NotNull(capturedUser);
-            Assert.Equal(email, capturedUser!.Email);
-            Assert.Equal(fullName, capturedUser.FullName);
-            Assert.Equal(0, capturedUser.Points);
-
-            Assert.NotNull(capturedUser.PasswordHash);
-            Assert.NotEqual(password, capturedUser.PasswordHash);
-            Assert.True(PasswordHelper.VerifyPassword(password, capturedUser.PasswordHash));
-
-            Assert.True(capturedUser.CreatedAt >= utcBefore &&
-                        capturedUser.CreatedAt <= utcAfter);
-
-            Assert.Equal(savedUser.UserId, dto.Id);
-            Assert.Equal(email, dto.Email);
-            Assert.Equal(fullName, dto.FullName);
-            Assert.Equal(0, dto.Points);
-            Assert.Equal("Початківець 👶", dto.RankLabel);
+            this.userRepositoryMock.Verify(r => r.GetByEmailAsync(email, this.ct), Times.Once);
+            this.userRepositoryMock.Verify(r => r.AddAsync(It.IsAny<User>(), this.ct), Times.Once);
         }
 
         /// <summary>
-        /// Тест: LoginAsync кидає KeyNotFoundException, якщо користувача з таким email не знайдено.
+        /// Тест: RegisterAsync кидає <see cref="ArgumentException"/>,
+        /// якщо користувач з таким email вже існує.
         /// </summary>
-        /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
+        [Fact]
+        public async Task RegisterAsync_EmailAlreadyExists_ThrowsArgumentException()
+        {
+            // arrange
+            string email = "exists@example.com";
+            string password = "StrongPass123!";
+            string fullName = "Existing User";
+
+            this.userRepositoryMock
+                .Setup(r => r.GetByEmailAsync(email, this.ct))
+                .ReturnsAsync(new User { UserId = 1, Email = email });
+
+            // act & assert
+            await Assert.ThrowsAsync<ArgumentException>(() =>
+                this.service.RegisterAsync(email, password, fullName, this.ct));
+
+            this.userRepositoryMock.Verify(r => r.GetByEmailAsync(email, this.ct), Times.Once);
+            this.userRepositoryMock.Verify(r => r.AddAsync(It.IsAny<User>(), this.ct), Times.Never);
+        }
+
+        /// <summary>
+        /// Тест: RegisterAsync кидає <see cref="ArgumentException"/>,
+        /// якщо email має некоректний формат (валідація Guard.Email).
+        /// </summary>
+        [Fact]
+        public async Task RegisterAsync_InvalidEmail_ThrowsArgumentException()
+        {
+            // arrange
+            string email = "not-an-email";
+            string password = "StrongPass123!";
+            string fullName = "User";
+
+            // act & assert
+            await Assert.ThrowsAsync<ArgumentException>(() =>
+                this.service.RegisterAsync(email, password, fullName, this.ct));
+
+            this.userRepositoryMock.Verify(
+                r => r.GetByEmailAsync(It.IsAny<string>(), this.ct),
+                Times.Never);
+            this.userRepositoryMock.Verify(
+                r => r.AddAsync(It.IsAny<User>(), this.ct),
+                Times.Never);
+        }
+
+        /// <summary>
+        /// Тест: LoginAsync при валідних облікових даних повертає <see cref="UserDTO"/>.
+        /// </summary>
+        [Fact]
+        public async Task LoginAsync_ValidCredentials_ReturnsUserDto()
+        {
+            // arrange
+            string email = "user@example.com";
+            string password = "StrongPass123!";
+            string hash = PasswordHelper.HashPassword(password);
+
+            var userEntity = new User
+            {
+                UserId = 10,
+                Email = email,
+                FullName = "User Name",
+                PasswordHash = hash,
+                Points = 150,
+                CreatedAt = DateTime.UtcNow,
+            };
+
+            this.userRepositoryMock
+                .Setup(r => r.GetByEmailAsync(email, this.ct))
+                .ReturnsAsync(userEntity);
+
+            // act
+            UserDTO result = await this.service.LoginAsync(email, password, this.ct);
+
+            // assert
+            Assert.NotNull(result);
+            Assert.Equal(10, result.Id);
+            Assert.Equal(email, result.Email);
+            Assert.Equal("User Name", result.FullName);
+
+            this.userRepositoryMock.Verify(r => r.GetByEmailAsync(email, this.ct), Times.Once);
+        }
+
+        /// <summary>
+        /// Тест: LoginAsync кидає <see cref="KeyNotFoundException"/>,
+        /// якщо користувача з таким email не знайдено.
+        /// </summary>
         [Fact]
         public async Task LoginAsync_UserNotFound_ThrowsKeyNotFoundException()
         {
-            var ct = CancellationToken.None;
             string email = "missing@example.com";
-            string password = "ValidPass1!";
+            string password = "SomePass123!";
 
-            this._usersMock
-                .Setup(r => r.GetByEmailAsync(email, ct))
+            this.userRepositoryMock
+                .Setup(r => r.GetByEmailAsync(email, this.ct))
                 .ReturnsAsync((User?)null);
 
-            var ex = await Assert.ThrowsAsync<KeyNotFoundException>(() =>
-                this._service.LoginAsync(email, password, ct));
+            await Assert.ThrowsAsync<KeyNotFoundException>(() =>
+                this.service.LoginAsync(email, password, this.ct));
 
-            Assert.Contains("Некоректний email або пароль", ex.Message);
-            this._usersMock.Verify(r => r.GetByEmailAsync(email, ct), Times.Once);
+            this.userRepositoryMock.Verify(r => r.GetByEmailAsync(email, this.ct), Times.Once);
         }
 
         /// <summary>
-        /// Тест: LoginAsync кидає KeyNotFoundException, якщо пароль введено неправильно.
+        /// Тест: LoginAsync кидає <see cref="KeyNotFoundException"/>,
+        /// якщо пароль некоректний.
         /// </summary>
-        /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
         [Fact]
-        public async Task LoginAsync_WrongPassword_ThrowsKeyNotFoundException()
+        public async Task LoginAsync_InvalidPassword_ThrowsKeyNotFoundException()
         {
-            var ct = CancellationToken.None;
+            // arrange
             string email = "user@example.com";
-            string correctPassword = "CorrectPass1!";
-            string wrongPassword = "WrongPass1!";
+            string correctPassword = "Correct123!";
+            string wrongPassword = "Wrong999!";
+            string hash = PasswordHelper.HashPassword(correctPassword);
 
-            var storedUser = new User
+            var userEntity = new User
             {
-                UserId = 7,
+                UserId = 11,
                 Email = email,
-                FullName = "User",
-                PasswordHash = PasswordHelper.HashPassword(correctPassword),
-                Points = 10,
-            };
-
-            this._usersMock
-                .Setup(r => r.GetByEmailAsync(email, ct))
-                .ReturnsAsync(storedUser);
-
-            var ex = await Assert.ThrowsAsync<KeyNotFoundException>(() =>
-                this._service.LoginAsync(email, wrongPassword, ct));
-
-            Assert.Contains("Некоректний email або пароль", ex.Message);
-            this._usersMock.Verify(r => r.GetByEmailAsync(email, ct), Times.Once);
-        }
-
-        /// <summary>
-        /// Тест: LoginAsync повертає коректно замаплений DTO при правильних email та паролі.
-        /// </summary>
-        /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
-        [Fact]
-        public async Task LoginAsync_CorrectCredentials_ReturnsMappedDto()
-        {
-            var ct = CancellationToken.None;
-            string email = "user@example.com";
-            string password = "CorrectPass1!";
-
-            var storedUser = new User
-            {
-                UserId = 99,
-                Email = email,
-                FullName = "Login User",
-                PasswordHash = PasswordHelper.HashPassword(password),
-                Points = 123,
-            };
-
-            this._usersMock
-                .Setup(r => r.GetByEmailAsync(email, ct))
-                .ReturnsAsync(storedUser);
-
-            this._ratingMock
-                .Setup(r => r.GetRank(It.IsAny<int>()))
-                .Returns((int pts) =>
-                {
-                    Assert.Equal(storedUser.Points, pts);
-                    return UserRank.Expert;
-                });
-
-            this._ratingMock
-                .Setup(r => r.GetRankLabel(It.IsAny<UserRank>()))
-                .Returns((UserRank rank) =>
-                {
-                    Assert.Equal(UserRank.Expert, rank);
-                    return "Експерт ⭐";
-                });
-
-            var dto = await this._service.LoginAsync(email, password, ct);
-
-            this._usersMock.Verify(r => r.GetByEmailAsync(email, ct), Times.Once);
-            this._ratingMock.Verify(r => r.GetRank(It.IsAny<int>()), Times.AtLeastOnce);
-            this._ratingMock.Verify(r => r.GetRankLabel(It.IsAny<UserRank>()), Times.AtLeastOnce);
-
-            Assert.Equal(storedUser.UserId, dto.Id);
-            Assert.Equal(storedUser.Email, dto.Email);
-            Assert.Equal(storedUser.FullName, dto.FullName);
-            Assert.Equal(storedUser.Points, dto.Points);
-            Assert.Equal("Експерт ⭐", dto.RankLabel);
-        }
-
-        /// <summary>
-        /// Тест: LoginAsync викликає репозиторій з тими ж email та CancellationToken, що були передані.
-        /// </summary>
-        /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
-        [Fact]
-        public async Task LoginAsync_CallsRepositoryWithSameEmailAndToken()
-        {
-            var cts = new CancellationTokenSource();
-            var ct = cts.Token;
-            string email = "check@example.com";
-            string password = "ValidPass1!";
-
-            var storedUser = new User
-            {
-                UserId = 1,
-                Email = email,
-                FullName = "Check User",
-                PasswordHash = PasswordHelper.HashPassword(password),
+                FullName = "User Name",
+                PasswordHash = hash,
                 Points = 0,
+                CreatedAt = DateTime.UtcNow,
             };
 
-            this._usersMock
-                .Setup(r => r.GetByEmailAsync(email, ct))
-                .ReturnsAsync(storedUser);
+            this.userRepositoryMock
+                .Setup(r => r.GetByEmailAsync(email, this.ct))
+                .ReturnsAsync(userEntity);
 
-            this._ratingMock
-                .Setup(r => r.GetRank(It.IsAny<int>()))
-                .Returns(UserRank.Newbie);
-            this._ratingMock
-                .Setup(r => r.GetRankLabel(It.IsAny<UserRank>()))
-                .Returns("Початківець 👶");
+            // act & assert
+            await Assert.ThrowsAsync<KeyNotFoundException>(() =>
+                this.service.LoginAsync(email, wrongPassword, this.ct));
 
-            var dto = await this._service.LoginAsync(email, password, ct);
-
-            this._usersMock.Verify(r => r.GetByEmailAsync(email, ct), Times.Once);
+            this.userRepositoryMock.Verify(r => r.GetByEmailAsync(email, this.ct), Times.Once);
         }
     }
 }

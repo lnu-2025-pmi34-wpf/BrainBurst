@@ -9,6 +9,7 @@ namespace BrainBurst.BLL.Tests.Services
     using BrainBurst.BLL.Services;
     using BrainBurst.DAL.Abstractions;
     using BrainBurst.DAL.Entities;
+    using Microsoft.Extensions.Logging;
     using Moq;
     using Xunit;
 
@@ -17,36 +18,39 @@ namespace BrainBurst.BLL.Tests.Services
     /// </summary>
     public class ArchiveServiceTests
     {
-        private readonly Mock<ITestResultRepository> _resultsMock;
-        private readonly ArchiveService _service;
+        private readonly Mock<ITestResultRepository> resultsMock;
+        private readonly Mock<ILogger<ArchiveService>> loggerMock;
+        private readonly ArchiveService service;
+        private readonly CancellationToken ct = CancellationToken.None;
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="ArchiveServiceTests"/> class.
-        /// налаштовуючи "мок" (заглушку) для <see cref="ITestResultRepository"/>.
+        /// Конструктор тестів: налаштовує "моки" для залежностей <see cref="ArchiveService"/>.
         /// </summary>
         public ArchiveServiceTests()
         {
-            this._resultsMock = new Mock<ITestResultRepository>(MockBehavior.Strict);
-            this._service = new ArchiveService(this._resultsMock.Object);
+            this.resultsMock = new Mock<ITestResultRepository>(MockBehavior.Strict);
+            this.loggerMock = new Mock<ILogger<ArchiveService>>(MockBehavior.Loose);
+
+            this.service = new ArchiveService(
+                this.resultsMock.Object,
+                this.loggerMock.Object);
         }
 
         /// <summary>
         /// Тест: GetArchiveAsync викликає репозиторій з коректними userId та CancellationToken.
         /// </summary>
-        /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
         [Fact]
         public async Task GetArchiveAsync_CallsRepositoryWithUserIdAndCancellationToken()
         {
             int userId = 42;
-            var ct = CancellationToken.None;
 
-            this._resultsMock
-                .Setup(r => r.GetByUserAsync(userId, ct))
+            this.resultsMock
+                .Setup(r => r.GetByUserAsync(userId, this.ct))
                 .ReturnsAsync(new List<TestResult>());
 
-            var result = await this._service.GetArchiveAsync(userId, ct);
+            var result = await this.service.GetArchiveAsync(userId, this.ct);
 
-            this._resultsMock.Verify(r => r.GetByUserAsync(userId, ct), Times.Once);
+            this.resultsMock.Verify(r => r.GetByUserAsync(userId, this.ct), Times.Once);
             Assert.NotNull(result);
             Assert.Empty(result);
         }
@@ -54,18 +58,16 @@ namespace BrainBurst.BLL.Tests.Services
         /// <summary>
         /// Тест: GetArchiveAsync повертає порожній список, якщо репозиторій не повертає результатів.
         /// </summary>
-        /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
         [Fact]
         public async Task GetArchiveAsync_NoResults_ReturnsEmptyList()
         {
             int userId = 5;
-            var ct = CancellationToken.None;
 
-            this._resultsMock
-                .Setup(r => r.GetByUserAsync(userId, ct))
+            this.resultsMock
+                .Setup(r => r.GetByUserAsync(userId, this.ct))
                 .ReturnsAsync(new List<TestResult>());
 
-            var archive = await this._service.GetArchiveAsync(userId, ct);
+            var archive = await this.service.GetArchiveAsync(userId, this.ct);
 
             Assert.NotNull(archive);
             Assert.Empty(archive);
@@ -74,13 +76,10 @@ namespace BrainBurst.BLL.Tests.Services
         /// <summary>
         /// Тест: GetArchiveAsync коректно мапить один TestResult в один ArchiveEntryDTO.
         /// </summary>
-        /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
         [Fact]
         public async Task GetArchiveAsync_MapsSingleResultCorrectly()
         {
             int userId = 7;
-            var ct = CancellationToken.None;
-
             var testDate = new DateTime(2025, 1, 2, 3, 4, 5, DateTimeKind.Utc);
 
             var results = new List<TestResult>
@@ -95,32 +94,28 @@ namespace BrainBurst.BLL.Tests.Services
                 },
             };
 
-            this._resultsMock
-                .Setup(r => r.GetByUserAsync(userId, ct))
+            this.resultsMock
+                .Setup(r => r.GetByUserAsync(userId, this.ct))
                 .ReturnsAsync(results);
 
-            var archive = await this._service.GetArchiveAsync(userId, ct);
+            var archive = await this.service.GetArchiveAsync(userId, this.ct);
 
-            Assert.Single(archive);
-            var entry = archive[0];
+            var entry = Assert.Single(archive);
 
             Assert.Equal(100, entry.TestResultId);
             Assert.Equal("Завершений Тест №200", entry.TestTitle);
             Assert.Equal(35, entry.Points);
             Assert.Equal(testDate, entry.TestDate);
-
-            Assert.Equal(87.5d, entry.CorrectAnswersPercent, precision: 10);
+            Assert.Equal(87.5d, entry.CorrectAnswersPercent, 10);
         }
 
         /// <summary>
         /// Тест: GetArchiveAsync коректно мапить декілька результатів, зберігаючи їх порядок.
         /// </summary>
-        /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
         [Fact]
         public async Task GetArchiveAsync_MultipleResults_PreservesOrderAndMapsAllEntries()
         {
             int userId = 10;
-            var ct = CancellationToken.None;
 
             var results = new List<TestResult>
             {
@@ -142,11 +137,11 @@ namespace BrainBurst.BLL.Tests.Services
                 },
             };
 
-            this._resultsMock
-                .Setup(r => r.GetByUserAsync(userId, ct))
+            this.resultsMock
+                .Setup(r => r.GetByUserAsync(userId, this.ct))
                 .ReturnsAsync(results);
 
-            var archive = await this._service.GetArchiveAsync(userId, ct);
+            var archive = await this.service.GetArchiveAsync(userId, this.ct);
 
             Assert.Equal(2, archive.Count);
 
@@ -161,20 +156,15 @@ namespace BrainBurst.BLL.Tests.Services
             Assert.Equal(100d, archive[1].CorrectAnswersPercent, 10);
             Assert.Equal(40, archive[1].Points);
             Assert.Equal(results[1].TestDate, archive[1].TestDate);
-
-            Assert.True(archive[0].TestResultId == results[0].TestResultId &&
-                        archive[1].TestResultId == results[1].TestResultId);
         }
 
         /// <summary>
         /// Тест: GetArchiveAsync коректно перетворює 'decimal' відсотки в 'double' без втрати точності.
         /// </summary>
-        /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
         [Fact]
         public async Task GetArchiveAsync_CorrectAnswersPercent_DecimalToDoubleIsAccurate()
         {
             int userId = 99;
-            var ct = CancellationToken.None;
 
             var percentages = new[] { 0m, 33.33m, 99.99m, 100m };
 
@@ -187,11 +177,11 @@ namespace BrainBurst.BLL.Tests.Services
                 TestDate = new DateTime(2025, 1, 1).AddDays(i),
             }).ToList();
 
-            this._resultsMock
-                .Setup(r => r.GetByUserAsync(userId, ct))
+            this.resultsMock
+                .Setup(r => r.GetByUserAsync(userId, this.ct))
                 .ReturnsAsync(results);
 
-            var archive = await this._service.GetArchiveAsync(userId, ct);
+            var archive = await this.service.GetArchiveAsync(userId, this.ct);
 
             Assert.Equal(percentages.Length, archive.Count);
 
@@ -200,6 +190,25 @@ namespace BrainBurst.BLL.Tests.Services
                 double expected = (double)percentages[i];
                 Assert.Equal(expected, archive[i].CorrectAnswersPercent, 10);
             }
+        }
+
+        /// <summary>
+        /// Тест: якщо репозиторій кидає виняток → сервіс логуює помилку і проброшує її далі.
+        /// Покриваємо catch (Exception) у GetArchiveAsync.
+        /// </summary>
+        [Fact]
+        public async Task GetArchiveAsync_RepositoryThrows_LogsErrorAndRethrows()
+        {
+            int userId = 123;
+
+            this.resultsMock
+                .Setup(r => r.GetByUserAsync(userId, this.ct))
+                .ThrowsAsync(new InvalidOperationException("DB error"));
+
+            await Assert.ThrowsAsync<InvalidOperationException>(() =>
+                this.service.GetArchiveAsync(userId, this.ct));
+
+            this.resultsMock.Verify(r => r.GetByUserAsync(userId, this.ct), Times.Once);
         }
     }
 }

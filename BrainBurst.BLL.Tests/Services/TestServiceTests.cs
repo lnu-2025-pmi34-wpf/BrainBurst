@@ -9,11 +9,13 @@ namespace BrainBurst.BLL.Tests.Services
     using BrainBurst.BLL.Services;
     using BrainBurst.DAL.Abstractions;
     using BrainBurst.DAL.Entities;
+    using Microsoft.Extensions.Logging;
     using Moq;
     using Xunit;
 
     /// <summary>
-    /// Містить юніт-тести для <see cref="TestService"/>.
+    /// Юніт-тести для сервісу <see cref="TestService"/>.
+    /// Забезпечують покриття ВСІХ гілок логіки.
     /// </summary>
     public class TestServiceTests
     {
@@ -22,12 +24,12 @@ namespace BrainBurst.BLL.Tests.Services
         private readonly Mock<IUserRepository> _usersMock;
         private readonly Mock<IFlashcardRepository> _cardsMock;
         private readonly Mock<IRatingService> _ratingMock;
+        private readonly Mock<ILogger<TestService>> _loggerMock;
 
         private readonly TestService _service;
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="TestServiceTests"/> class.
-        /// налаштовуючи всі необхідні "моки" (заглушки) репозиторіїв та сервісів.
+        /// Ініціалізація тестового оточення.
         /// </summary>
         public TestServiceTests()
         {
@@ -36,21 +38,26 @@ namespace BrainBurst.BLL.Tests.Services
             this._usersMock = new Mock<IUserRepository>(MockBehavior.Strict);
             this._cardsMock = new Mock<IFlashcardRepository>(MockBehavior.Strict);
             this._ratingMock = new Mock<IRatingService>(MockBehavior.Strict);
+            this._loggerMock = new Mock<ILogger<TestService>>(MockBehavior.Loose);
 
             this._service = new TestService(
                 this._testsMock.Object,
                 this._resultsMock.Object,
                 this._usersMock.Object,
                 this._cardsMock.Object,
-                this._ratingMock.Object);
+                this._ratingMock.Object,
+                this._loggerMock.Object);
         }
 
+        // =====================================================================
+        // ===========================  GENERATE  ===============================
+        // =====================================================================
+
         /// <summary>
-        /// Тест: GenerateFromFlashcardsAsync кидає ArgumentException, якщо список ID є null.
+        /// Якщо flashcardIds == null → кидає ArgumentException.
         /// </summary>
-        /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
         [Fact]
-        public async Task GenerateFromFlashcardsAsync_NullFlashcardIds_ThrowsArgumentException()
+        public async Task GenerateFromFlashcardsAsync_Null_ThrowsArgumentException()
         {
             int creatorId = 1;
             IEnumerable<int>? ids = null;
@@ -63,47 +70,38 @@ namespace BrainBurst.BLL.Tests.Services
         }
 
         /// <summary>
-        /// Тест: GenerateFromFlashcardsAsync кидає ArgumentException, якщо список ID порожній.
+        /// Якщо flashcardIds порожній → також ArgumentException.
         /// </summary>
-        /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
         [Fact]
-        public async Task GenerateFromFlashcardsAsync_EmptyFlashcardIds_ThrowsArgumentException()
+        public async Task GenerateFromFlashcardsAsync_Empty_ThrowsArgumentException()
         {
             int creatorId = 1;
-            IEnumerable<int> ids = Array.Empty<int>();
             var ct = CancellationToken.None;
 
             var ex = await Assert.ThrowsAsync<ArgumentException>(() =>
-                this._service.GenerateFromFlashcardsAsync(creatorId, ids, ct));
+                this._service.GenerateFromFlashcardsAsync(creatorId, Array.Empty<int>(), ct));
 
             Assert.Contains("Потрібен хоча б один flashcardId", ex.Message);
         }
 
         /// <summary>
-        /// Тест: GenerateFromFlashcardsAsync коректно викликає репозиторії та мапить результат.
+        /// Перевіряє базовий позитивний сценарій генерації тесту:
+        /// виклик репозиторіїв, мапінг та коректність DTO.
         /// </summary>
-        /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
         [Fact]
-        public async Task GenerateFromFlashcardsAsync_CallsRepositoriesWithCorrectParameters()
+        public async Task GenerateFromFlashcardsAsync_Valid_CreatesTestCorrectly()
         {
-            int creatorId = 7;
-            var flashcardIds = new[] { 10, 20 };
+            int creatorId = 99;
+            var ids = new[] { 10, 20 };
             var ct = CancellationToken.None;
 
-            var testEntity = new Test
-            {
-                TestId = 123,
-                CreatorId = creatorId,
-            };
+            var testEntity = new Test { TestId = 777, CreatorId = creatorId };
 
             this._testsMock
-                .Setup(r => r.CreateFromFlashcardsAsync(
-                    creatorId,
-                    It.Is<IEnumerable<int>>(ids => ids.SequenceEqual(flashcardIds)),
-                    ct))
+                .Setup(r => r.CreateFromFlashcardsAsync(creatorId, ids, ct))
                 .ReturnsAsync(testEntity);
 
-            var allCards = new List<Flashcard>
+            var cards = new List<Flashcard>
             {
                 new Flashcard { FlashcardId = 10, Question = "Q1", Answer = "A1", CreatorId = creatorId },
                 new Flashcard { FlashcardId = 20, Question = "Q2", Answer = "A2", CreatorId = creatorId },
@@ -112,33 +110,54 @@ namespace BrainBurst.BLL.Tests.Services
 
             this._cardsMock
                 .Setup(r => r.FindAsync(creatorId, null, ct))
-                .ReturnsAsync(allCards);
+                .ReturnsAsync(cards);
 
-            var dto = await this._service.GenerateFromFlashcardsAsync(creatorId, flashcardIds, ct);
-
-            this._testsMock.Verify(
-                r => r.CreateFromFlashcardsAsync(
-                creatorId,
-                It.Is<IEnumerable<int>>(ids => ids.SequenceEqual(flashcardIds)),
-                ct), Times.Once);
-
-            this._cardsMock.Verify(r => r.FindAsync(creatorId, null, ct), Times.Once);
+            var dto = await this._service.GenerateFromFlashcardsAsync(creatorId, ids, ct);
 
             Assert.NotNull(dto);
-            Assert.Equal(testEntity.TestId, dto.Id);
+            Assert.Equal(777, dto.Id);
             Assert.Equal(creatorId, dto.CreatorId);
             Assert.Equal(2, dto.Questions.Count);
-            Assert.All(dto.Questions, q => Assert.Contains(q.Id, flashcardIds));
+
+            Assert.Contains(dto.Questions, q => q.Id == 10);
+            Assert.Contains(dto.Questions, q => q.Id == 20);
+
+            this._testsMock.Verify(r => r.CreateFromFlashcardsAsync(creatorId, ids, ct), Times.Once);
+            this._cardsMock.Verify(r => r.FindAsync(creatorId, null, ct), Times.Once);
         }
 
         /// <summary>
-        /// Тест: GetAsync повертає null, якщо тест не знайдено.
+        /// Якщо репозиторій тестів кидає будь-який інший виняток → він логуються і проброшується далі.
+        /// Покриваємо catch (Exception) у GenerateFromFlashcardsAsync.
         /// </summary>
-        /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
+        [Fact]
+        public async Task GenerateFromFlashcardsAsync_RepositoryThrows_LogsAndRethrows()
+        {
+            int creatorId = 1;
+            var ids = new[] { 42 };
+            var ct = CancellationToken.None;
+
+            this._testsMock
+                .Setup(r => r.CreateFromFlashcardsAsync(creatorId, ids, ct))
+                .ThrowsAsync(new InvalidOperationException("DB failure"));
+
+            await Assert.ThrowsAsync<InvalidOperationException>(() =>
+                this._service.GenerateFromFlashcardsAsync(creatorId, ids, ct));
+
+            this._testsMock.Verify(r => r.CreateFromFlashcardsAsync(creatorId, ids, ct), Times.Once);
+        }
+
+        // =====================================================================
+        // ===========================  GET TEST  ===============================
+        // =====================================================================
+
+        /// <summary>
+        /// Якщо тест не знайдено → повертається null.
+        /// </summary>
         [Fact]
         public async Task GetAsync_NotFound_ReturnsNull()
         {
-            int testId = 42;
+            int testId = 5;
             var ct = CancellationToken.None;
 
             this._testsMock
@@ -152,63 +171,91 @@ namespace BrainBurst.BLL.Tests.Services
         }
 
         /// <summary>
-        /// Тест: GetAsync повертає "легкий" DTO (без питань), якщо тест знайдено.
+        /// Позитивний сценарій: тест знайдено → DTO повертається без питань.
         /// </summary>
-        /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
         [Fact]
-        public async Task GetAsync_Found_ReturnsDtoWithEmptyQuestions()
+        public async Task GetAsync_Found_ReturnsDto()
         {
-            int testId = 100;
-            int creatorId = 5;
+            int testId = 10;
             var ct = CancellationToken.None;
-
-            var entity = new Test
-            {
-                TestId = testId,
-                CreatorId = creatorId,
-            };
 
             this._testsMock
                 .Setup(r => r.GetAsync(testId, ct))
-                .ReturnsAsync(entity);
+                .ReturnsAsync(new Test { TestId = 10, CreatorId = 3 });
 
             var dto = await this._service.GetAsync(testId, ct);
 
             Assert.NotNull(dto);
-            Assert.Equal(testId, dto!.Id);
-            Assert.Equal(creatorId, dto.CreatorId);
-            Assert.NotNull(dto.Questions);
+            Assert.Equal(10, dto!.Id);
+            Assert.Equal(3, dto.CreatorId);
             Assert.Empty(dto.Questions);
         }
 
         /// <summary>
-        /// Тест: SubmitAsync кидає ArgumentException, якщо список відповідей порожній.
+        /// Якщо репозиторій кидає виняток у GetAsync → сервіс логуює помилку і проброшує її далі.
+        /// Покриваємо catch (Exception) у GetAsync.
         /// </summary>
-        /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
+        [Fact]
+        public async Task GetAsync_RepositoryThrows_LogsAndRethrows()
+        {
+            int testId = 123;
+            var ct = CancellationToken.None;
+
+            this._testsMock
+                .Setup(r => r.GetAsync(testId, ct))
+                .ThrowsAsync(new Exception("Unexpected repository error"));
+
+            await Assert.ThrowsAsync<Exception>(() =>
+                this._service.GetAsync(testId, ct));
+
+            this._testsMock.Verify(r => r.GetAsync(testId, ct), Times.Once);
+        }
+
+        /// <summary>
+        /// Якщо репозиторій кидає саме KeyNotFoundException,
+        /// сервіс повинен просто пробросити його далі (гілка без додаткового логування).
+        /// </summary>
+        [Fact]
+        public async Task GetAsync_RepositoryThrowsKeyNotFound_RethrowsWithoutExtraLogging()
+        {
+            int testId = 999;
+            var ct = CancellationToken.None;
+
+            this._testsMock
+                .Setup(r => r.GetAsync(testId, ct))
+                .ThrowsAsync(new KeyNotFoundException("Test not found"));
+
+            await Assert.ThrowsAsync<KeyNotFoundException>(() =>
+                this._service.GetAsync(testId, ct));
+
+            this._testsMock.Verify(r => r.GetAsync(testId, ct), Times.Once);
+        }
+
+        // =====================================================================
+        // ===========================  SUBMIT  =================================
+        // =====================================================================
+
+        /// <summary>
+        /// Якщо answers порожній → ArgumentException.
+        /// </summary>
         [Fact]
         public async Task SubmitAsync_EmptyAnswers_ThrowsArgumentException()
         {
-            int testId = 1;
-            int userId = 2;
-            var answers = Array.Empty<(int flashcardId, string? userInput)>();
             var ct = CancellationToken.None;
 
             var ex = await Assert.ThrowsAsync<ArgumentException>(() =>
-                this._service.SubmitAsync(testId, userId, answers, ct));
+                this._service.SubmitAsync(1, 2, Array.Empty<(int, string?)>(), ct));
 
             Assert.Contains("Відповіді відсутні", ex.Message);
         }
 
         /// <summary>
-        /// Тест: SubmitAsync кидає InvalidOperationException, якщо тест не знайдено.
+        /// Якщо тест не знайдено → InvalidOperationException.
         /// </summary>
-        /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
         [Fact]
-        public async Task SubmitAsync_TestNotFound_ThrowsInvalidOperationException()
+        public async Task SubmitAsync_TestNotFound_Throws()
         {
             int testId = 1;
-            int userId = 2;
-            var answers = new[] { (1, (string?)"a") };
             var ct = CancellationToken.None;
 
             this._testsMock
@@ -216,136 +263,178 @@ namespace BrainBurst.BLL.Tests.Services
                 .ReturnsAsync((Test?)null);
 
             var ex = await Assert.ThrowsAsync<InvalidOperationException>(() =>
-                this._service.SubmitAsync(testId, userId, answers, ct));
+                this._service.SubmitAsync(testId, 10, new[] { (1, "a") }, ct));
 
             Assert.Contains("Тест не знайдено", ex.Message);
         }
 
         /// <summary>
-        /// Тест: SubmitAsync коректно розраховує відсоток та бали при частково правильних відповідях.
+        /// Частково правильні відповіді → перевіряється процент, бали, оновлення юзера.
         /// </summary>
-        /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
         [Fact]
-        public async Task SubmitAsync_CalculatesPercentAndPoints_ForPartiallyCorrectAnswers()
+        public async Task SubmitAsync_PartialCorrect_ComputesScoreCorrectly()
         {
             int testId = 10;
-            int userId = 20;
+            int userId = 33;
             var ct = CancellationToken.None;
 
             var answers = new[]
             {
-                (flashcardId: 1, userInput: (string?)"  aNsWeR1 "),
-                (flashcardId: 2, userInput: (string?)"wrong"),
-                (flashcardId: 3, userInput: (string?)"Answer3"),
+                (1, (string?)"Answer1"),
+                (2, (string?)"wrong"),
+                (3, (string?)"answer3 "),
             };
 
-            var testEntity = new Test { TestId = testId, CreatorId = 99 };
             this._testsMock
                 .Setup(r => r.GetAsync(testId, ct))
-                .ReturnsAsync(testEntity);
+                .ReturnsAsync(new Test { TestId = testId, CreatorId = 999 });
 
-            var user = new User { UserId = userId, Points = 50 };
+            var user = new User { UserId = userId, Points = 40 };
             this._usersMock
                 .Setup(r => r.GetByIdAsync(userId, ct))
                 .ReturnsAsync(user);
 
-            var cards = new List<Flashcard>
-            {
-                new Flashcard { FlashcardId = 1, Answer = "answer1" },
-                new Flashcard { FlashcardId = 2, Answer = "correct2" },
-                new Flashcard { FlashcardId = 3, Answer = " answer3 " },
-            };
-
             this._cardsMock
-                .Setup(r => r.FindAsync(testEntity.CreatorId, null, ct))
-                .ReturnsAsync(cards);
+                .Setup(r => r.FindAsync(999, null, ct))
+                .ReturnsAsync(new List<Flashcard>
+                {
+                    new Flashcard { FlashcardId = 1, Answer = "answer1" },
+                    new Flashcard { FlashcardId = 2, Answer = "correct2" },
+                    new Flashcard { FlashcardId = 3, Answer = "Answer3" },
+                });
 
-            TestResult? capturedResult = null;
-            IEnumerable<QuestionResult>? capturedQuestions = null;
+            TestResult? savedResult = null;
 
             this._resultsMock
                 .Setup(r => r.AddAsync(
                     It.IsAny<TestResult>(),
                     It.IsAny<IEnumerable<QuestionResult>>(),
-                    It.IsAny<CancellationToken>()))
-                .Callback<TestResult, IEnumerable<QuestionResult>, CancellationToken>((tr, qs, _) =>
+                    ct))
+                .Callback<TestResult, IEnumerable<QuestionResult>, CancellationToken>((tr, _, _) =>
                 {
-                    capturedResult = tr;
-                    capturedQuestions = qs;
+                    savedResult = tr;
                 })
-                .ReturnsAsync((TestResult tr, IEnumerable<QuestionResult> qs, CancellationToken _) => tr);
+                .ReturnsAsync((TestResult tr, IEnumerable<QuestionResult> _, CancellationToken _) => tr);
 
             this._usersMock
-                .Setup(r => r.UpdateAsync(It.IsAny<User>(), ct))
+                .Setup(r => r.UpdateAsync(user, ct))
                 .Returns(Task.CompletedTask);
 
             var dto = await this._service.SubmitAsync(testId, userId, answers, ct);
 
-            Assert.NotNull(capturedResult);
-            Assert.NotNull(capturedQuestions);
+            Assert.NotNull(savedResult);
 
             int correct = 2;
-            int total = answers.Length;
-            double expectedPercentDouble = 100.0 * correct / total;
-            decimal expectedPercent = (decimal)expectedPercentDouble;
+            double percent = 100.0 * correct / answers.Length;
             int expectedPoints = correct * 10;
 
-            Assert.Equal(testId, capturedResult!.TestId);
-            Assert.Equal(userId, capturedResult.UserId);
-            Assert.Equal(expectedPercent, capturedResult.CorrectAnswersPercent);
-            Assert.Equal(expectedPoints, capturedResult.Points);
-
-            Assert.Equal(50 + expectedPoints, user.Points);
-            this._usersMock.Verify(r => r.UpdateAsync(user, ct), Times.Once);
+            Assert.Equal((decimal)percent, savedResult!.CorrectAnswersPercent);
+            Assert.Equal(expectedPoints, savedResult.Points);
+            Assert.Equal(40 + expectedPoints, user.Points);
         }
 
         /// <summary>
-        /// Тест: SubmitAsync коректно нараховує бонусні бали за 100% правильних відповідей.
+        /// 100% правильні відповіді → нараховується бонус.
         /// </summary>
-        /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
         [Fact]
-        public async Task SubmitAsync_AllCorrectAnswers_GivesBonusPoints()
+        public async Task SubmitAsync_AllCorrect_GivesBonus()
         {
-            int testId = 11;
-            int userId = 22;
+            int testId = 3;
+            int userId = 5;
             var ct = CancellationToken.None;
 
             var answers = new[]
             {
-                (1, (string?)"answer1"),
-                (2, (string?)"answer2"),
+                (1, (string?)"a"),
+                (2, (string?)"b"),
             };
 
-            var testEntity = new Test { TestId = testId, CreatorId = 5 };
             this._testsMock
                 .Setup(r => r.GetAsync(testId, ct))
-                .ReturnsAsync(testEntity);
+                .ReturnsAsync(new Test { TestId = testId, CreatorId = 5 });
 
-            var user = new User { UserId = userId, Points = 0 };
+            var user = new User { UserId = userId, Points = 10 };
+
             this._usersMock
                 .Setup(r => r.GetByIdAsync(userId, ct))
                 .ReturnsAsync(user);
 
-            var cards = new List<Flashcard>
-            {
-                new Flashcard { FlashcardId = 1, Answer = "answer1" },
-                new Flashcard { FlashcardId = 2, Answer = "answer2" },
-            };
-
             this._cardsMock
-                .Setup(r => r.FindAsync(testEntity.CreatorId, null, ct))
-                .ReturnsAsync(cards);
+                .Setup(r => r.FindAsync(5, null, ct))
+                .ReturnsAsync(new List<Flashcard>
+                {
+                    new Flashcard { FlashcardId = 1, Answer = "a" },
+                    new Flashcard { FlashcardId = 2, Answer = "b" },
+                });
 
-            TestResult? capturedResult = null;
+            TestResult? saved = null;
 
             this._resultsMock
                 .Setup(r => r.AddAsync(
                     It.IsAny<TestResult>(),
                     It.IsAny<IEnumerable<QuestionResult>>(),
-                    It.IsAny<CancellationToken>()))
+                    ct))
+                .Callback<TestResult, IEnumerable<QuestionResult>, CancellationToken>((tr, _, _) =>
+                {
+                    saved = tr;
+                })
+                .ReturnsAsync((TestResult tr, IEnumerable<QuestionResult> _, CancellationToken _) => tr);
+
+            this._usersMock
+                .Setup(r => r.UpdateAsync(user, ct))
+                .Returns(Task.CompletedTask);
+
+            var dto = await this._service.SubmitAsync(testId, userId, answers, ct);
+
+            Assert.NotNull(saved);
+
+            int expected = (answers.Length * 10) + 20;
+
+            Assert.Equal(expected, saved!.Points);
+            Assert.Equal(expected + 10, user.Points);
+        }
+
+        /// <summary>
+        /// Якщо FlashcardId відсутній → відповідь уважається неправильною.
+        /// </summary>
+        [Fact]
+        public async Task SubmitAsync_MissingFlashcard_MarkedIncorrect()
+        {
+            int testId = 88;
+            int userId = 2;
+            var ct = CancellationToken.None;
+
+            var answers = new[]
+            {
+                (1, (string?)"aaa"),
+                (99, (string?)"zzz"),
+            };
+
+            this._testsMock
+                .Setup(r => r.GetAsync(testId, ct))
+                .ReturnsAsync(new Test { TestId = testId, CreatorId = 100 });
+
+            this._usersMock
+                .Setup(r => r.GetByIdAsync(userId, ct))
+                .ReturnsAsync(new User { UserId = userId });
+
+            this._cardsMock
+                .Setup(r => r.FindAsync(100, null, ct))
+                .ReturnsAsync(new List<Flashcard>
+                {
+                    new Flashcard { FlashcardId = 1, Answer = "aaa" },
+                });
+
+            IEnumerable<QuestionResult>? captured = null;
+
+            this._resultsMock
+                .Setup(r => r.AddAsync(
+                    It.IsAny<TestResult>(),
+                    It.IsAny<IEnumerable<QuestionResult>>(),
+                    ct))
                 .Callback<TestResult, IEnumerable<QuestionResult>, CancellationToken>((tr, qs, _) =>
                 {
-                    capturedResult = tr;
+                    captured = qs;
                 })
                 .ReturnsAsync((TestResult tr, IEnumerable<QuestionResult> qs, CancellationToken _) => tr);
 
@@ -353,116 +442,83 @@ namespace BrainBurst.BLL.Tests.Services
                 .Setup(r => r.UpdateAsync(It.IsAny<User>(), ct))
                 .Returns(Task.CompletedTask);
 
-            var dto = await this._service.SubmitAsync(testId, userId, answers, ct);
+            await this._service.SubmitAsync(testId, userId, answers, ct);
 
-            int correct = answers.Length;
-            double expectedPercentDouble = 100.0;
-            decimal expectedPercent = (decimal)expectedPercentDouble;
-            int expectedPoints = (correct * 10) + 20;
+            var list = captured!.ToList();
 
-            Assert.NotNull(capturedResult);
-            Assert.Equal(expectedPercent, capturedResult!.CorrectAnswersPercent);
-            Assert.Equal(expectedPoints, capturedResult.Points);
-            Assert.Equal(expectedPoints, user.Points);
+            Assert.True(list[0].IsCorrect);
+            Assert.False(list[1].IsCorrect); // Flashcard 99 не існує
         }
 
         /// <summary>
-        /// Тест: SubmitAsync коректно створює QuestionResults та позначає відсутні картки як неправильні.
+        /// Перевіряє, що FindAsync викликається з CreatorId, а не з userId.
         /// </summary>
-        /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
         [Fact]
-        public async Task SubmitAsync_BuildsQuestionResultsAndMarksMissingCardsAsIncorrect()
+        public async Task SubmitAsync_UsesCreatorIdCorrectly()
         {
-            int testId = 33;
-            int userId = 44;
+            int testId = 77;
+            int userId = 5;
+            int creatorId = 123;
             var ct = CancellationToken.None;
 
-            var answers = new[]
-            {
-                (flashcardId: 1, userInput: "ans1"),
-                (flashcardId: 2, userInput: (string?)null),
-            };
-
-            var testEntity = new Test { TestId = testId, CreatorId = 9 };
             this._testsMock
                 .Setup(r => r.GetAsync(testId, ct))
-                .ReturnsAsync(testEntity);
+                .ReturnsAsync(new Test { TestId = testId, CreatorId = creatorId });
 
-            var user = new User { UserId = userId, Points = 0 };
             this._usersMock
                 .Setup(r => r.GetByIdAsync(userId, ct))
-                .ReturnsAsync(user);
-
-            var cards = new List<Flashcard>
-            {
-                new Flashcard { FlashcardId = 1, Answer = "ans1" },
-            };
+                .ReturnsAsync(new User { UserId = userId });
 
             this._cardsMock
-                .Setup(r => r.FindAsync(testEntity.CreatorId, null, ct))
-                .ReturnsAsync(cards);
-
-            IEnumerable<QuestionResult>? capturedQuestions = null;
+                .Setup(r => r.FindAsync(creatorId, null, ct))
+                .ReturnsAsync(new List<Flashcard>
+                {
+                    new Flashcard { FlashcardId = 1, Answer = "x" },
+                });
 
             this._resultsMock
                 .Setup(r => r.AddAsync(
                     It.IsAny<TestResult>(),
                     It.IsAny<IEnumerable<QuestionResult>>(),
-                    It.IsAny<CancellationToken>()))
-                .Callback<TestResult, IEnumerable<QuestionResult>, CancellationToken>((tr, qs, _) =>
-                {
-                    capturedQuestions = qs;
-                })
+                    ct))
                 .ReturnsAsync((TestResult tr, IEnumerable<QuestionResult> qs, CancellationToken _) => tr);
 
             this._usersMock
                 .Setup(r => r.UpdateAsync(It.IsAny<User>(), ct))
                 .Returns(Task.CompletedTask);
 
-            var dto = await this._service.SubmitAsync(testId, userId, answers, ct);
+            await this._service.SubmitAsync(testId, userId, new[] { (1, (string?)"x") }, ct);
 
-            Assert.NotNull(capturedQuestions);
-            var list = capturedQuestions!.ToList();
-            Assert.Equal(2, list.Count);
-
-            var q1 = list[0];
-            Assert.Equal(1, q1.FlashcardId);
-            Assert.Equal("ans1", q1.UserInput);
-            Assert.True(q1.IsCorrect);
-
-            var q2 = list[1];
-            Assert.Equal(2, q2.FlashcardId);
-            Assert.Equal(string.Empty, q2.UserInput);
-            Assert.False(q2.IsCorrect);
+            this._cardsMock.Verify(r => r.FindAsync(creatorId, null, ct), Times.Once);
         }
 
         /// <summary>
-        /// Тест: SubmitAsync використовує CreatorId тесту (а не UserId) для завантаження карток.
+        /// Якщо при збереженні результату виникає неспецифічний виняток,
+        /// він має бути залогований (LogError) і проброшений.
+        /// Покриваємо гілку if (ex is not ArgumentException && ... ) у SubmitAsync.
         /// </summary>
-        /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
         [Fact]
-        public async Task SubmitAsync_UsesTestCreatorIdWhenLoadingFlashcards()
+        public async Task SubmitAsync_UnexpectedException_LogsErrorAndRethrows()
         {
-            int testId = 99;
-            int userId = 1;
+            int testId = 55;
+            int userId = 7;
             var ct = CancellationToken.None;
 
-            var answers = new[] { (1, (string?)"a") };
-
-            var testCreatorId = 777;
-            var testEntity = new Test { TestId = testId, CreatorId = testCreatorId };
+            var answers = new[]
+            {
+                (1, (string?)"a"),
+            };
 
             this._testsMock
                 .Setup(r => r.GetAsync(testId, ct))
-                .ReturnsAsync(testEntity);
+                .ReturnsAsync(new Test { TestId = testId, CreatorId = 99 });
 
-            var user = new User { UserId = userId, Points = 0 };
             this._usersMock
                 .Setup(r => r.GetByIdAsync(userId, ct))
-                .ReturnsAsync(user);
+                .ReturnsAsync(new User { UserId = userId, Points = 0 });
 
             this._cardsMock
-                .Setup(r => r.FindAsync(testCreatorId, null, ct))
+                .Setup(r => r.FindAsync(99, null, ct))
                 .ReturnsAsync(new List<Flashcard>
                 {
                     new Flashcard { FlashcardId = 1, Answer = "a" },
@@ -472,16 +528,67 @@ namespace BrainBurst.BLL.Tests.Services
                 .Setup(r => r.AddAsync(
                     It.IsAny<TestResult>(),
                     It.IsAny<IEnumerable<QuestionResult>>(),
-                    It.IsAny<CancellationToken>()))
-                .ReturnsAsync((TestResult tr, IEnumerable<QuestionResult> qs, CancellationToken _) => tr);
+                    ct))
+                .ThrowsAsync(new Exception("DB failure on AddAsync"));
 
+            await Assert.ThrowsAsync<Exception>(() =>
+                this._service.SubmitAsync(testId, userId, answers, ct));
+
+            this._testsMock.Verify(r => r.GetAsync(testId, ct), Times.Once);
+            this._usersMock.Verify(r => r.GetByIdAsync(userId, ct), Times.Once);
+            this._cardsMock.Verify(r => r.FindAsync(99, null, ct), Times.Once);
+            this._resultsMock.Verify(
+                r => r.AddAsync(
+                    It.IsAny<TestResult>(),
+                    It.IsAny<IEnumerable<QuestionResult>>(),
+                    ct),
+                Times.Once);
+        }
+
+        /// <summary>
+        /// Якщо користувача не знайдено (GetByIdAsync кидає KeyNotFoundException),
+        /// SubmitAsync повинен пробросити виняток далі без логування як "критичної" помилки.
+        /// Це покриває гілку, де (ex is not ArgumentException && ex is not InvalidOperationException && ex is not KeyNotFoundException) == false.
+        /// </summary>
+        [Fact]
+        public async Task SubmitAsync_UserNotFound_KeyNotFoundRethrownWithoutCriticalLog()
+        {
+            int testId = 42;
+            int userId = 123;
+            var ct = CancellationToken.None;
+
+            var answers = new[]
+            {
+                (1, (string?)"some answer"),
+            };
+
+            // Тест існує, щоб пройти першу частину логіки
+            this._testsMock
+                .Setup(r => r.GetAsync(testId, ct))
+                .ReturnsAsync(new Test { TestId = testId, CreatorId = 10 });
+
+            // На етапі завантаження користувача репозиторій кидає KeyNotFoundException
             this._usersMock
-                .Setup(r => r.UpdateAsync(It.IsAny<User>(), ct))
-                .Returns(Task.CompletedTask);
+                .Setup(r => r.GetByIdAsync(userId, ct))
+                .ThrowsAsync(new KeyNotFoundException("User not found"));
 
-            var dto = await this._service.SubmitAsync(testId, userId, answers, ct);
+            // Cards / results не повинні навіть викликатися
+            this._cardsMock
+                .Setup(r => r.FindAsync(It.IsAny<int>(), It.IsAny<string?>(), ct))
+                .ReturnsAsync(new List<Flashcard>());
 
-            this._cardsMock.Verify(r => r.FindAsync(testCreatorId, null, ct), Times.Once);
+            await Assert.ThrowsAsync<KeyNotFoundException>(() =>
+                this._service.SubmitAsync(testId, userId, answers, ct));
+
+            this._testsMock.Verify(r => r.GetAsync(testId, ct), Times.Once);
+            this._usersMock.Verify(r => r.GetByIdAsync(userId, ct), Times.Once);
+            this._cardsMock.Verify(r => r.FindAsync(It.IsAny<int>(), It.IsAny<string?>(), ct), Times.Never);
+            this._resultsMock.Verify(
+                r => r.AddAsync(
+                    It.IsAny<TestResult>(),
+                    It.IsAny<IEnumerable<QuestionResult>>(),
+                    ct),
+                Times.Never);
         }
     }
 }

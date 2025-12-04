@@ -9,6 +9,7 @@ namespace BrainBurst.BLL.Tests.Services
     using BrainBurst.BLL.Services;
     using BrainBurst.DAL.Abstractions;
     using BrainBurst.DAL.Entities;
+    using Microsoft.Extensions.Logging;
     using Moq;
     using Xunit;
 
@@ -18,6 +19,7 @@ namespace BrainBurst.BLL.Tests.Services
     public class FlashcardServiceTests
     {
         private readonly Mock<IFlashcardRepository> _cardsMock;
+        private readonly Mock<ILogger<FlashcardService>> _loggerMock;
         private readonly FlashcardService _service;
 
         /// <summary>
@@ -27,7 +29,9 @@ namespace BrainBurst.BLL.Tests.Services
         public FlashcardServiceTests()
         {
             this._cardsMock = new Mock<IFlashcardRepository>(MockBehavior.Strict);
-            this._service = new FlashcardService(this._cardsMock.Object);
+            this._loggerMock = new Mock<ILogger<FlashcardService>>();
+
+            this._service = new FlashcardService(this._cardsMock.Object, this._loggerMock.Object);
         }
 
         /// <summary>
@@ -66,9 +70,10 @@ namespace BrainBurst.BLL.Tests.Services
 
             this._cardsMock.Verify(
                 r => r.AddAsync(
-                It.IsAny<Flashcard>(),
-                It.IsAny<IEnumerable<string>>(),
-                ct), Times.Once);
+                    It.IsAny<Flashcard>(),
+                    It.IsAny<IEnumerable<string>>(),
+                    ct),
+                Times.Once);
 
             Assert.NotNull(capturedCard);
             Assert.Equal(creatorId, capturedCard!.CreatorId);
@@ -190,9 +195,10 @@ namespace BrainBurst.BLL.Tests.Services
             this._cardsMock.Verify(r => r.GetAsync(id, ct), Times.Once);
             this._cardsMock.Verify(
                 r => r.UpdateAsync(
-                It.IsAny<Flashcard>(),
-                It.IsAny<IEnumerable<string>>(),
-                ct), Times.Once);
+                    It.IsAny<Flashcard>(),
+                    It.IsAny<IEnumerable<string>>(),
+                    ct),
+                Times.Once);
 
             Assert.NotNull(updated);
             Assert.Equal(id, updated!.FlashcardId);
@@ -351,6 +357,180 @@ namespace BrainBurst.BLL.Tests.Services
 
             Assert.NotNull(result);
             Assert.Empty(result);
+            this._cardsMock.Verify(r => r.FindAsync(ownerId, search, ct), Times.Once);
+        }
+
+        // =====================================================================
+        // ДОДАТКОВІ ТЕСТИ ДЛЯ ПОКРИТТЯ ВСІХ ГІЛОК (try/catch)
+        // =====================================================================
+
+        /// <summary>
+        /// CreateAsync: якщо валідація падає (Guard.Text кидає ArgumentException),
+        /// помилка логуються як Warning і виняток проброшується далі.
+        /// Покриваємо catch (ArgumentException).
+        /// </summary>
+        [Fact]
+        public async Task CreateAsync_InvalidQuestion_ThrowsArgumentException_AndDoesNotCallRepository()
+        {
+            var ct = CancellationToken.None;
+            int creatorId = 1;
+            string question = string.Empty; // некоректний текст
+            string answer = "Valid answer";
+            var tags = Array.Empty<string>();
+
+            await Assert.ThrowsAsync<ArgumentException>(() =>
+                this._service.CreateAsync(creatorId, question, answer, tags, ct));
+
+            this._cardsMock.Verify(
+                r => r.AddAsync(
+                    It.IsAny<Flashcard>(),
+                    It.IsAny<IEnumerable<string>>(),
+                    It.IsAny<CancellationToken>()),
+                Times.Never);
+        }
+
+        /// <summary>
+        /// CreateAsync: якщо репозиторій кидає будь-який інший виняток,
+        /// він логуються як критичний і проброшується далі.
+        /// Покриваємо catch (Exception).
+        /// </summary>
+        [Fact]
+        public async Task CreateAsync_RepositoryThrows_LogsErrorAndRethrows()
+        {
+            var ct = CancellationToken.None;
+            int creatorId = 2;
+            string question = "Q";
+            string answer = "A";
+            var tags = new[] { "t" };
+
+            this._cardsMock
+                .Setup(r => r.AddAsync(
+                    It.IsAny<Flashcard>(),
+                    It.IsAny<IEnumerable<string>>(),
+                    ct))
+                .ThrowsAsync(new InvalidOperationException("DB failure"));
+
+            await Assert.ThrowsAsync<InvalidOperationException>(() =>
+                this._service.CreateAsync(creatorId, question, answer, tags, ct));
+
+            this._cardsMock.Verify(
+                r => r.AddAsync(
+                    It.IsAny<Flashcard>(),
+                    It.IsAny<IEnumerable<string>>(),
+                    ct),
+                Times.Once);
+        }
+
+        /// <summary>
+        /// UpdateAsync: якщо під час роботи репозиторія виникає неспецифічний виняток,
+        /// він має бути залогований (LogError) і проброшений.
+        /// Покриваємо гілку ex is not KeyNotFoundException у catch.
+        /// </summary>
+        [Fact]
+        public async Task UpdateAsync_RepositoryThrows_LogsErrorAndRethrows()
+        {
+            var ct = CancellationToken.None;
+            int id = 20;
+            int editorId = 3;
+            string newQ = "Valid Q";
+            string newA = "Valid A";
+            var tags = new[] { "a" };
+
+            var existing = new Flashcard
+            {
+                FlashcardId = id,
+                CreatorId = editorId,
+                Question = "Old",
+                Answer = "Old",
+                CreatedAt = DateTime.UtcNow.AddDays(-1),
+            };
+
+            this._cardsMock
+                .Setup(r => r.GetAsync(id, ct))
+                .ReturnsAsync(existing);
+
+            this._cardsMock
+                .Setup(r => r.UpdateAsync(
+                    It.IsAny<Flashcard>(),
+                    It.IsAny<IEnumerable<string>>(),
+                    ct))
+                .ThrowsAsync(new InvalidOperationException("DB failure on update"));
+
+            await Assert.ThrowsAsync<InvalidOperationException>(() =>
+                this._service.UpdateAsync(id, editorId, newQ, newA, tags, ct));
+
+            this._cardsMock.Verify(r => r.GetAsync(id, ct), Times.Once);
+            this._cardsMock.Verify(
+                r => r.UpdateAsync(
+                    It.IsAny<Flashcard>(),
+                    It.IsAny<IEnumerable<string>>(),
+                    ct),
+                Times.Once);
+        }
+
+        /// <summary>
+        /// DeleteAsync: якщо репозиторій кидає KeyNotFoundException,
+        /// сервіс має залогувати Warning і пробросити виняток далі.
+        /// Покриваємо catch (KeyNotFoundException).
+        /// </summary>
+        [Fact]
+        public async Task DeleteAsync_CardNotFound_ThrowsKeyNotFoundException()
+        {
+            var ct = CancellationToken.None;
+            int id = 30;
+            int requesterId = 9;
+
+            this._cardsMock
+                .Setup(r => r.DeleteAsync(id, requesterId, ct))
+                .ThrowsAsync(new KeyNotFoundException("not found"));
+
+            await Assert.ThrowsAsync<KeyNotFoundException>(() =>
+                this._service.DeleteAsync(id, requesterId, ct));
+
+            this._cardsMock.Verify(r => r.DeleteAsync(id, requesterId, ct), Times.Once);
+        }
+
+        /// <summary>
+        /// DeleteAsync: якщо виникає будь-який інший виняток,
+        /// він логуються як критичний і проброшується далі.
+        /// Покриваємо catch (Exception).
+        /// </summary>
+        [Fact]
+        public async Task DeleteAsync_UnexpectedException_LogsErrorAndRethrows()
+        {
+            var ct = CancellationToken.None;
+            int id = 31;
+            int requesterId = 10;
+
+            this._cardsMock
+                .Setup(r => r.DeleteAsync(id, requesterId, ct))
+                .ThrowsAsync(new InvalidOperationException("DB failure"));
+
+            await Assert.ThrowsAsync<InvalidOperationException>(() =>
+                this._service.DeleteAsync(id, requesterId, ct));
+
+            this._cardsMock.Verify(r => r.DeleteAsync(id, requesterId, ct), Times.Once);
+        }
+
+        /// <summary>
+        /// ListAsync: якщо під час звернення до репозиторія виникає виняток,
+        /// сервіс має його залогувати і пробросити.
+        /// Покриваємо catch (Exception) у ListAsync.
+        /// </summary>
+        [Fact]
+        public async Task ListAsync_RepositoryThrows_LogsErrorAndRethrows()
+        {
+            var ct = CancellationToken.None;
+            int ownerId = 99;
+            string? search = "something";
+
+            this._cardsMock
+                .Setup(r => r.FindAsync(ownerId, search, ct))
+                .ThrowsAsync(new Exception("DB failure on find"));
+
+            await Assert.ThrowsAsync<Exception>(() =>
+                this._service.ListAsync(ownerId, search, ct));
+
             this._cardsMock.Verify(r => r.FindAsync(ownerId, search, ct), Times.Once);
         }
     }

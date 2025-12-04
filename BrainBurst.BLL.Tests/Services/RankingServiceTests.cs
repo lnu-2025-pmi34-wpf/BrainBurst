@@ -2,6 +2,8 @@ namespace BrainBurst.BLL.Tests.Services
 {
     using BrainBurst.BLL.Enums;
     using BrainBurst.BLL.Services;
+    using Microsoft.Extensions.Logging;
+    using Moq;
     using Xunit;
 
     /// <summary>
@@ -9,7 +11,13 @@ namespace BrainBurst.BLL.Tests.Services
     /// </summary>
     public class RankingServiceTests
     {
-        private readonly RankingService _service = new ();
+        private readonly RankingService _service;
+
+        public RankingServiceTests()
+        {
+            var loggerMock = new Mock<ILogger<RankingService>>();
+            this._service = new RankingService(loggerMock.Object);
+        }
 
         /// <summary>
         /// Тест: GetRank коректно повертає очікуваний ранг для різних значень балів.
