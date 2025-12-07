@@ -43,33 +43,7 @@
                     </StackPanel>
                 </StackPanel>
             </Grid>
-            <TextBlock Text="Нагороди" FontSize="28" FontWeight="Bold" Margin="0,40,0,20"/>
-            <StackPanel>
-                <Border Style="{StaticResource AwardPanel}">
-                    <StackPanel>
-                        <TextBlock Text="Перший спалах" Style="{StaticResource AwardTitleText}"/>
-                        <TextBlock Text="за створення першої картки чи тесту" Style="{StaticResource AwardSubText}"/>
-                    </StackPanel>
-                </Border>
-                <Border Style="{StaticResource AwardPanel}">
-                    <StackPanel>
-                        <TextBlock Text="Фокус дня" Style="{StaticResource AwardTitleText}"/>
-                        <TextBlock Text="за активність 7 днів поспіль" Style="{StaticResource AwardSubText}"/>
-                    </StackPanel>
-                </Border>
-                <Border Style="{StaticResource AwardPanel}" Background="#FFE4E1">
-                    <StackPanel>
-                        <TextBlock Text="Карткороб" Style="{StaticResource AwardTitleText}"/>
-                        <TextBlock Text="за 100 створених карток" Style="{StaticResource AwardSubText}"/>
-                    </StackPanel>
-                </Border>
-                <Border Style="{StaticResource AwardPanel}" Background="#FFD8D6">
-                    <StackPanel>
-                        <TextBlock Text="Мозкобуст" Style="{StaticResource AwardTitleText}"/>
-                        <TextBlock Text="за вихід у топ-10 рейтингу" Style="{StaticResource AwardSubText}"/>
-                    </StackPanel>
-                </Border>
-            </StackPanel>
+            
 
         </StackPanel>
     </ScrollViewer>
