@@ -369,6 +369,7 @@ namespace BrainBurst.BLL.Tests.Services
         /// помилка логуються як Warning і виняток проброшується далі.
         /// Покриваємо catch (ArgumentException).
         /// </summary>
+        /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
         [Fact]
         public async Task CreateAsync_InvalidQuestion_ThrowsArgumentException_AndDoesNotCallRepository()
         {
@@ -394,6 +395,7 @@ namespace BrainBurst.BLL.Tests.Services
         /// він логуються як критичний і проброшується далі.
         /// Покриваємо catch (Exception).
         /// </summary>
+        /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
         [Fact]
         public async Task CreateAsync_RepositoryThrows_LogsErrorAndRethrows()
         {
@@ -426,6 +428,7 @@ namespace BrainBurst.BLL.Tests.Services
         /// він має бути залогований (LogError) і проброшений.
         /// Покриваємо гілку ex is not KeyNotFoundException у catch.
         /// </summary>
+        /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
         [Fact]
         public async Task UpdateAsync_RepositoryThrows_LogsErrorAndRethrows()
         {
@@ -473,6 +476,7 @@ namespace BrainBurst.BLL.Tests.Services
         /// сервіс має залогувати Warning і пробросити виняток далі.
         /// Покриваємо catch (KeyNotFoundException).
         /// </summary>
+        /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
         [Fact]
         public async Task DeleteAsync_CardNotFound_ThrowsKeyNotFoundException()
         {
@@ -495,6 +499,7 @@ namespace BrainBurst.BLL.Tests.Services
         /// він логуються як критичний і проброшується далі.
         /// Покриваємо catch (Exception).
         /// </summary>
+        /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
         [Fact]
         public async Task DeleteAsync_UnexpectedException_LogsErrorAndRethrows()
         {
@@ -517,6 +522,7 @@ namespace BrainBurst.BLL.Tests.Services
         /// сервіс має його залогувати і пробросити.
         /// Покриваємо catch (Exception) у ListAsync.
         /// </summary>
+        /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
         [Fact]
         public async Task ListAsync_RepositoryThrows_LogsErrorAndRethrows()
         {

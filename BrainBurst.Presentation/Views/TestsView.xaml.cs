@@ -15,7 +15,11 @@
     /// <summary>
     /// Внутрішній клас, що представляє одну доступну колоду (тему) для тесту.
     /// </summary>
+#pragma warning disable SA1649
+#pragma warning disable SA1402
     public class TestDeckItem
+#pragma warning restore SA1402
+#pragma warning restore SA1649
     {
         /// <summary>
         /// Gets or sets назву тегу (теми).
@@ -42,6 +46,9 @@
         /// Initializes a new instance of the <see cref="TestsView"/> class.
         /// </summary>
         /// <param name="logger">Логер для запису подій.</param>
+        /// <param name="serviceProvider">Постачальник служб DI (для навігації).</param>
+        /// <param name="flashcardService">Сервіс для отримання списку карток (для групування тем).</param>
+        /// <param name="authContext">Контекст автентифікації для отримання ID користувача.</param>
         public TestsView(IServiceProvider serviceProvider, IFlashcardService flashcardService, IAuthContext authContext, ILogger<TestsView> logger)
         {
             this.InitializeComponent();
@@ -114,7 +121,6 @@
             try
             {
                 var border = sender as Border;
-                // Приводимо DataContext до нового типу TestDeckItem
                 if (border?.DataContext is TestDeckItem deckItem)
                 {
                     this._logger.LogInformation("Test_Click: Запуск тесту для колоди: {DeckTag}", deckItem.DeckTag);

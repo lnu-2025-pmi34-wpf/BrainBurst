@@ -11,11 +11,11 @@
     /// <summary>
     /// Внутрішній клас, що представляє одну помилку (неправильну відповідь) у тесті.
     /// </summary>
-#pragma warning disable SA1402 // File may only contain a single type
-#pragma warning disable SA1649 // File name should match first type name
+#pragma warning disable SA1402
+#pragma warning disable SA1649
     public class TestMistake
-#pragma warning restore SA1649 // File name should match first type name
-#pragma warning restore SA1402 // File may only contain a single type
+#pragma warning restore SA1649
+#pragma warning restore SA1402
     {
         /// <summary>
         /// Gets or sets отримує або встановлює текст питання.
@@ -43,6 +43,7 @@
         /// <summary>
         /// Initializes a new instance of the <see cref="TestResultsView"/> class.
         /// </summary>
+        /// <param name="logger">Логер для запису подій.</param>
         public TestResultsView(ILogger<TestResultsView> logger)
         {
             this.InitializeComponent();
@@ -55,6 +56,8 @@
         /// Встановлює результати тесту після отримання View з контейнера DI.
         /// Цей метод замінює старий конструктор з даними.
         /// </summary>
+        /// <param name="mistakes">Список помилок (неправильних відповідей) користувача.</param>
+        /// <param name="totalQuestions">Загальна кількість питань у тесті.</param>
         public void InitializeResults(List<TestMistake> mistakes, int totalQuestions)
         {
             this._logger.LogInformation("InitializeResults: Відображення результатів. Всього: {Total}, Помилок: {Mistakes}", totalQuestions, mistakes.Count);

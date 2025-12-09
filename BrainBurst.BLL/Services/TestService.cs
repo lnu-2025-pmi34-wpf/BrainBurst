@@ -163,8 +163,12 @@ public sealed class TestService : ITestService
             double percent = 100.0 * correct / answers.Count;
             int points = (correct * 10) + (Math.Abs(percent - 100.0) < double.Epsilon ? 20 : 0);
 
-            this._logger.LogInformation("SubmitAsync: Тест {TestId} оцінено. Правильно: {Correct}, %: {Percent:N2}, Балів: {Points}",
-                                       testId, correct, percent, points);
+            this._logger.LogInformation(
+                "SubmitAsync: Тест {TestId} оцінено. Правильно: {Correct}, %: {Percent:N2}, Балів: {Points}",
+                testId,
+                correct,
+                percent,
+                points);
 
             var tr = new TestResult
             {

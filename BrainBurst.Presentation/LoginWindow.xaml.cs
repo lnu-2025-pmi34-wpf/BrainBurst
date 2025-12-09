@@ -9,7 +9,6 @@
     using Microsoft.Extensions.DependencyInjection;
     using Microsoft.Extensions.Logging;
 
-
     /// <summary>
     /// Логіка взаємодії для вікна входу користувача (LoginWindow.xaml).
     /// </summary>

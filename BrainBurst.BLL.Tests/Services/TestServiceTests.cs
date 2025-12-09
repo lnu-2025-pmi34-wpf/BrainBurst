@@ -29,6 +29,7 @@ namespace BrainBurst.BLL.Tests.Services
         private readonly TestService _service;
 
         /// <summary>
+        /// Initializes a new instance of the <see cref="TestServiceTests"/> class.
         /// Ініціалізація тестового оточення.
         /// </summary>
         public TestServiceTests()
@@ -56,6 +57,7 @@ namespace BrainBurst.BLL.Tests.Services
         /// <summary>
         /// Якщо flashcardIds == null → кидає ArgumentException.
         /// </summary>
+        /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
         [Fact]
         public async Task GenerateFromFlashcardsAsync_Null_ThrowsArgumentException()
         {
@@ -72,6 +74,7 @@ namespace BrainBurst.BLL.Tests.Services
         /// <summary>
         /// Якщо flashcardIds порожній → також ArgumentException.
         /// </summary>
+        /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
         [Fact]
         public async Task GenerateFromFlashcardsAsync_Empty_ThrowsArgumentException()
         {
@@ -88,6 +91,7 @@ namespace BrainBurst.BLL.Tests.Services
         /// Перевіряє базовий позитивний сценарій генерації тесту:
         /// виклик репозиторіїв, мапінг та коректність DTO.
         /// </summary>
+        /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
         [Fact]
         public async Task GenerateFromFlashcardsAsync_Valid_CreatesTestCorrectly()
         {
@@ -130,6 +134,7 @@ namespace BrainBurst.BLL.Tests.Services
         /// Якщо репозиторій тестів кидає будь-який інший виняток → він логуються і проброшується далі.
         /// Покриваємо catch (Exception) у GenerateFromFlashcardsAsync.
         /// </summary>
+        /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
         [Fact]
         public async Task GenerateFromFlashcardsAsync_RepositoryThrows_LogsAndRethrows()
         {
@@ -154,6 +159,7 @@ namespace BrainBurst.BLL.Tests.Services
         /// <summary>
         /// Якщо тест не знайдено → повертається null.
         /// </summary>
+        /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
         [Fact]
         public async Task GetAsync_NotFound_ReturnsNull()
         {
@@ -173,6 +179,7 @@ namespace BrainBurst.BLL.Tests.Services
         /// <summary>
         /// Позитивний сценарій: тест знайдено → DTO повертається без питань.
         /// </summary>
+        /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
         [Fact]
         public async Task GetAsync_Found_ReturnsDto()
         {
@@ -195,6 +202,7 @@ namespace BrainBurst.BLL.Tests.Services
         /// Якщо репозиторій кидає виняток у GetAsync → сервіс логуює помилку і проброшує її далі.
         /// Покриваємо catch (Exception) у GetAsync.
         /// </summary>
+        /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
         [Fact]
         public async Task GetAsync_RepositoryThrows_LogsAndRethrows()
         {
@@ -215,6 +223,7 @@ namespace BrainBurst.BLL.Tests.Services
         /// Якщо репозиторій кидає саме KeyNotFoundException,
         /// сервіс повинен просто пробросити його далі (гілка без додаткового логування).
         /// </summary>
+        /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
         [Fact]
         public async Task GetAsync_RepositoryThrowsKeyNotFound_RethrowsWithoutExtraLogging()
         {
@@ -238,6 +247,7 @@ namespace BrainBurst.BLL.Tests.Services
         /// <summary>
         /// Якщо answers порожній → ArgumentException.
         /// </summary>
+        /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
         [Fact]
         public async Task SubmitAsync_EmptyAnswers_ThrowsArgumentException()
         {
@@ -252,6 +262,7 @@ namespace BrainBurst.BLL.Tests.Services
         /// <summary>
         /// Якщо тест не знайдено → InvalidOperationException.
         /// </summary>
+        /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
         [Fact]
         public async Task SubmitAsync_TestNotFound_Throws()
         {
@@ -262,8 +273,10 @@ namespace BrainBurst.BLL.Tests.Services
                 .Setup(r => r.GetAsync(testId, ct))
                 .ReturnsAsync((Test?)null);
 
+            var answers = new (int flashcardId, string? userInput)[] { (1, "a") };
+
             var ex = await Assert.ThrowsAsync<InvalidOperationException>(() =>
-                this._service.SubmitAsync(testId, 10, new[] { (1, "a") }, ct));
+                this._service.SubmitAsync(testId, 10, answers, ct));
 
             Assert.Contains("Тест не знайдено", ex.Message);
         }
@@ -271,6 +284,7 @@ namespace BrainBurst.BLL.Tests.Services
         /// <summary>
         /// Частково правильні відповіді → перевіряється процент, бали, оновлення юзера.
         /// </summary>
+        /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
         [Fact]
         public async Task SubmitAsync_PartialCorrect_ComputesScoreCorrectly()
         {
@@ -336,6 +350,7 @@ namespace BrainBurst.BLL.Tests.Services
         /// <summary>
         /// 100% правильні відповіді → нараховується бонус.
         /// </summary>
+        /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
         [Fact]
         public async Task SubmitAsync_AllCorrect_GivesBonus()
         {
@@ -397,6 +412,7 @@ namespace BrainBurst.BLL.Tests.Services
         /// <summary>
         /// Якщо FlashcardId відсутній → відповідь уважається неправильною.
         /// </summary>
+        /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
         [Fact]
         public async Task SubmitAsync_MissingFlashcard_MarkedIncorrect()
         {
@@ -453,6 +469,7 @@ namespace BrainBurst.BLL.Tests.Services
         /// <summary>
         /// Перевіряє, що FindAsync викликається з CreatorId, а не з userId.
         /// </summary>
+        /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
         [Fact]
         public async Task SubmitAsync_UsesCreatorIdCorrectly()
         {
@@ -495,8 +512,9 @@ namespace BrainBurst.BLL.Tests.Services
         /// <summary>
         /// Якщо при збереженні результату виникає неспецифічний виняток,
         /// він має бути залогований (LogError) і проброшений.
-        /// Покриваємо гілку if (ex is not ArgumentException && ... ) у SubmitAsync.
+        /// Покриваємо гілку if (ex is not ArgumentException ... ) у SubmitAsync.
         /// </summary>
+        /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
         [Fact]
         public async Task SubmitAsync_UnexpectedException_LogsErrorAndRethrows()
         {
@@ -548,8 +566,9 @@ namespace BrainBurst.BLL.Tests.Services
         /// <summary>
         /// Якщо користувача не знайдено (GetByIdAsync кидає KeyNotFoundException),
         /// SubmitAsync повинен пробросити виняток далі без логування як "критичної" помилки.
-        /// Це покриває гілку, де (ex is not ArgumentException && ex is not InvalidOperationException && ex is not KeyNotFoundException) == false.
+        /// Це покриває гілку, де (ex is not ArgumentException and ex is not InvalidOperationException and ex is not KeyNotFoundException) == false.
         /// </summary>
+        /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
         [Fact]
         public async Task SubmitAsync_UserNotFound_KeyNotFoundRethrownWithoutCriticalLog()
         {

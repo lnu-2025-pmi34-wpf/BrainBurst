@@ -13,6 +13,9 @@ namespace BrainBurst.BLL.Tests.Services
     {
         private readonly RankingService _service;
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="RankingServiceTests"/> class.
+        /// </summary>
         public RankingServiceTests()
         {
             var loggerMock = new Mock<ILogger<RankingService>>();

@@ -1,14 +1,18 @@
 ﻿#pragma warning disable SA1200
-using BrainBurst.BLL.Mapping;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using System;
-using Microsoft.Extensions.Logging;
+#pragma warning disable SA1210 // Using directives should be ordered alphabetically by namespace
 using BrainBurst.DAL.Entities;
+#pragma warning restore SA1210 // Using directives should be ordered alphabetically by namespace
 using BrainBurst.BLL.Interfaces.Abstractions;
+#pragma warning disable SA1210 // Using directives should be ordered alphabetically by namespace
 using BrainBurst.DAL.Abstractions;
+#pragma warning restore SA1210 // Using directives should be ordered alphabetically by namespace
+using BrainBurst.BLL.Mapping;
+using Microsoft.Extensions.Logging;
 #pragma warning restore SA1200
 
 namespace BrainBurst.BLL.Services;
@@ -93,7 +97,8 @@ public sealed class TestGenerationService : ITestGenerationService
         }
         catch (Exception ex)
         {
-            this._logger.LogError(ex,
+            this._logger.LogError(
+                ex,
                 "CreateFlashcardsFromTextAsync: Критична помилка під час генерації або збереження карток для користувача {CreatorId}.",
                 creatorId);
             throw;

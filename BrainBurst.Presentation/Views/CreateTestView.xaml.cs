@@ -19,15 +19,32 @@
     /// <summary>
     /// Клас для елемента списку колод у вікні створення.
     /// </summary>
+#pragma warning disable SA1402
+#pragma warning disable SA1649
     public class GenerationDeckItem
+#pragma warning restore SA1649
+#pragma warning restore SA1402
     {
+        /// <summary>
+        /// Gets or sets отримує або встановлює ID флеш-картки.
+        /// </summary>
         public int FlashcardId { get; set; }
 
+        /// <summary>
+        /// Gets or sets отримує або встановлює тег колоди (назву).
+        /// </summary>
         public string TagsStr { get; set; } = string.Empty;
 
+        /// <summary>
+        /// Gets or sets отримує або встановлює дату створення найстарішої картки в колоді.
+        /// </summary>
         public DateTime CreatedAt { get; set; }
     }
 
+    /// <summary>
+    /// Логіка взаємодії для View створення нового тесту.
+    /// Дозволяє створювати тести на основі вибраних колод або імпорту тексту для AI-генерації.
+    /// </summary>
     public partial class CreateTestView : UserControl
     {
         private readonly IFlashcardService _flashcardService;
@@ -38,6 +55,15 @@
 
         private IReadOnlyList<FlashcardDTO> _allCards = Array.Empty<FlashcardDTO>();
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="CreateTestView"/> class.
+        /// Ініціалізує новий екземпляр класу <see cref="CreateTestView"/>.
+        /// </summary>
+        /// <param name="flashcardService">Сервіс для отримання списку карток.</param>
+        /// <param name="testService">Сервіс для генерації тесту з наявних карток.</param>
+        /// <param name="testGenerationService">Сервіс для генерації карток з тексту (AI).</param>
+        /// <param name="authContext">Контекст автентифікації для отримання ID користувача.</param>
+        /// <param name="logger">Логер для запису подій.</param>
         public CreateTestView(
             IFlashcardService flashcardService,
             ITestService testService,
@@ -100,7 +126,7 @@
 
                 if (decks.Any())
                 {
-                    this.StatusText.Text = "";
+                    this.StatusText.Text = string.Empty;
                     this._logger.LogInformation("LoadDecksAsync: Знайдено {DeckCount} колод для створення тесту.", decks.Count);
                 }
                 else

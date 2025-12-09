@@ -24,6 +24,7 @@ namespace BrainBurst.BLL.Tests.Services
         private readonly CancellationToken ct = CancellationToken.None;
 
         /// <summary>
+        /// Initializes a new instance of the <see cref="ArchiveServiceTests"/> class.
         /// Конструктор тестів: налаштовує "моки" для залежностей <see cref="ArchiveService"/>.
         /// </summary>
         public ArchiveServiceTests()
@@ -39,6 +40,7 @@ namespace BrainBurst.BLL.Tests.Services
         /// <summary>
         /// Тест: GetArchiveAsync викликає репозиторій з коректними userId та CancellationToken.
         /// </summary>
+        /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
         [Fact]
         public async Task GetArchiveAsync_CallsRepositoryWithUserIdAndCancellationToken()
         {
@@ -58,6 +60,7 @@ namespace BrainBurst.BLL.Tests.Services
         /// <summary>
         /// Тест: GetArchiveAsync повертає порожній список, якщо репозиторій не повертає результатів.
         /// </summary>
+        /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
         [Fact]
         public async Task GetArchiveAsync_NoResults_ReturnsEmptyList()
         {
@@ -76,6 +79,7 @@ namespace BrainBurst.BLL.Tests.Services
         /// <summary>
         /// Тест: GetArchiveAsync коректно мапить один TestResult в один ArchiveEntryDTO.
         /// </summary>
+        /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
         [Fact]
         public async Task GetArchiveAsync_MapsSingleResultCorrectly()
         {
@@ -112,6 +116,7 @@ namespace BrainBurst.BLL.Tests.Services
         /// <summary>
         /// Тест: GetArchiveAsync коректно мапить декілька результатів, зберігаючи їх порядок.
         /// </summary>
+        /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
         [Fact]
         public async Task GetArchiveAsync_MultipleResults_PreservesOrderAndMapsAllEntries()
         {
@@ -161,6 +166,7 @@ namespace BrainBurst.BLL.Tests.Services
         /// <summary>
         /// Тест: GetArchiveAsync коректно перетворює 'decimal' відсотки в 'double' без втрати точності.
         /// </summary>
+        /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
         [Fact]
         public async Task GetArchiveAsync_CorrectAnswersPercent_DecimalToDoubleIsAccurate()
         {
@@ -196,6 +202,7 @@ namespace BrainBurst.BLL.Tests.Services
         /// Тест: якщо репозиторій кидає виняток → сервіс логуює помилку і проброшує її далі.
         /// Покриваємо catch (Exception) у GetArchiveAsync.
         /// </summary>
+        /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
         [Fact]
         public async Task GetArchiveAsync_RepositoryThrows_LogsErrorAndRethrows()
         {

@@ -1,29 +1,42 @@
-using System;
-using Xunit;
-
 namespace BrainBurst.BLL.Tests
 {
+    using System;
+    using Xunit;
+
+    /// <summary>
+    /// Містить юніт-тести для класу Guard, який виконує перевірку аргументів.
+    /// </summary>
     public class GuardTests
     {
         // ============================================================
         // Email()
         // ============================================================
 
+        /// <summary>
+        /// Тест: Перевіряє, що валідна електронна адреса не викликає винятку.
+        /// </summary>
         [Fact]
         public void Email_Valid_DoesNotThrow()
         {
             Guard.Email("test@example.com");
         }
 
+        /// <summary>
+        /// Тест: Перевіряє, що порожні або null значення електронної адреси викликають виняток.
+        /// </summary>
+        /// <param name="input">Вхідний рядок (null, empty, whitespace).</param>
         [Theory]
         [InlineData(null)]
         [InlineData("")]
         [InlineData("   ")]
-        public void Email_Empty_Throws(string input)
+        public void Email_Empty_Throws(string? input)
         {
-            Assert.Throws<ArgumentException>(() => Guard.Email(input));
+            Assert.Throws<ArgumentException>(() => Guard.Email(input!));
         }
 
+        /// <summary>
+        /// Тест: Перевіряє, що адреса без символу '@' викликає виняток.
+        /// </summary>
         [Fact]
         public void Email_NoAtSymbol_Throws()
         {
@@ -34,21 +47,31 @@ namespace BrainBurst.BLL.Tests
         // Password()
         // ============================================================
 
+        /// <summary>
+        /// Тест: Перевіряє, що валідний пароль (за замовчуванням: довжина >= 8) не викликає винятку.
+        /// </summary>
         [Fact]
         public void Password_Valid_DoesNotThrow()
         {
             Guard.Password("valid123");
         }
 
+        /// <summary>
+        /// Тест: Перевіряє, що порожні або null значення пароля викликають виняток.
+        /// </summary>
+        /// <param name="input">Вхідний рядок (null, empty, whitespace).</param>
         [Theory]
         [InlineData(null)]
         [InlineData("")]
         [InlineData("   ")]
-        public void Password_Empty_Throws(string input)
+        public void Password_Empty_Throws(string? input)
         {
-            Assert.Throws<ArgumentException>(() => Guard.Password(input));
+            Assert.Throws<ArgumentException>(() => Guard.Password(input!));
         }
 
+        /// <summary>
+        /// Тест: Перевіряє, що пароль, коротший за мінімальну довжину, викликає виняток.
+        /// </summary>
         [Fact]
         public void Password_TooShort_Throws()
         {
@@ -59,21 +82,31 @@ namespace BrainBurst.BLL.Tests
         // Text()
         // ============================================================
 
+        /// <summary>
+        /// Тест: Перевіряє, що валідний текст не викликає винятку.
+        /// </summary>
         [Fact]
         public void Text_Valid_DoesNotThrow()
         {
             Guard.Text("Hello", "Поле");
         }
 
+        /// <summary>
+        /// Тест: Перевіряє, що порожні або null значення тексту викликають виняток.
+        /// </summary>
+        /// <param name="input">Вхідний рядок (null, empty, whitespace).</param>
         [Theory]
         [InlineData(null)]
         [InlineData("")]
         [InlineData("   ")]
-        public void Text_Empty_Throws(string input)
+        public void Text_Empty_Throws(string? input)
         {
-            Assert.Throws<ArgumentException>(() => Guard.Text(input, "Назва"));
+            Assert.Throws<ArgumentException>(() => Guard.Text(input!, "Назва"));
         }
 
+        /// <summary>
+        /// Тест: Перевіряє, що текст, довший за максимальну довжину, викликає виняток.
+        /// </summary>
         [Fact]
         public void Text_TooLong_Throws()
         {
@@ -81,6 +114,9 @@ namespace BrainBurst.BLL.Tests
             Assert.Throws<ArgumentException>(() => Guard.Text(veryLong, "Поле", max: 100));
         }
 
+        /// <summary>
+        /// Тест: Перевіряє, що текст, який дорівнює максимальній довжині, не викликає винятку.
+        /// </summary>
         [Fact]
         public void Text_MaxBoundary_DoesNotThrow()
         {

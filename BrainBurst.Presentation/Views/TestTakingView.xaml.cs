@@ -158,8 +158,11 @@
                 }
                 else
                 {
-                    this._logger.LogWarning("AnswerTextBox_KeyDown: Питання {Index} відповідено НЕПРАВИЛЬНО. Користувач: '{UserAnswer}', Правильно: '{CorrectAnswer}'",
-                        this._currentQuestionIndex + 1, userAnswer, correctAnswer);
+                    this._logger.LogWarning(
+                        "AnswerTextBox_KeyDown: Питання {Index} відповідено НЕПРАВИЛЬНО. Користувач: '{UserAnswer}', Правильно: '{CorrectAnswer}'",
+                        this._currentQuestionIndex + 1,
+                        userAnswer,
+                        correctAnswer);
                     this.ResultIcon.Text = "❌";
                     this.ResultIcon.Foreground = Brushes.Red;
                     this.AnswerCard.Background = (SolidColorBrush)new BrushConverter().ConvertFrom("#FFF0F0") !;
@@ -204,8 +207,10 @@
                     {
                         var totalQuestions = this._questions.Count;
 
-                        this._logger.LogInformation("NextCard_Click: Результати успішно збережено. Правильно: {CorrectCount}, Неправильно: {MistakesCount}.",
-                            testResultDto.CorrectAnswersPercent, this._mistakesList.Count);
+                        this._logger.LogInformation(
+                            "NextCard_Click: Результати успішно збережено. Правильно: {CorrectCount}, Неправильно: {MistakesCount}.",
+                            testResultDto.CorrectAnswersPercent,
+                            this._mistakesList.Count);
 
                         // Переходимо на екран результатів
                         var resultsView = this._serviceProvider.GetRequiredService<TestResultsView>();

@@ -32,6 +32,7 @@
         /// <param name="serviceProvider">Постачальник служб DI.</param>
         /// <param name="archiveService">Сервіс для отримання архівних даних.</param>
         /// <param name="authContext">Контекст автентифікації для отримання ID поточного користувача.</param>
+        /// <param name="logger">Логер для запису подій.</param>
         public ArchiveView(IServiceProvider serviceProvider, IArchiveService archiveService, IAuthContext authContext, ILogger<ArchiveView> logger)
         {
             this.InitializeComponent();
@@ -127,7 +128,7 @@
                         {
                             QuestionText = card?.Question ?? "[Картка видалена]",
                             UserAnswer = wrong.UserInput,
-                            CorrectAnswer = card?.Answer ?? "[Невідомо]"
+                            CorrectAnswer = card?.Answer ?? "[Невідомо]",
                         });
                     }
 

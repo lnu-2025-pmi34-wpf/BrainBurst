@@ -103,6 +103,7 @@ namespace BrainBurst.BLL.Services
                 {
                     this._logger.LogError(ex, "ChangePasswordAsync: Критична помилка при зміні пароля для {UserId}.", userId);
                 }
+
                 throw;
             }
         }
@@ -173,6 +174,7 @@ namespace BrainBurst.BLL.Services
                 {
                     this._logger.LogError(ex, "UpdateProfileAsync: Критична помилка при оновленні профілю {UserId}.", id);
                 }
+
                 throw;
             }
         }

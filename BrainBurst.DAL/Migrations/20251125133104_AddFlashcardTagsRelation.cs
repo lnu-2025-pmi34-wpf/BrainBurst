@@ -1,9 +1,9 @@
-﻿using Microsoft.EntityFrameworkCore.Migrations;
-
-#nullable disable
+﻿#nullable disable
 
 namespace BrainBurst.DAL.Migrations
 {
+    using Microsoft.EntityFrameworkCore.Migrations;
+
     /// <inheritdoc />
     public partial class AddFlashcardTagsRelation : Migration
     {
@@ -15,7 +15,7 @@ namespace BrainBurst.DAL.Migrations
                 columns: table => new
                 {
                     FlashcardsFlashcardId = table.Column<int>(type: "integer", nullable: false),
-                    TagsTagId = table.Column<int>(type: "integer", nullable: false)
+                    TagsTagId = table.Column<int>(type: "integer", nullable: false),
                 },
                 constraints: table =>
                 {

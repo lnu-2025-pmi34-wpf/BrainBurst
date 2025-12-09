@@ -1,19 +1,22 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading;
-using System.Threading.Tasks;
-using BrainBurst.BLL.DTO;
-using BrainBurst.BLL.Interfaces.Abstractions;
-using BrainBurst.BLL.Services;
-using BrainBurst.DAL.Abstractions;
-using BrainBurst.DAL.Entities;
-using Microsoft.Extensions.Logging;
-using Moq;
-using Xunit;
-
 namespace BrainBurst.BLL.Tests.Services
 {
+    using System;
+    using System.Collections.Generic;
+    using System.Linq;
+    using System.Threading;
+    using System.Threading.Tasks;
+    using BrainBurst.BLL.DTO;
+    using BrainBurst.BLL.Interfaces.Abstractions;
+    using BrainBurst.BLL.Services;
+    using BrainBurst.DAL.Abstractions;
+    using BrainBurst.DAL.Entities;
+    using Microsoft.Extensions.Logging;
+    using Moq;
+    using Xunit;
+
+    /// <summary>
+    /// Містить юніт-тести для класу <see cref="TestGenerationService"/>.
+    /// </summary>
     public class TestGenerationServiceTests
     {
         private readonly Mock<IQuizGenerator> _aiMock;
@@ -21,18 +24,25 @@ namespace BrainBurst.BLL.Tests.Services
         private readonly Mock<ILogger<TestGenerationService>> _loggerMock;
         private readonly TestGenerationService _service;
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="TestGenerationServiceTests"/> class.
+        /// </summary>
         public TestGenerationServiceTests()
         {
-            _aiMock = new Mock<IQuizGenerator>(MockBehavior.Strict);
-            _cardsMock = new Mock<IFlashcardRepository>(MockBehavior.Strict);
-            _loggerMock = new Mock<ILogger<TestGenerationService>>(MockBehavior.Loose);
+            this._aiMock = new Mock<IQuizGenerator>(MockBehavior.Strict);
+            this._cardsMock = new Mock<IFlashcardRepository>(MockBehavior.Strict);
+            this._loggerMock = new Mock<ILogger<TestGenerationService>>(MockBehavior.Loose);
 
-            _service = new TestGenerationService(
-                _aiMock.Object,
-                _cardsMock.Object,
-                _loggerMock.Object);
+            this._service = new TestGenerationService(
+                this._aiMock.Object,
+                this._cardsMock.Object,
+                this._loggerMock.Object);
         }
 
+        /// <summary>
+        /// Тест: Перевіряє, що метод викликає генератор AI з тими самими вхідними параметрами.
+        /// </summary>
+        /// <returns>A <see cref="Task"/> representing the result of the asynchronous operation.</returns>
         [Fact]
         public async Task CreateFlashcardsFromTextAsync_CallsAiWithSameParameters()
         {
@@ -41,15 +51,20 @@ namespace BrainBurst.BLL.Tests.Services
             var tags = new[] { "tag1", "tag2" };
             var ct = CancellationToken.None;
 
-            _aiMock
+            this._aiMock
                 .Setup(ai => ai.GenerateFromTextAsync(text, ct))
                 .ReturnsAsync(new List<(string Question, string Answer)>());
 
-            var result = await _service.CreateFlashcardsFromTextAsync(creatorId, text, tags, ct);
+            var result = await this._service.CreateFlashcardsFromTextAsync(creatorId, text, tags, ct);
 
-            _aiMock.Verify(ai => ai.GenerateFromTextAsync(text, ct), Times.Once);
+            this._aiMock.Verify(ai => ai.GenerateFromTextAsync(text, ct), Times.Once);
         }
 
+        /// <summary>
+        /// Тест: Перевіряє, що якщо AI не повертає карток, метод повертає порожній список
+        /// і не викликає репозиторій для збереження.
+        /// </summary>
+        /// <returns>A <see cref="Task"/> representing the result of the asynchronous operation.</returns>
         [Fact]
         public async Task CreateFlashcardsFromTextAsync_ZeroItemsFromAi_ReturnsEmptyList()
         {
@@ -58,15 +73,15 @@ namespace BrainBurst.BLL.Tests.Services
             var tags = new[] { "t" };
             var ct = CancellationToken.None;
 
-            _aiMock
+            this._aiMock
                 .Setup(ai => ai.GenerateFromTextAsync(text, ct))
                 .ReturnsAsync(Array.Empty<(string Question, string Answer)>());
 
-            var result = await _service.CreateFlashcardsFromTextAsync(creatorId, text, tags, ct);
+            var result = await this._service.CreateFlashcardsFromTextAsync(creatorId, text, tags, ct);
 
             Assert.Empty(result);
 
-            _cardsMock.Verify(
+            this._cardsMock.Verify(
                 r => r.AddAsync(
                     It.IsAny<Flashcard>(),
                     It.IsAny<IEnumerable<string>>(),
@@ -74,6 +89,11 @@ namespace BrainBurst.BLL.Tests.Services
                 Times.Never);
         }
 
+        /// <summary>
+        /// Тест: Перевіряє, що метод зберігає кожну згенеровану картку,
+        /// передаючи коректні дані та теги до репозиторію.
+        /// </summary>
+        /// <returns>A <see cref="Task"/> representing the result of the asynchronous operation.</returns>
         [Fact]
         public async Task CreateFlashcardsFromTextAsync_SavesEachFlashcard_WithCorrectData()
         {
@@ -88,23 +108,24 @@ namespace BrainBurst.BLL.Tests.Services
                 ("Q2", "A2"),
             };
 
-            _aiMock
+            this._aiMock
                 .Setup(ai => ai.GenerateFromTextAsync(text, ct))
                 .ReturnsAsync(aiItems);
 
-            _cardsMock
+            this._cardsMock
                 .Setup(r => r.AddAsync(
                     It.IsAny<Flashcard>(),
                     It.IsAny<IEnumerable<string>>(),
                     It.IsAny<CancellationToken>()))
                 .ReturnsAsync((Flashcard f, IEnumerable<string> tg, CancellationToken _) => f);
 
-            var result = await _service.CreateFlashcardsFromTextAsync(creatorId, text, tags, ct);
+            var result = await this._service.CreateFlashcardsFromTextAsync(creatorId, text, tags, ct);
 
-            _cardsMock.Verify(
+            this._cardsMock.Verify(
                 r => r.AddAsync(
                     It.IsAny<Flashcard>(),
-                    tags, ct),
+                    tags,
+                    ct),
                 Times.Exactly(aiItems.Count));
 
             Assert.Equal(2, result.Count);
@@ -112,6 +133,10 @@ namespace BrainBurst.BLL.Tests.Services
             Assert.Equal("A1", result[0].Answer);
         }
 
+        /// <summary>
+        /// Тест: Перевіряє, що поле CreatedAt встановлюється близьким до поточного часу UTC.
+        /// </summary>
+        /// <returns>A <see cref="Task"/> representing the result of the asynchronous operation.</returns>
         [Fact]
         public async Task CreateFlashcardsFromTextAsync_SetsCreatedAt_ToUtcNow()
         {
@@ -122,10 +147,10 @@ namespace BrainBurst.BLL.Tests.Services
 
             var aiItems = new[]
             {
-                ("What?", "Answer!")
+                ("What?", "Answer!"),
             };
 
-            _aiMock
+            this._aiMock
                 .Setup(ai => ai.GenerateFromTextAsync(text, ct))
                 .ReturnsAsync(aiItems);
 
@@ -133,7 +158,7 @@ namespace BrainBurst.BLL.Tests.Services
 
             Flashcard? savedFlashcard = null;
 
-            _cardsMock
+            this._cardsMock
                 .Setup(r => r.AddAsync(
                     It.IsAny<Flashcard>(),
                     It.IsAny<IEnumerable<string>>(),
@@ -144,7 +169,7 @@ namespace BrainBurst.BLL.Tests.Services
                 })
                 .ReturnsAsync((Flashcard f, IEnumerable<string> tg, CancellationToken _) => f);
 
-            var result = await _service.CreateFlashcardsFromTextAsync(creatorId, text, tags, ct);
+            var result = await this._service.CreateFlashcardsFromTextAsync(creatorId, text, tags, ct);
 
             DateTime after = DateTime.UtcNow;
 
@@ -152,6 +177,10 @@ namespace BrainBurst.BLL.Tests.Services
             Assert.True(savedFlashcard!.CreatedAt >= before && savedFlashcard!.CreatedAt <= after);
         }
 
+        /// <summary>
+        /// Тест: Перевіряє, що токен скасування коректно передається до методу AddAsync репозиторію.
+        /// </summary>
+        /// <returns>A <see cref="Task"/> representing the result of the asynchronous operation.</returns>
         [Fact]
         public async Task CreateFlashcardsFromTextAsync_PassesCancellationTokenToRepository()
         {
@@ -163,23 +192,23 @@ namespace BrainBurst.BLL.Tests.Services
 
             var aiItems = new[]
             {
-                ("Q", "A")
+                ("Q", "A"),
             };
 
-            _aiMock
+            this._aiMock
                 .Setup(ai => ai.GenerateFromTextAsync(text, ct))
                 .ReturnsAsync(aiItems);
 
-            _cardsMock
+            this._cardsMock
                 .Setup(r => r.AddAsync(
                     It.IsAny<Flashcard>(),
                     It.IsAny<IEnumerable<string>>(),
                     It.Is<CancellationToken>(token => token == ct)))
                 .ReturnsAsync((Flashcard f, IEnumerable<string> tg, CancellationToken _) => f);
 
-            var result = await _service.CreateFlashcardsFromTextAsync(creatorId, text, tags, ct);
+            var result = await this._service.CreateFlashcardsFromTextAsync(creatorId, text, tags, ct);
 
-            _cardsMock.Verify(
+            this._cardsMock.Verify(
                 r => r.AddAsync(
                     It.IsAny<Flashcard>(),
                     It.IsAny<IEnumerable<string>>(),
@@ -191,6 +220,7 @@ namespace BrainBurst.BLL.Tests.Services
         /// Якщо AI-генератор кидає виняток, сервіс має залогувати помилку і пробросити виняток далі.
         /// Покриваємо гілку catch (Exception) у CreateFlashcardsFromTextAsync.
         /// </summary>
+        /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
         [Fact]
         public async Task CreateFlashcardsFromTextAsync_AiThrows_LogsErrorAndRethrows()
         {
@@ -199,15 +229,15 @@ namespace BrainBurst.BLL.Tests.Services
             var tags = new[] { "x" };
             var ct = CancellationToken.None;
 
-            _aiMock
+            this._aiMock
                 .Setup(ai => ai.GenerateFromTextAsync(text, ct))
                 .ThrowsAsync(new InvalidOperationException("AI failure"));
 
             await Assert.ThrowsAsync<InvalidOperationException>(() =>
-                _service.CreateFlashcardsFromTextAsync(creatorId, text, tags, ct));
+                this._service.CreateFlashcardsFromTextAsync(creatorId, text, tags, ct));
 
-            _aiMock.Verify(ai => ai.GenerateFromTextAsync(text, ct), Times.Once);
-            _cardsMock.Verify(
+            this._aiMock.Verify(ai => ai.GenerateFromTextAsync(text, ct), Times.Once);
+            this._cardsMock.Verify(
                 r => r.AddAsync(
                     It.IsAny<Flashcard>(),
                     It.IsAny<IEnumerable<string>>(),

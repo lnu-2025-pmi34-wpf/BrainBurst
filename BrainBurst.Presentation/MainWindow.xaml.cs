@@ -12,7 +12,7 @@
         private readonly IServiceProvider _serviceProvider;
         private readonly ILogger<MainWindow> _logger;
 
-        /// <summary>   
+        /// <summary>
         /// Initializes a new instance of the <see cref="MainWindow"/> class.
         /// </summary>
         /// <param name="serviceProvider">Постачальник служб DI (для отримання інших вікон).</param>

@@ -56,7 +56,7 @@
             string answer = this.AnswerTextBox.Text;
             string? tagsInput = this.TagsTextBox.Text?.Trim();
 
-            this._logger.LogInformation("SaveButton_Click: Запущено збереження картки. Питання: {Question}", question.Length > 30 ? question[..30] + "..." : question);                                                                                                                             
+            this._logger.LogInformation("SaveButton_Click: Запущено збереження картки. Питання: {Question}", question.Length > 30 ? question[..30] + "..." : question);
 
             IEnumerable<string> tags;
             if (string.IsNullOrWhiteSpace(tagsInput))

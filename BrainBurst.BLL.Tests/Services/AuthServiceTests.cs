@@ -26,6 +26,7 @@ namespace BrainBurst.BLL.Tests.Services
         private readonly CancellationToken ct = CancellationToken.None;
 
         /// <summary>
+        /// Initializes a new instance of the <see cref="AuthServiceTests"/> class.
         /// Конструктор тестового класу. Налаштовує "моки" для залежностей <see cref="AuthService"/>.
         /// </summary>
         public AuthServiceTests()
@@ -52,6 +53,7 @@ namespace BrainBurst.BLL.Tests.Services
         /// Тест: RegisterAsync при валідних даних створює нового користувача
         /// і повертає коректний <see cref="UserDTO"/>.
         /// </summary>
+        /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
         [Fact]
         public async Task RegisterAsync_ValidData_CreatesUserAndReturnsDto()
         {
@@ -92,6 +94,7 @@ namespace BrainBurst.BLL.Tests.Services
         /// Тест: RegisterAsync кидає <see cref="ArgumentException"/>,
         /// якщо користувач з таким email вже існує.
         /// </summary>
+        /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
         [Fact]
         public async Task RegisterAsync_EmailAlreadyExists_ThrowsArgumentException()
         {
@@ -116,6 +119,7 @@ namespace BrainBurst.BLL.Tests.Services
         /// Тест: RegisterAsync кидає <see cref="ArgumentException"/>,
         /// якщо email має некоректний формат (валідація Guard.Email).
         /// </summary>
+        /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
         [Fact]
         public async Task RegisterAsync_InvalidEmail_ThrowsArgumentException()
         {
@@ -139,6 +143,7 @@ namespace BrainBurst.BLL.Tests.Services
         /// <summary>
         /// Тест: LoginAsync при валідних облікових даних повертає <see cref="UserDTO"/>.
         /// </summary>
+        /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
         [Fact]
         public async Task LoginAsync_ValidCredentials_ReturnsUserDto()
         {
@@ -177,6 +182,7 @@ namespace BrainBurst.BLL.Tests.Services
         /// Тест: LoginAsync кидає <see cref="KeyNotFoundException"/>,
         /// якщо користувача з таким email не знайдено.
         /// </summary>
+        /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
         [Fact]
         public async Task LoginAsync_UserNotFound_ThrowsKeyNotFoundException()
         {
@@ -197,6 +203,7 @@ namespace BrainBurst.BLL.Tests.Services
         /// Тест: LoginAsync кидає <see cref="KeyNotFoundException"/>,
         /// якщо пароль некоректний.
         /// </summary>
+        /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
         [Fact]
         public async Task LoginAsync_InvalidPassword_ThrowsKeyNotFoundException()
         {
